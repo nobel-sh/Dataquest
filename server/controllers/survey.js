@@ -1,41 +1,51 @@
 const asyncHandler = require('express-async-handler')
 const Survey = require('../models/survey')
-
+const Question = require('../models/question')
 
 const getAllSurveys = asyncHandler( async (req,res) => {
-    const surveys = await Survey.find({owner_id:req.user_id});
+    console.log(req.query)
+    const surveys = await Survey.find({owner_id:req.query.owner_id});
     res.status(200).json({surveys})
     }
 )
 
 const createSurvey = asyncHandler( async (req,res) => {
-    const {owner:{id:owner_id},title,questions,responses} = req.body;
+
+    const {owner:{id:owner_id},title} = req.body;
     
-    console.log("The request body is :", req.body);
-    if (!user) {
+    if (!owner_id || !title) {
         res.status(400);
-        throw new Error("All fields are mandatory !");
+        throw new Error("All fields are mandatory !");   
     }
+
+    const ifSurveyExists = await Survey.exists({title});
+    if(ifSurveyExists){
+        res.status(400);
+        throw new Error("Survey with this title already exists");
+    }
+
+    
 
     const survey = await Survey.create({
         owner_id,
-        title,
-        questions,
-        responses
+        title
     })
     res.status(200).json(survey)
 })
 
 const getSurvey = asyncHandler(async (req,res) => {
-    const {id:surveyID} = req.params;
+    console.log(req.query)
+    const {survey_id:surveyID} = req.query;
     const survey = await Survey.findOne({
         _id:surveyID
     })
+    const questions = await Question.find({
+        survey_id:surveyID})
     if(!survey){
         res.status(404);
         throw new Error("Survey Not Found");
     }
-    res.status(200).json({survey})
+    res.status(200).json({survey,questions})
     }
 )
 
