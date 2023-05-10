@@ -21,7 +21,9 @@ const Dashboard = () => {
       setSurveys(res.data.surveys)
       console.log(res.data)
     }
+    // const reload_window = ()=>{window.location.reload()}
     fetchSurveys()
+    // reload_window()
   }, [])
 
   const handleDate = (survey_date) => {

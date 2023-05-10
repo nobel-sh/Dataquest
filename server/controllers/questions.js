@@ -9,7 +9,6 @@ const createQuestion= asyncHandler( async (req,res) => {
         question,
         options,
         type});
-    console.log(newQuestion);
     res.status(200).json(newQuestion)
 })
 

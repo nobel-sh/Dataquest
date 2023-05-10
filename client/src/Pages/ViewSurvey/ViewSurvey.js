@@ -36,11 +36,11 @@ const ViewSurvey = () => {
     <h1>{survey?.title}</h1>
     {questions?.map((question,index) => {
         if(question.type==='yes/no'){
-            return <YesNoSurvey questionNo={index} question={question.question} options={question.options} />
+            return <YesNoSurvey questionNo={index} question={question.question} options={question.options} _id={question._id}/>
         }else if(question.type ==='dropdown'){
-            return <DropDownSurvey questionNo={index} question={question.question} options={question.options}/>
+            return <DropDownSurvey questionNo={index} question={question.question} options={question.options} _id={question._id}/>
         }
-        else return <CustomInput questionNo={index} question={question.question} />
+        else return <CustomInput questionNo={index} question={question.question} _id={question._id}/>
     })}
     </ViewSurveyContainer>
    

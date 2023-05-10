@@ -1,6 +1,7 @@
 html{
     font-family: Outfit,'Courier New', Courier, monospace  ;
     font-weight: normal;
+    background-color: rgb(5, 18, 58);
 }
 body{
     margin: 0;

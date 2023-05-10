@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken')
 
 const userLogin = asyncHandler( async (req,res)=>{
 
+        console.log(req.body);
         const {email,password} = req.body;
         
         if(!email || !password){
@@ -31,10 +32,10 @@ const userLogin = asyncHandler( async (req,res)=>{
                     }
                 },
                 process.env.JWT_TOKEN,
-                {expiresIn:"30m"},
+                {expiresIn:"240"},
             )
-
-            res.status(200).json({accessToken});
+            const {username,_id:user_id} = user;
+            res.status(200).json({accessToken,expiresIn:'10000',user:{username,user_id}});
         }else {
             res.status(401);
             throw new Error("Invalid Password")
@@ -44,7 +45,7 @@ const userLogin = asyncHandler( async (req,res)=>{
 )
 
 const userRegister = asyncHandler( async (req,res)=>{
-
+    console.log(req.body);
     const {username,email,password} = req.body;
         
         if(!username || !email || !password){
@@ -70,8 +71,8 @@ const userRegister = asyncHandler( async (req,res)=>{
         res.status(400);
         throw new Error("Could not register user");
     }
-
-    res.status(200).json({users});
+    
+    res.status(200).json({});
 
     }
 )

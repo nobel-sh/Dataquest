@@ -3,7 +3,6 @@ const Survey = require('../models/survey')
 const Question = require('../models/question')
 
 const getAllSurveys = asyncHandler( async (req,res) => {
-    console.log(req.query)
     const surveys = await Survey.find({owner_id:req.query.owner_id});
     res.status(200).json({surveys})
     }
@@ -34,7 +33,6 @@ const createSurvey = asyncHandler( async (req,res) => {
 })
 
 const getSurvey = asyncHandler(async (req,res) => {
-    console.log(req.query)
     const {survey_id:surveyID} = req.query;
     const survey = await Survey.findOne({
         _id:surveyID
