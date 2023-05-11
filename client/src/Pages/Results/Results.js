@@ -1,10 +1,10 @@
 import React, { useEffect,useState } from 'react'
-import { ResultsContainer } from './results.styled'
+import { ResultsContainer,ChartsContainer,ResponseContainer } from './results.styled'
 import axios from 'axios'
 import { useParams } from 'react-router-dom'
-import ApexCharts from 'apexcharts'
 import Chart from 'react-apexcharts'
-import { giveNoOfResults, giveNoOfResultsForYesNo } from './ResultStats'
+import {  giveNoOfResultsForYesNo } from './ResultStats'
+
 
 const Results = () => {
 
@@ -35,61 +35,108 @@ const Results = () => {
         }
         
         fetchResults();
-    }, [])
+    }, [survey_id])
 
     const generateStats = (question) => {
-                const value = []
-                const results = giveNoOfResultsForYesNo(question,responses);
-                question.options.map((option) => {
-                    value.push(results[option.toString()]?results[option.toString()]:0)
-                    console.log(option)
-                })
-                // console.log(value)
-                const options = {
-                    chart: {
-                        type: 'bar'
-                    },
-                    series: [
-                        {
-                            name: 'Choice',
-                            data: value
-                        }
-                    ],
-                    xaxis: {
-                        categories: question.options
-                    }
-                }
-                return options;
+        const value = []
+        const results = giveNoOfResultsForYesNo(question,responses);
+        question.options.map((option) => 
+        value.push(results.get(option)?results.get(option):0)
+        )
+        return value
     }
-    
-
+    const generateBar = (question) => {
+        const value = generateStats(question);
         const options = {
+            colors:['#00e396','#008ffb','#ff4560','#feb019','#9d6a79'],
+            plotOptions: {
+                bar: {
+                    distributed: true
+                }
+              },
             chart: {
-              type: 'bar'
+                foreColor: '#000',
+                type: 'bar',
             },
             series: [
-              {
-                name: 'suii',
-                data: [30, 40, 35, 50, 49, 60, 70, 91, 125]
-              }
+                {
+                    name: 'Option',
+                    data: value
+                }
             ],
             xaxis: {
-              categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999]
-            }
-          }
-       
+                categories: question.options
+            },
+        }
+                return options;
+    }
 
+    const generateDonut = (question) => {
+        const value = generateStats(question);
+        const options = {
+            series:value,
+            options: {
+                labels: question.options,
+                chart: {
+                    foreColor: '#000',
+                    
+                    type: 'donut',
+                },
+                responsive: [{
+                    breakpoint: 480,
+                  options: {
+                    chart: {
+                      width: 200
+                    },
+                    legend: {
+                         position: 'bottom',
+                    }
+
+                }
+            }]
+              }
+        }
+         return options;
+    }
+
+    const generateCustom = (question) => {
+        const results = []
+        responses.forEach((response)=>{
+            if(response.question_id===question._id){
+                results.push(response.answer)
+            }
+        })
+        return results;
+    }  
+    
+      
     return (
     <ResultsContainer>
         <h1>{title}</h1>
         <div>
-            <h2>Responses received : {responses.length/questions.length}</h2>
-            <Chart options={options} series={options.series} type={options.chart.type} width={500} height={320} />
+            <h2>Responses received : {responses.length?responses.length/questions.length:0}</h2>
         </div> 
         {questions.map((question) => {
-            const options = generateStats(question);
-            // console.log(options)
-            return <Chart options={options} series={options.series} type={options.chart.type} width={500} height={320} />   
+            const bar_options = generateBar(question);
+            const donut_options = generateDonut(question);
+
+            return <ResponseContainer>
+            <h1>{question.question}</h1>
+            <h2 style={{display:'flex',justifyContent:'center',color:'#dbdbdb'}}>Responses</h2>
+            {question.type !=='custom'?
+            <ChartsContainer>
+                <Chart options={bar_options} series={bar_options.series} type={bar_options.chart.type} width={300} height={200} />   
+                <Chart options={donut_options.options} series={donut_options.series} type='donut' width={300} height={200}/>
+            </ChartsContainer>
+            :<>
+            {generateCustom(question).map((answer) => <h2>{answer}</h2>)}
+            </>
+            
+            
+            }
+            
+            
+            </ResponseContainer>
         })  }
           
         </ResultsContainer>

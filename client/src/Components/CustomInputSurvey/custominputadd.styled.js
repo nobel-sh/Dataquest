@@ -8,18 +8,30 @@ export const CustomInputAddContainer = styled.div`
     gap:20px;
     margin:20px;
     margin-right: 2rem;
+    padding: 2rem;
     background-color: #020B19;
     border-radius: 5px;
 
+    h2{
+        font-weight: 500;
+    }
     button{
-        width: 100px;
+        font-family: Outfit;
         height: 40px;
-        margin:0
+        width:60px;
+        border:none;
+        font-size: larger;
+        font-weight: 500;
+        &:hover{
+            background-color: rgb(230, 230,230, 0.5);
+        }
     }
 `
 
 export const CustomInputQuestionContainer = styled.input`
     border-radius: 5px;
-    min-width: 50rem;
-    height: 50px;
+    min-width: 45rem;
+    height: 30px;
+    padding: 5px;
+
 `

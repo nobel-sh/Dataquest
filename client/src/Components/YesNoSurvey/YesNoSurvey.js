@@ -6,7 +6,7 @@ import axios from 'axios';
 export const YesNoSurvey = ({questionNo,question,options,_id}) => {
   const [selected,setSelected] = useState(null);
   const survey_id = useParams().id;
-  const user_id = localStorage.getItem('user_id')?localStorage.getItem('user_id'):'6426cb196f3bb0a8d860bb23';
+  const user_id = JSON.parse(window.localStorage.getItem('_auth_state')).user_id
 
   const handleClick = async (e) => {
     if(selected===null){
@@ -37,8 +37,12 @@ export const YesNoSurvey = ({questionNo,question,options,_id}) => {
         <h3>Question <span>{questionNo+1}</span></h3>
         <h1>{question}</h1>
         <YesNoOptionsContainer>
-            <button onClick={()=>{setSelected(options[0])}} > {options[0]}</button>
-            <button onClick={()=>{setSelected(options[1])}} > {options[1]}</button>
+            <button 
+              style={selected !== null ? { backgroundColor: selected === options[0] ? "#8da5aa" : "grey"} : { backgroundColor: "grey"}} 
+            onClick={()=>{setSelected(options[0])} } > {options[0]}</button>
+            <button 
+              style={selected !== null ? { backgroundColor: selected === options[1] ? "#8da5aa" : "grey"} : { backgroundColor: "grey"}} 
+            onClick={()=>{setSelected(options[1])}} > {options[1]}</button>
         </YesNoOptionsContainer>
         <button onClick={handleClick}>Save</button>
         

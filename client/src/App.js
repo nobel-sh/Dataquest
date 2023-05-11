@@ -19,7 +19,7 @@ function App() {
   return (
     <div className="App">
       <Router>
-       {window.location.pathname!='/login'&& window.location.pathname!='/signup' && <Navbar/>}
+       {/* {window.location.pathname!='/login'&& window.location.pathname!='/signup' && <Navbar/>} */}
 
          <div style={{display:"flex"}}>
          {window.location.pathname!='/login'&& window.location.pathname!='/signup' && <Sidebar/>}

@@ -1,8 +1,9 @@
 import React from 'react'
-import { SidebarContainer, SidebarText,SidebarLink } from '../../Styles/sidebar.styled'
-import {FaClipboardList,FaChartBar,FaUser,FaSignOutAlt} from 'react-icons/fa'
+import { SidebarContainer, SidebarText,SidebarLink,SidebarImage, SidebarLogout, SidebarRoutes} from '../../Styles/sidebar.styled'
+import {FaClipboardList,FaSignOutAlt, FaHome} from 'react-icons/fa'
 import { Link, useNavigate } from 'react-router-dom'
 import {  useSignOut } from 'react-auth-kit'
+import LogoImg from '../../pictures/logo1.png'
 
 const Sidebar = () => {
   const navigate = useNavigate();
@@ -15,22 +16,32 @@ const Sidebar = () => {
     navigate(0);
   }
 
-  const handleForms = () => {
-    console.log("form");
-    navigate('/forms');
-
-  }
   return (
     <>
     <SidebarContainer>
-        <SidebarLink to={'/forms'} onClick>
-        <SidebarText><FaClipboardList/> Forms</SidebarText>
-        </SidebarLink>
-        
+        <Link to='/'>
+            <SidebarImage src={LogoImg} alt='dataquest logo'/>
+        </Link>
+        <SidebarRoutes>
 
-        <SidebarLink to={'/login'}onClick={handleSignout}>
-        <SidebarText><FaSignOutAlt/>Logout</SidebarText>
-        </SidebarLink>
+          <SidebarLink to={'/'} onClick>
+          <SidebarText><FaHome/> Home</SidebarText>
+          </SidebarLink>
+
+          <SidebarLink to={'/forms'} onClick>
+          <SidebarText><FaClipboardList/> Create</SidebarText>
+          </SidebarLink>
+
+          <SidebarLogout>
+            <SidebarLink to={'/login'}onClick={handleSignout}>
+            <SidebarText><FaSignOutAlt/>Logout</SidebarText>
+            </SidebarLink>
+          </SidebarLogout>
+        </SidebarRoutes>
+        
+        
+        
+        
         
 
     </SidebarContainer>

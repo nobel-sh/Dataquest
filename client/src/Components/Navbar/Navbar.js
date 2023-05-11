@@ -1,7 +1,6 @@
 import React from 'react'
 import {NavbarContainer,NavbarLogoContainer,NavbarLinksContainer,NavbarImage, NavbarLink}from '../../Styles/navbar.styled'
-import TitleStyled from '../../Styles/Title.styled'
-import LogoImg from '../../pictures/placeholder_logo.png'
+import LogoImg from '../../pictures/logo1.png'
 import { Link } from 'react-router-dom'
 
 const Navbar = () => {

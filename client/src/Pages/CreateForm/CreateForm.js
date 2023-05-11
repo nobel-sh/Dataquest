@@ -5,7 +5,7 @@ import {YesNoSurveyAdd} from '../../Components/YesNoSurvey/YesNoSurveyAdd'
 import { DropDownSurveyAdd } from '../../Components/DropDownSurvey/DropDownSurveyAdd'
 import { CustomInputAdd } from '../../Components/CustomInputSurvey/CustomInputAdd'
 import axios from 'axios'
-
+import {BsPlusSquareFill} from 'react-icons/bs'
 
 const CreateForm = () => {
 
@@ -34,10 +34,12 @@ const CreateForm = () => {
 
 
   const handleTitle = async (e) => {
+    const surveyId = window.localStorage.getItem('_auth_state')
+    const user_id = JSON.parse(surveyId).user_id
     console.log(e.target.value)
     const data = {
       owner:{
-        id:'6426cb196f3bb0a8d860bb23'
+        id: user_id
     },
     title:e.target.value
   }
@@ -74,7 +76,7 @@ const CreateForm = () => {
               <option value="dropdown">Drop-Down</option>
               <option value="custom">Custom Input</option>
             </select>
-          <button onClick={handleAddSurvey}>Add Question</button>
+          <button onClick={handleAddSurvey}><BsPlusSquareFill /></button>
           </CreateFormChooseSurvey>
 
           {questions}

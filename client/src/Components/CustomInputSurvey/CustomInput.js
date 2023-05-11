@@ -8,7 +8,7 @@ export const CustomInput = ({questionNo,question,_id}) => {
 
   const survey_id = useParams().id;
   const answer = useRef(null);
-  const user_id = localStorage.getItem('user_id')?localStorage.getItem('user_id'):'6426cb196f3bb0a8d860bb23';
+  const user_id = JSON.parse(window.localStorage.getItem('_auth_state')).user_id
 
   const handleClick = async (e) => {
     const data={

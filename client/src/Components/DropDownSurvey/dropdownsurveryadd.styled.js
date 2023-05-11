@@ -12,18 +12,33 @@ export const DropDownAddContainer = styled.div`
     border-radius: 10px;
     background-color: #020B19;
     button{
+        font-family: Outfit;
         height: 40px;
         width:60px;
+        border:none;
+        font-size: larger;
+        font-weight: 500;
+        &:hover{
+            background-color: rgb(230, 230,230, 0.5);
+        }
     }
+    input{
+        border-radius: 5px;
+        margin-left: 10px;
+        border: 0;
+        height: 25px;
+        width: 10rem;
+        border-radius: 5px;
+        height: 30px;
+   }
 `  
 export const DropDownQuestionContainer = styled.input`
-    border-radius: 5px;
     min-width: 50rem;
-    height: 20px;
+    padding: 5px;
 `
 
 export const DropDownAnswersContainer = styled.input`
-    border-radius: 5px;
+    height: 20px !important;
     width: 20rem;
-    height: 20px;
+   padding: 3px;
 `

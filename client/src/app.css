@@ -1,9 +1,13 @@
 html{
-    font-family: Outfit,'Courier New', Courier, monospace  ;
+    font-family: 'Space Mono', monospace,'Outfit';
+    /* font-family: Outfit,'Courier New', Courier, monospace  ; */
     font-weight: normal;
-    background-color: rgb(5, 18, 58);
+    /* background-color: rgb(5, 18, 58); */
+    /* background: radial-gradient(circle at 52.1% -29.6%, rgb(144, 17, 105) 0%, rgb(51, 0, 131) 100.2%);linear-gradient(112.1deg, rgb(32, 38, 57) 11.4%, rgb(63, 76, 119) 70.2%); */
+    background: radial-gradient(circle at 52.1% -29.6%, rgb(144, 17, 105) 0%, rgb(51, 0, 131) 100.2%);
 }
 body{
     margin: 0;
     padding: 0;
+    color:white;
 }

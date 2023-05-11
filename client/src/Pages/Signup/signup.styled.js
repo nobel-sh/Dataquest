@@ -2,15 +2,15 @@ import styled from "styled-components";
 
 export const SignupContainer = styled.div`
     display: flex;
-    background-color: black;
-    color:white;
+    background-color: aliceblue;
+    color:black;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 90vh;
+    height: auto;
     width: 50vw;
     border-radius: 20px;
-    margin:4    0px;
+    margin:40px;
     margin-left:25vw !important;
     font-size: 1.5rem;
     color:white;
@@ -18,13 +18,13 @@ export const SignupContainer = styled.div`
 `
 
 export const SignupInputContainer = styled.form`
+    color:black;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     label{
-        margin-top: 10px;
-        margin-bottom: 10px;
+        margin:5px;
     }
     input{
         width: 20rem;

@@ -1,26 +1,32 @@
 import styled from "styled-components";
 
 export const CreateFormContainer = styled.div`
-    min-height: 90vh;
+    height:100vh;
     width: 82vw;
-    background-color: black;
+    background-color: rgba(112,43,208,255);
     color:white;
     display: flex;
     flex-direction: column;
-    /* align-items: center; */
+    align-items: center;
+    justify-content: flex-start;
     padding-left: 5%;
     button{
         border-radius: 5px;
         text-decoration: none;
         margin-left: 100px;
     }
+    form{
+        background-color: rgba(149,109,204,255);
+        width: 70%;
+        margin-top: 30px;
+        padding: 20px;
+        border-radius: 10px;
+    }
 `
 export const CreateFromTitle = styled.div`
     padding-left: 80px;
-    padding-top: 70px;
     display: flex;
     gap:60px;
-
     h1{
         font-size: x-large;
         font-weight: 500;
@@ -33,12 +39,19 @@ export const CreateFromTitle = styled.div`
         min-width: 600px;
         height: 35px;
         border-radius: 5px;
+        border: 1px solid #3498db;
+        padding-left: 10px;
+        color: black;
+        &:focus{
+            outline: none;
+        }
+
     }
 
 `
 export const CreateFormAddQuestion = styled.div`
     color:white;
-    background-color: black;
+    background-color: white;
 `
 
 export const CreateFormChooseSurvey = styled.div`
@@ -47,29 +60,37 @@ export const CreateFormChooseSurvey = styled.div`
     align-items: center;
     gap: 20px;
     justify-content: center;
-    select{
-        min-height: 25px;
-        width:auto;
-        border-radius: 5px;
-        border: 1px solid #3498db;
-        background-color: transparent;
-        color:white;   
+    width:100%;
+
+    margin-top: 20px;
+    select{        
+        font-family: Outfit;
+        font-size: 18px;
+        color: black;
+        letter-spacing: 1.5px;
     }
 
     option{
-            /* background-color:transparent; */
-            color:black;
-        }
+        color:white;
+        background-color:  #020B19;
+    }
 
     button{
-
-        min-height: 25px;
-        width: max-content;
-        border-radius: 5px;
-        box-shadow: 0 6px 6px rgba(0, 0, 0, 0.6);
-        border: 1px solid #3498db;
+        font-family: Outfit; 
+        color: rgb(220,220,220);
         background-color: transparent;
-        color:white;
+        border-radius: 8px;
+        font-size: 40px;
+        border:none;
+        font-weight: 500;
+        height: 40px;
+        cursor: pointer;
+        text-align: center;
+        vertical-align: middle;
+        padding: 0;
+        &:hover{
+            background-color: rgba(1,1,1,1);
 
+        }
     }    
 `

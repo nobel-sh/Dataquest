@@ -6,28 +6,42 @@ export const CustomInputContainer = styled.div`
     align-items: center;
     justify-content: center;
     color:white;
-    background-color: grey;
-    margin-top: 1rem;
+    background-color: #020B19;
+    margin-top: 30px;
     border-radius: 5px;
-    padding: 1rem;
+    width: 76vw;
+    padding: 20px;
+    gap:20px;
     h3{
-        font-size: 1.5rem;
-        font-weight: 400;
-        margin-bottom: 0.5rem;
+       margin: 0;
         span{
             font-size: 1.5rem;
             font-weight: 700;
         }
     }
+    h1{
+        margin: 10px;
+        margin-top: 2px;
+    }
+
     input{
-        width: 100%;
-        height: 2rem;
-        border-radius: 5px;
+        font-family: Outfit;
+        width: 85%;
+        min-height: 1.5rem;
+        border-radius: 3px;
         border: none;
         outline: none;
         padding: 0.5rem;
         font-size: 1.2rem;
         font-weight: 500;
     }
-    
+    button{
+        height: 30px;
+        width: 100px;
+        background-color: white;
+        color: black;
+        border: none;
+        border-radius: 5px;
+        margin:5px;
+    }
 `

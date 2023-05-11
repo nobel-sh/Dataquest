@@ -1,7 +1,11 @@
 import styled from "styled-components";
 
 export const DashboardContainer = styled.div`
-    background-color: #2A313C;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     height: auto;
-    width:82vw;
+    min-height: 100vh;
+    width:85vw;
+    background-color: rgba(112,43,208,255);
 `

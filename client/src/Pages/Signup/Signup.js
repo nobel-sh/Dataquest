@@ -45,7 +45,7 @@ export const Signup = () => {
             }
         });
         if(res.status===200 ){
-            await navigate('/login/*');
+            await navigate('/login');
         }else{
             alert("User already exists");
         }
@@ -56,13 +56,13 @@ export const Signup = () => {
         
         <SignupInputContainer>
             <h1>Signup</h1>
-            <h2>Username</h2>
+            <label>Username</label>
             <input type="text" placeholder="Enter username" ref={username}/>
-            <h2>Email</h2>
+            <label>Email</label>
             <input type="email" placeholder="Enter email" ref={email}/>
-            <h2>Password</h2>
+            <label>Password</label>
             <input type="password" placeholder="Enter password" ref={password}/>
-            <h2>Confirm Password</h2>
+            <label>Confirm Password</label>
             <input type="password" placeholder="Re enter password" ref={confirmPassword}/>
             <button type="submit" onClick={handleSubmit}>Signup</button>
 

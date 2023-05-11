@@ -6,5 +6,6 @@ export const ViewSurveyContainer = styled.div`
     align-items: center;
     width: 100%;
     height:auto;
-    background-color: gainsboro;
+    min-height: 100vh;
+    background-color: rgba(112,43,208,255);
 `

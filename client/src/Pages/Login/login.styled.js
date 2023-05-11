@@ -5,8 +5,8 @@ export const LoginContainer = styled.div`
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background-color: black;
-    color:white;
+    background-color: aliceblue;
+    color:black;
     height: 80vh;
     width: 50vw;
     border-radius: 20px;

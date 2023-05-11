@@ -3,7 +3,7 @@ import styled from "styled-components";
 export const SurveyTileContainer = styled.div`
     display:flex;
     flex-direction: column;
-    background-color: #716F6F;
+    background-color: rgba(149,109,204,255);
     color: white;
     margin: 50px;
     padding: 15px;
@@ -34,11 +34,33 @@ export const SurveyTileInfoText = styled.h3`
     font-weight: 400;
 `
 export const SurveyTileOpenButton = styled.button`
-    color: white;
-    background-color: #0D1117;
+    color: black;
+    background-color: white;
     border-radius: 10px;
     height: 2rem;
-    min-width: 5rem;
+    min-width: 6rem;
+    font-size: larger;
     border: none;
     font-weight: 600;
+    &:hover{
+        background-color: rgba(255,255,255,0.8);
+    }
+`
+export const LinkContainer = styled.div`
+    padding: 2px;
+    display:flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    h3{
+        margin:0;
+    }
+    a{
+        text-decoration: underline;
+    }
+    &:hover{
+        cursor: pointer;
+        color: rgb(230,230,230);
+    }
 `

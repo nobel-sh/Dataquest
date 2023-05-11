@@ -35,7 +35,7 @@ export const CustomInputAdd = () => {
     
     return (
         <CustomInputAddContainer>
-        <span><h2>Question :</h2> <CustomInputQuestionContainer ref={Title}/></span>
+        <h2>Question :<span> <CustomInputQuestionContainer ref={Title}/></span></h2>
         <button type='submit' onClick={handleSubmit}>Save</button>
         </CustomInputAddContainer>
     )
