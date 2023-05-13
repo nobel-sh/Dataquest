@@ -9,7 +9,7 @@ export const CustomInputAddContainer = styled.div`
     margin:20px;
     margin-right: 2rem;
     padding: 2rem;
-    background-color: #020B19;
+    background-color: #808cba;
     border-radius: 5px;
 
     h2{

@@ -8,7 +8,7 @@ export const SidebarContainer = styled.div`
     justify-content: center;
     width:15vw;
     height: auto;
-    background-color: rgba(36,27,47,255);
+    background-color: #213458;
     color:white;
 `
 export const SidebarText = styled.h2`

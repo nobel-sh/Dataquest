@@ -9,7 +9,7 @@ export const YesNoAddContainer = styled.div`
     gap:20px;
     margin-right: 2rem;
     border-radius: 10px;
-    background-color: #020B19;
+    background-color: #808cba;
     button{
         font-family: Outfit;
         height: 40px;

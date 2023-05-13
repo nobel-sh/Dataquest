@@ -24,11 +24,11 @@ const Sidebar = () => {
         </Link>
         <SidebarRoutes>
 
-          <SidebarLink to={'/'} onClick>
+          <SidebarLink to={'/'} k>
           <SidebarText><FaHome/> Home</SidebarText>
           </SidebarLink>
 
-          <SidebarLink to={'/forms'} onClick>
+          <SidebarLink to={'/forms'} >
           <SidebarText><FaClipboardList/> Create</SidebarText>
           </SidebarLink>
 

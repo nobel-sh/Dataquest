@@ -3,7 +3,7 @@ import styled from "styled-components";
 export const CreateFormContainer = styled.div`
     height:100vh;
     width: 82vw;
-    background-color: rgba(112,43,208,255);
+    background-color: gainsboro;
     color:white;
     display: flex;
     flex-direction: column;
@@ -16,11 +16,14 @@ export const CreateFormContainer = styled.div`
         margin-left: 100px;
     }
     form{
-        background-color: rgba(149,109,204,255);
+        background-color: #808cba;
         width: 70%;
         margin-top: 30px;
         padding: 20px;
         border-radius: 10px;
+    }
+    h2{
+        color:black;
     }
 `
 export const CreateFromTitle = styled.div`
@@ -77,7 +80,7 @@ export const CreateFormChooseSurvey = styled.div`
 
     button{
         font-family: Outfit; 
-        color: rgb(220,220,220);
+        color: black;
         background-color: transparent;
         border-radius: 8px;
         font-size: 40px;

@@ -7,5 +7,14 @@ export const DashboardContainer = styled.div`
     height: auto;
     min-height: 100vh;
     width:85vw;
-    background-color: rgba(112,43,208,255);
+    background-color:gainsboro;
+    h1{
+        color:black;
+    }
+    h2{
+        color:black;
+    }
+    h3{
+        color:black;
+    }
 `

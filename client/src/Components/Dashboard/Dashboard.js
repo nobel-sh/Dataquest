@@ -42,7 +42,7 @@ const Dashboard = () => {
           <h1 style={{fontWeight:'normal'}}>Welcome <MdWavingHand/> </h1>
 
           <h2>Your Surveys</h2>
-          {surveys.length===0 && <h3>You have no surveys yet. Click on the <b style={{padding:'5px',backgroundColor:'black',borderRadius:'5px' }}>Create</b> button to create a new survey.</h3> }
+          {surveys.length===0 && <h3>You have no surveys yet. Click on the <b style={{padding:'5px',backgroundColor:'black', color:'white',borderRadius:'5px' }}>Create</b> button to create a new survey.</h3> }
           {surveys.map((survey) => <SurveyTile Title={survey.title} Date={handleDate(survey.createdAt)} survey_id={survey._id}/>) }
         </DashboardContainer>
     </>
