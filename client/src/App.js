@@ -11,6 +11,10 @@ import Login from "./Pages/Login/Login";
 import { Signup } from "./Pages/Signup/Signup";
 import { RequireAuth } from "react-auth-kit";
 import { useState } from "react";
+import {ToastContainer} from "react-toastify";
+// import { ToastContainer } from "react-toastify";
+ import 'react-toastify/dist/ReactToastify.css';
+
 
 function App() {
   const [showNav,setShowNav] = useState(false);
@@ -54,6 +58,7 @@ function App() {
                 <Route path='/signup' element={<Signup/>}/>
                 <Route path="/*" element={<Notfound/>}/>
               </Routes>
+              <ToastContainer />
           </div>
       </ Router>
       

@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { useSignIn } from 'react-auth-kit'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 
 
 export const Signup = () => {
@@ -18,15 +19,15 @@ export const Signup = () => {
     const handleSubmit = async (e) => {
 
         if(password.current.value !== confirmPassword.current.value){
-            alert("Passwords do not match");
+            toast.error("Passwords do not match");
             return;
         }
         if(password.current.value.length < 8){
-            alert("Password must be atleast 8 characters long");
+            toast.error("Password must be atleast 8 characters long");
             return;
         }
         if(username.current.value.length < 3){
-            alert("Username must be atleast 3 characters long");
+            toast.error("Username must be atleast 3 characters long");
             return;
         }
 
@@ -38,18 +39,21 @@ export const Signup = () => {
         }
 
         console.log(data);
-
-        const res = await axios.post('http://localhost:4949/api/v1/user/register',data,{
-            headers: {
-                'Content-Type': 'application/json'
+        try{
+            const res = await axios.post('http://localhost:4949/api/v1/user/register',data,{
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            if(res.status===200 ){
+                await navigate('/login');
             }
-        });
-        if(res.status===200 ){
-            await navigate('/login');
-        }else{
-            alert("User already exists");
+            console.log(res);
+        }catch(err){
+            toast.error("User already exists");
+            return false;
         }
-        console.log(res.data);
+       
     }
   return (
     <SignupContainer>

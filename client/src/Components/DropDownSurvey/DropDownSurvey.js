@@ -3,6 +3,9 @@ import { DropDownContainer } from './dropdownsurvey.styled'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
+import {toast,ToastContainer} from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css';
+
 
 export const DropDownSurvey = ({questionNo,question,options,_id}) => {
   const [selected,setSelected] = useState(null);
@@ -11,7 +14,7 @@ export const DropDownSurvey = ({questionNo,question,options,_id}) => {
 
   const handleClick = async(e) => {
       if(selected===null){
-        alert('Please select an option')
+        toast.error('Please select an option')
         return;
       }
       const data = {
@@ -26,12 +29,18 @@ export const DropDownSurvey = ({questionNo,question,options,_id}) => {
           id:user_id,
         }
       }
-      const res = await axios.post(`http://localhost:4949/api/v1/survey/${survey_id}/responses`,data,{
-        headers: {
-          'Content-Type': 'application/json' 
-        }
-      });
-      console.log(res.data)
+      try{
+        const res = await axios.post(`http://localhost:4949/api/v1/survey/${survey_id}/responses`,data,{
+          headers: {
+            'Content-Type': 'application/json' 
+          }
+        });
+        console.log(res.data)
+        toast.success('Response saved')
+      }catch(err){
+        console.log(err)
+        toast.error('Something went wrong')
+      }
   }
 
   return (
@@ -44,6 +53,7 @@ export const DropDownSurvey = ({questionNo,question,options,_id}) => {
         })}
       </select>
       <button onClick={handleClick}>Save</button>
+      
     </DropDownContainer>
     
   )

@@ -24,9 +24,9 @@ export const SurveyTileDottedlines = styled.div`
     width:inherit;
 `
 export const SurveyTileInfo = styled.div`
-    display: flex;
-    justify-content: space-evenly;
-    gap:20vw;
+    display: flex !important;
+    justify-content: space-around !important;
+    gap:10vw;
     align-items: center;
     padding:0;
 `

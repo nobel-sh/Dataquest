@@ -3,6 +3,7 @@ import { LoginContainer, LoginInputContainer } from "./login.styled";
 import { useSignIn} from "react-auth-kit";
 import axios from 'axios';
 import { Link,useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export const Login = () => {
     const email = useRef(null);
@@ -16,27 +17,32 @@ export const Login = () => {
             email:email.current.value,
             password:password.current.value,
         }
-        const res = await axios.post('http://localhost:4949/api/v1/user/login',data,{
+        try{
+            const res = await axios.post('http://localhost:4949/api/v1/user/login',data,{
             headers: {
                 'Content-Type': 'application/json'
+            }})
+
+            console.log(res)
+            if(res.status===200){
+                navigate('/dashboard/',   { replace: true });
+                navigate(0);
             }
-        });
-       SignIn({
-              token:res.data.accessToken,
-              expiresIn:res.data.expiresIn,
-              authState:res.data.user,
-                tokenType:'Bearer',
-       });
-       console.log(res.data);
-       if(res.status===200){
-           navigate('/dashboard/',   { replace: true });
-           navigate(0);
-        }else{
-            alert("Invalid Credentials");
-
+            SignIn({
+                token:res.data.accessToken,
+                expiresIn:res.data.expiresIn,
+                authState:res.data.user,
+                  tokenType:'Bearer',
+                }
+                );
         }
-
-    }
+        catch(err) {
+            console.log(err)
+            toast.error("Invalid Credentials");
+            return false;
+        }
+       
+}
 return(
         <LoginContainer> 
                 <h1 > Login to your account </h1>

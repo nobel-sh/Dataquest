@@ -3,6 +3,7 @@ import { DashboardContainer } from '../../Styles/dashboard.styled'
 import SurveyTile from '../Survey/Tile/SurveyTile'
 import axios from 'axios'
 import {MdWavingHand} from 'react-icons/md'
+import { ToastContainer, toast } from 'react-toastify'; 
 
 const Dashboard = () => {
   

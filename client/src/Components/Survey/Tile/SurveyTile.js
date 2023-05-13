@@ -1,15 +1,50 @@
 import React from 'react'
 import { SurveyTileContainer, SurveyTileDottedlines, SurveyTileInfo, SurveyTileInfoText, SurveyTileOpenButton, SurveyTileTitle,LinkContainer} from '../../../Styles/surveytile.styled'
-import Popup from 'reactjs-popup'
+import {toast,ToastContainer} from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css';
+import axios from 'axios'
+import {useNavigate} from 'react-router-dom'
 
 const SurveyTile = ({Title,Date,survey_id}) => {
+  const navigate = useNavigate()
   const handleClick = () => {
     window.localStorage.setItem('surveyId',survey_id)
     window.location.href = `/results/${survey_id}`
   }
   const handleClipboard = () => {
-    navigator.clipboard.writeText(`http://localhost:4000/forms/${survey_id}`)
+    navigator.clipboard.writeText(`http://localhost:3000/forms/${survey_id}`)
+    toast.success('Copied To Clipboard!', {
+      position: "bottom-right",
+      autoClose: 1000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "light",
+      });
   }
+
+  const handleDelete = async() => {
+   try{
+    console.log(survey_id)
+    const res = await axios.delete(`http://localhost:4949/api/v1/survey/${survey_id}`, {
+      params: {survey_id}
+      },
+      { headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+    console.log(res.data)
+    toast.success('Survey Deleted')
+    navigate(0)
+
+   }catch(err){
+      console.log(err)
+      toast.error('Something went wrong')
+   
+  }
+}
   return (
     <>
         <SurveyTileContainer>
@@ -18,14 +53,14 @@ const SurveyTile = ({Title,Date,survey_id}) => {
             <SurveyTileInfo>
                 <SurveyTileInfoText>Created At : {Date} </SurveyTileInfoText>
                 <SurveyTileOpenButton onClick={handleClick}>Open</SurveyTileOpenButton>
+                <SurveyTileOpenButton style={{backgroundColor:'#aa0000',color:'white'}} onClick={handleDelete}>Delete</SurveyTileOpenButton>
             </SurveyTileInfo>
             <LinkContainer>
             <h3>Link: </h3>
-            <Popup trigger={<a onClick={handleClipboard}>{`http://localhost:4000/forms/${survey_id}`}</a>} position="right center">
-              <h3 style={{color:'#dddddd'}}>Copied to clipboard!</h3>
-            </Popup>
+            <a onClick={handleClipboard}>{`http://localhost:3000/forms/${survey_id}`}</a>
             </LinkContainer>
         </SurveyTileContainer>
+        {/* <ToastContainer /> */}
     </>
   )
 }

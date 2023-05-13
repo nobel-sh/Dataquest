@@ -6,6 +6,7 @@ import { DropDownSurveyAdd } from '../../Components/DropDownSurvey/DropDownSurve
 import { CustomInputAdd } from '../../Components/CustomInputSurvey/CustomInputAdd'
 import axios from 'axios'
 import {BsPlusSquareFill} from 'react-icons/bs'
+import {toast} from 'react-toastify'
 
 const CreateForm = () => {
 
@@ -50,14 +51,14 @@ const CreateForm = () => {
     }});
   console.log(res.data)
   if(res.status === 200){
-    alert('Title Added')
+    toast.info('Survey Added')
     window.localStorage.setItem('surveyId',res.data._id)
   }
   else if(res.status === 400){
-    alert('Title already exists')
+    toast.error('Title already exists')
     return
   }else{
-    alert('Something went wrong')
+    toast.error('Something went wrong')
   }
 }
 

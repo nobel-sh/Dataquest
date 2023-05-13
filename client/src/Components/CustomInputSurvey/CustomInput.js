@@ -3,6 +3,7 @@ import { CustomInputContainer } from './custominput.styled'
 import { useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import axios from 'axios'
+import {toast} from 'react-toastify'
 
 export const CustomInput = ({questionNo,question,_id}) => {
 
@@ -23,12 +24,18 @@ export const CustomInput = ({questionNo,question,_id}) => {
         id:user_id,
       }
     }
-    const res = await axios.post(`http://localhost:4949/api/v1/survey/${survey_id}/responses`,data,{
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    console.log(res.data)
+    try{
+      const res = await axios.post(`http://localhost:4949/api/v1/survey/${survey_id}/responses`,data,{
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log(res.data)
+      toast.success('Response saved')
+    }catch(err){
+      console.log(err)
+      toast.error('Something went wrong')
+    }
   }
   return (
     <CustomInputContainer>

@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler')
 const Survey = require('../models/survey')
 const Question = require('../models/question')
+const Response = require('../models/response')
 
 const getAllSurveys = asyncHandler( async (req,res) => {
     const surveys = await Survey.find({owner_id:req.query.owner_id});
@@ -67,17 +68,32 @@ const updateSurvey = asyncHandler( async (req,res) => {
 } )
 
 const deleteSurvey = asyncHandler( async (req,res) => {
-    const {id:surveyID} = req.params;
-    
-    const ifSurveyExists = await Survey.exists({_id:surveyID});
+    const {survey_id:surveyID} = req.query;
+    const ifSurveyExists = await Survey.findOne({_id:surveyID});
+
     if(!ifSurveyExists){
         res.status(404);
-        throw new Error("Survey Not Found");
+        throw new Error("Surveyzzz Not Found");
     }
     const survey = await Survey.findByIdAndDelete({
         _id:surveyID
     })
-    res.status(200).json({survey})
+    const ifQuestionsExists = await Question.findOne({survey_id:surveyID});
+    let questions = {};
+    if(ifQuestionsExists){     
+        questions = await Question.deleteMany({
+            survey_id:surveyID
+        })
+    }
+
+    const ifResponsesExists = await Response.findOne({survey_id:surveyID});
+    let responses = {};
+    if(ifResponsesExists){        
+        responses = await Response.deleteMany({
+            survey_id:surveyID
+        })
+    }
+    res.status(200).json({survey,questions,responses})
     }
 )
 

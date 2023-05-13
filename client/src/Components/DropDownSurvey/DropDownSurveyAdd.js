@@ -1,6 +1,8 @@
 import React, { useRef, useState } from 'react'
 import { DropDownAddContainer, DropDownAnswersContainer, DropDownQuestionContainer } from './dropdownsurveryadd.styled'
 import axios from 'axios';
+import {toast,ToastContainer} from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css';
 
 
 export const DropDownSurveyAdd = () => {
@@ -30,7 +32,7 @@ export const DropDownSurveyAdd = () => {
     const handleSubmit = async (e) => {
         
         if(window.localStorage.getItem('surveyId')==null){
-            alert('Please add title first')
+            toast.error('Please add title first')
             return;
           }
         const _id = window.localStorage.getItem('surveyId')
@@ -42,15 +44,23 @@ export const DropDownSurveyAdd = () => {
           question:Title.current.value,
           options:options
       }
-      const res  = await axios.post('http://localhost:4949/api/v1/survey/64557ac5591d468fef3908ee/questions',data,{
-          headers: {
-            'Content-Type': 'application/json'
-          }})
-      console.log(res.data)
-    
-          Title.current.value = ''
-            setOptions([])
-            setOptionsTile([<DropDownOption option_no='1'/>])
+
+      try{
+        const res  = await axios.post('http://localhost:4949/api/v1/survey/64557ac5591d468fef3908ee/questions',data,{
+            headers: {
+              'Content-Type': 'application/json'
+            }})
+        console.log(res.data)
+      
+            Title.current.value = ''
+              setOptions([])
+              setOptionsTile([<DropDownOption option_no='1'/>])
+              toast.success('Question added successfully')
+      }catch(err){
+        console.log(err)
+        toast.error('Something went wrong')
+      }
+     
     };
 
     return (

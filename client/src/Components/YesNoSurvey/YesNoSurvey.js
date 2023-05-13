@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { YesNoContainer,YesNoOptionsContainer } from './yesnosurvey.styled'
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import {toast} from 'react-toastify'
 
 export const YesNoSurvey = ({questionNo,question,options,_id}) => {
   const [selected,setSelected] = useState(null);
@@ -10,7 +11,7 @@ export const YesNoSurvey = ({questionNo,question,options,_id}) => {
 
   const handleClick = async (e) => {
     if(selected===null){
-      alert('Please select an option')
+      toast.error('Please select an option')
       return;
     }
     const data = {
@@ -25,12 +26,18 @@ export const YesNoSurvey = ({questionNo,question,options,_id}) => {
         id:user_id,
       }
     }
-    const res = await axios.post(`http://localhost:4949/api/v1/survey/${survey_id}/responses`,data,{
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
-    console.log(res.data)
+    try{
+      const res = await axios.post(`http://localhost:4949/api/v1/survey/${survey_id}/responses`,data,{
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      console.log(res.data)
+      toast.success('Response saved')
+    }catch(err){
+      console.log(err)
+      toast.error('Something went wrong')
+    }
   }
   return (
     <YesNoContainer>
