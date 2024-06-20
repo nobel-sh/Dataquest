@@ -40,7 +40,7 @@ export const Signup = () => {
 
         console.log(data);
         try{
-            const res = await axios.post('http://localhost:4949/api/v1/user/register',data,{
+            const res = await axios.post(`${process.env.API_ADDRESS}/user/register`,data,{
                 headers: {
                     'Content-Type': 'application/json'
                 }

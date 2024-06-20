@@ -28,7 +28,7 @@ const SurveyTile = ({Title,Date,survey_id}) => {
   const handleDelete = async() => {
    try{
     console.log(survey_id)
-    const res = await axios.delete(`http://localhost:4949/api/v1/survey/${survey_id}`, {
+    const res = await axios.delete(`${process.env.API_ADDRESS}/survey/${survey_id}`, {
       params: {survey_id}
       },
       { headers: {

@@ -17,7 +17,7 @@ const Results = () => {
     useEffect(() => {
     
         const fetchResults = async () => {
-            const res = await axios.get(`http://localhost:4949/api/v1/survey/${survey_id}/responses`,
+            const res = await axios.get(`${process.env.API_ADDRESS}/survey/${survey_id}/responses`,
             {
                 params:{
                     survey_id

@@ -28,7 +28,7 @@ export const CustomInputAdd = () => {
                 type:'custom',
                 question:Title.current.value,
             }
-            const res  = await axios.post('http://localhost:4949/api/v1/survey/64557ac5591d468fef3908ee/questions',data,{
+            const res  = await axios.post(`${process.env.API_ADDRESS}/survey/64557ac5591d468fef3908ee/questions`,data,{
                 headers: {
                   'Content-Type': 'application/json'
                 }})

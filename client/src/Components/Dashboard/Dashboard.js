@@ -16,7 +16,7 @@ const Dashboard = () => {
       user_state = window.localStorage.getItem('_auth_state')?window.localStorage.getItem('_auth_state'):'6426cb196f3bb0a8d860bb23'
       owner_id = JSON.parse(user_state).user_id?JSON.parse(user_state).user_id:'6426cb196f3bb0a8d860bb23';
 
-      const res = await axios.get(`http://localhost:4949/api/v1/survey`, {
+      const res = await axios.get(`${process.env.API_ADDRESS}/survey`, {
           params: {owner_id:owner_id}
           },
           { headers: {

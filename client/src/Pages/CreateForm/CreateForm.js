@@ -45,7 +45,7 @@ const CreateForm = () => {
     title:e.target.value
   }
 
-  const res  = await axios.post('http://localhost:4949/api/v1/survey',data,{
+  const res  = await axios.post(`${process.env.API_ADDRESS}/survey`,data,{
     headers: {
       'Content-Type': 'application/json'
     }});

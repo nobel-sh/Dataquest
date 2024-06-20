@@ -18,7 +18,7 @@ export const Login = () => {
             password:password.current.value,
         }
         try{
-            const res = await axios.post('http://localhost:4949/api/v1/user/login',data,{
+            const res = await axios.post(`${process.env.API_ADDRESS}/user/login`,data,{
             headers: {
                 'Content-Type': 'application/json'
             }})

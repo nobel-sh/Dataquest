@@ -16,7 +16,7 @@ const ViewSurvey = () => {
     const [questions, setQuestions] = useState();
     useEffect(() => {
     const fetchSurvey = async () => {
-        const res = await axios.get(`http://localhost:4949/api/v1/survey/${params.id}`, {
+        const res = await axios.get(`${process.env.API_ADDRESS}/survey/${params.id}`, {
             params: {survey_id}
             },
             { headers: {

@@ -39,7 +39,7 @@ export const YesNoSurveyAdd = () => {
           options:[Option1.current.value,Option2.current.value]
       }
       try{
-        await axios.post('http://localhost:4949/api/v1/survey/64557ac5591d468fef3908ee/questions',data,{
+        await axios.post(`${process.env.API_ADDRESS}/survey/64557ac5591d468fef3908ee/questions`,data,{
           headers: {
             'Content-Type': 'application/json'
           }})

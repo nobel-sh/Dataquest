@@ -30,7 +30,7 @@ export const DropDownSurvey = ({questionNo,question,options,_id}) => {
         }
       }
       try{
-        const res = await axios.post(`http://localhost:4949/api/v1/survey/${survey_id}/responses`,data,{
+        const res = await axios.post(`${process.env.API_ADDRESS}/survey/${survey_id}/responses`,data,{
           headers: {
             'Content-Type': 'application/json' 
           }
