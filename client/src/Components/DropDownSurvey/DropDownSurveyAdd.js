@@ -1,90 +1,85 @@
-import React, { useRef, useState } from "react";
+import React, { useState, forwardRef, useImperativeHandle } from "react";
 import {
   DropDownAddContainer,
   DropDownAnswersContainer,
   DropDownQuestionContainer,
+  DropDownButton,
 } from "./dropdownsurveryadd.styled";
-import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
 
-export const DropDownSurveyAdd = () => {
-  const Title = useRef(null);
+const DropDownOption = React.memo(({ value, onChange, onRemove, index }) => {
+  return (
+    <span>
+      Option {index + 1}:
+      <DropDownAnswersContainer
+        value={value}
+        onChange={(e) => onChange(index, e.target.value)}
+      />
+      {index > 0 && (
+        <DropDownButton onClick={() => onRemove(index)}>Remove</DropDownButton>
+      )}
+    </span>
+  );
+});
 
-  const DropDownOption = ({ option_no }) => {
-    return (
-      <span>
-        Option : {option_no} <DropDownAnswersContainer onBlur={handleSave} />
-      </span>
+export const DropDownSurveyAdd = forwardRef((props, ref) => {
+  const [title, setTitle] = useState("");
+  const [options, setOptions] = useState([{ id: Date.now(), value: "" }]);
+
+  useImperativeHandle(ref, () => ({
+    getData: () => {
+      if (title.trim() === "") {
+        throw new Error("Please enter a question");
+      }
+      if (options.some((option) => option.value.trim() === "")) {
+        throw new Error("Please fill all options");
+      }
+      return {
+        type: "dropdown",
+        question: title,
+        options: options
+          .map((opt) => opt.value)
+          .filter((opt) => opt.trim() !== ""),
+      };
+    },
+  }));
+
+  const handleAddOption = () => {
+    setOptions([...options, { id: Date.now(), value: "" }]);
+  };
+
+  const handleOptionChange = (index, value) => {
+    const newOptions = options.map((opt, i) =>
+      i === index ? { ...opt, value } : opt,
     );
-  };
-  const [options, setOptions] = useState([]);
-  const [optionsTile, setOptionsTile] = useState([
-    <DropDownOption option_no="1" />,
-  ]);
-
-  const handleSave = (e) => {
-    setOptions([...options, e.target.value]);
+    setOptions(newOptions);
   };
 
-  const handleClick = (e) => {
-    if (options.length <= 0 || options[options.length - 1] === "") {
-      return;
-    }
-    setOptionsTile([
-      ...optionsTile,
-      <DropDownOption option_no={optionsTile.length + 1} />,
-    ]);
-    console.log(`New Option : ${options[options.length - 1]}`);
-  };
-
-  const handleSubmit = async (e) => {
-    if (window.localStorage.getItem("surveyId") == null) {
-      toast.error("Please add title first");
-      return;
-    }
-    const _id = window.localStorage.getItem("surveyId");
-    const data = {
-      survey: {
-        id: _id,
-      },
-      type: "dropdown",
-      question: Title.current.value,
-      options: options,
-    };
-
-    try {
-      const res = await axios.post(
-        `${process.env.REACT_APP_API_ADDRESS}/survey/64557ac5591d468fef3908ee/questions`,
-        data,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-      console.log(res.data);
-
-      Title.current.value = "";
-      setOptions([]);
-      setOptionsTile([<DropDownOption option_no="1" />]);
-      toast.success("Question added successfully");
-    } catch (err) {
-      console.log(err);
-      toast.error("Something went wrong");
-    }
+  const handleRemoveOption = (index) => {
+    setOptions(options.filter((_, i) => i !== index));
   };
 
   return (
     <DropDownAddContainer>
       <span>
-        Title: <DropDownQuestionContainer type="text" ref={Title} />
+        Title:
+        <DropDownQuestionContainer
+          type="text"
+          name="question"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
       </span>
-      {optionsTile.map((option) => option)}
-      <button onClick={handleClick}>Add </button>
-      <button type="submit" onClick={handleSubmit}>
-        Save
-      </button>
+      {options.map((option, index) => (
+        <DropDownOption
+          key={option.id}
+          value={option.value}
+          onChange={handleOptionChange}
+          onRemove={handleRemoveOption}
+          index={index}
+        />
+      ))}
+
+      <DropDownButton onClick={handleAddOption}>Add Option</DropDownButton>
     </DropDownAddContainer>
   );
-};
+});

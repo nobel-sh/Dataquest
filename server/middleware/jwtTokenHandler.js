@@ -1,28 +1,36 @@
-const asyncHandler = require('express-async-handler');
-const jwt = require('jsonwebtoken');
+const asyncHandler = require("express-async-handler");
+const jwt = require("jsonwebtoken");
 
-const validateToken = asyncHandler( async (req,res,next) =>{
-        let token;
-        let authHeader = req.headers.Authorization || req.headers.authorization;
-        if(authHeader && authHeader.startsWith("Bearer")){
-            token = authHeader.split(' ')[1];
-            jwt.verify(token,process.env.JWT_TOKEN, (err,decoded) =>{
-                if(err){
-                    res.status(400);
-                    throw new Error("User is not authorized");
-                }
+const validateToken = asyncHandler(async (req, res, next) => {
+  const authHeader = req.headers.authorization || req.headers.Authorization;
 
-                req.user = decoded.user;
-                next();
-            });
-        }
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    res.status(401);
+    throw new Error("Token not found.");
+  }
 
-        if(!token){
-            res.status(401);
-            throw new Error("Token is not corrent or is expired")
-        }
+  const token = authHeader.split(" ")[1];
 
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_TOKEN);
+    req.user = decoded.user;
+    next();
+  } catch (err) {
+    console.error("JWT Error:", err);
+    if (err instanceof jwt.JsonWebTokenError) {
+      res.status(400);
+      throw new Error("Invalid token.");
+    } else if (err instanceof jwt.TokenExpiredError) {
+      res.status(401);
+      throw new Error("Token has expired.");
+    } else if (err instanceof jwt.NotBeforeError) {
+      res.status(403);
+      throw new Error("Token not active.");
+    } else {
+      res.status(500);
+      throw new Error("Internal server error");
     }
-)
+  }
+});
 
 module.exports = validateToken;

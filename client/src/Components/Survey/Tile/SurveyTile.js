@@ -34,16 +34,20 @@ const SurveyTile = ({ Title, Date, survey_id }) => {
   };
 
   const handleDelete = async () => {
+    const auth_token = window.localStorage.getItem("_auth");
+    if (!auth_token) {
+      toast.error("Please log in.");
+      return;
+    }
     try {
       console.log(survey_id);
       const res = await axios.delete(
         `${process.env.REACT_APP_API_ADDRESS}/survey/${survey_id}`,
         {
           params: { survey_id },
-        },
-        {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${auth_token}`,
           },
         },
       );

@@ -28,6 +28,9 @@ export const YesNoSurvey = ({ questionNo, question, options, _id }) => {
         id: user_id,
       },
     };
+
+    const auth_token = window.localStorage.getItem("_auth");
+
     try {
       const res = await axios.post(
         `${process.env.REACT_APP_API_ADDRESS}/survey/${survey_id}/responses`,
@@ -35,6 +38,7 @@ export const YesNoSurvey = ({ questionNo, question, options, _id }) => {
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${auth_token}`,
           },
         },
       );

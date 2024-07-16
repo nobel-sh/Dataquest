@@ -13,6 +13,20 @@ export const CustomInput = ({ questionNo, question, _id }) => {
   ).user_id;
 
   const handleClick = async (e) => {
+    const user_state = window.localStorage.getItem("_auth_state");
+    const auth_token = window.localStorage.getItem("_auth");
+
+    if (!user_state) {
+      toast.error("Please log in.");
+      return;
+    }
+
+    const owner_id = JSON.parse(user_state).user_id;
+
+    if (!owner_id || !auth_token) {
+      toast.error("Please log in.");
+      return;
+    }
     const data = {
       survey: {
         id: survey_id,
@@ -32,6 +46,7 @@ export const CustomInput = ({ questionNo, question, _id }) => {
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${auth_token}`,
           },
         },
       );

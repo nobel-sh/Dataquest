@@ -7,34 +7,43 @@ import { ToastContainer, toast } from "react-toastify";
 
 const Dashboard = () => {
   const [surveys, setSurveys] = useState([]);
-  let user_state = null;
 
-  let owner_id = null;
-  useEffect((ownerID) => {
+  useEffect(() => {
     const fetchSurveys = async () => {
-      user_state = window.localStorage.getItem("_auth_state")
-        ? window.localStorage.getItem("_auth_state")
-        : "6426cb196f3bb0a8d860bb23";
-      owner_id = JSON.parse(user_state).user_id
-        ? JSON.parse(user_state).user_id
-        : "6426cb196f3bb0a8d860bb23";
-      console.log(process.env);
-      const res = await axios.get(
-        `${process.env.REACT_APP_API_ADDRESS}/survey`,
-        {
-          params: { owner_id: owner_id },
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
+      const user_state = window.localStorage.getItem("_auth_state");
+      const auth_token = window.localStorage.getItem("_auth");
+
+      if (!user_state) {
+        toast.error("Please log in.");
+        return;
+      }
+
+      const owner_id = JSON.parse(user_state).user_id;
+
+      if (!owner_id || !auth_token) {
+        toast.error("Please log in.");
+        return;
+      }
+
+      try {
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_ADDRESS}/survey`,
+          {
+            params: { owner_id: owner_id },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${auth_token}`,
+            },
           },
-        },
-      );
-      setSurveys(res.data.surveys);
+        );
+        setSurveys(res.data.surveys);
+      } catch (error) {
+        console.error("Error fetching surveys:", error);
+        toast.error("Failed to fetch surveys.");
+      }
     };
 
     fetchSurveys();
-    // reload_window()
   }, []);
 
   const handleDate = (survey_date) => {
@@ -72,14 +81,17 @@ const Dashboard = () => {
             button to create a new survey.
           </h3>
         )}
+
         {surveys.map((survey) => (
           <SurveyTile
+            key={survey._id}
             Title={survey.title}
             Date={handleDate(survey.createdAt)}
             survey_id={survey._id}
           />
         ))}
       </DashboardContainer>
+      <ToastContainer />
     </>
   );
 };

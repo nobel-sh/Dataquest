@@ -1,44 +1,42 @@
-import styled from "styled-components"
-
+import styled from "styled-components";
 
 export const DropDownAddContainer = styled.div`
-    display: flex;
-    flex-direction: column;
-    margin: 1rem;
-    padding: 1rem;
-    align-items: center;
-    gap:20px;
-    margin-right: 2rem;
-    border-radius: 10px;
-    background-color: #808cba;
-    button{
-        font-family: Outfit;
-        height: 40px;
-        width:60px;
-        border:none;
-        font-size: larger;
-        font-weight: 500;
-        &:hover{
-            background-color: rgb(230, 230,230, 0.5);
-        }
-    }
-    input{
-        border-radius: 5px;
-        margin-left: 10px;
-        border: 0;
-        height: 25px;
-        width: 10rem;
-        border-radius: 5px;
-        height: 30px;
-   }
-`  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 1em;
+  padding: 2em;
+  margin-right: 2rem;
+  border-radius: 4px;
+  background-color: rgb(200, 200, 200);
+  input {
+    margin: 1em;
+    margin-left: 12px;
+    border: 0;
+    height: 25px;
+    width: 10rem;
+    border-radius: 5px;
+    height: 30px;
+  }
+`;
+export const DropDownButton = styled.button`
+  padding: 8px;
+  height: 3em;
+  border: none;
+  background-color: green;
+  color: white;
+  border-radius: 4px;
+`;
+
 export const DropDownQuestionContainer = styled.input`
-    min-width: 50rem;
-    padding: 5px;
-`
+  min-width: 50rem;
+  padding: 1em;
+  margin: 1em;
+`;
 
 export const DropDownAnswersContainer = styled.input`
-    height: 20px !important;
-    width: 20rem;
-   padding: 3px;
-`
+  height: 20px;
+  width: 20rem;
+  padding: 3px;
+`;

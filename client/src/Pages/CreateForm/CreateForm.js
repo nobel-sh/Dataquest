@@ -37,8 +37,9 @@ const CreateForm = () => {
       return;
     }
 
-    const surveyId = window.localStorage.getItem("_auth_state");
-    const user_id = JSON.parse(surveyId).user_id;
+    const user_state = window.localStorage.getItem("_auth_state");
+    const user_id = JSON.parse(user_state).user_id;
+    const auth_token = window.localStorage.getItem("_auth");
 
     const surveyData = {
       owner: {
@@ -55,6 +56,7 @@ const CreateForm = () => {
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${auth_token}`,
           },
         },
       );
@@ -73,6 +75,7 @@ const CreateForm = () => {
               {
                 headers: {
                   "Content-Type": "application/json",
+                  Authorization: `Bearer ${auth_token}`,
                 },
               },
             );

@@ -18,6 +18,7 @@ export const DropDownSurvey = ({ questionNo, question, options, _id }) => {
       toast.error("Please select an option");
       return;
     }
+    const auth_token = window.localStorage.getItem("_auth");
     const data = {
       survey: {
         id: survey_id,
@@ -37,6 +38,7 @@ export const DropDownSurvey = ({ questionNo, question, options, _id }) => {
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${auth_token}`,
           },
         },
       );

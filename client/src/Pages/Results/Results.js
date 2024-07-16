@@ -8,6 +8,7 @@ import axios from "axios";
 import { useParams } from "react-router-dom";
 import Chart from "react-apexcharts";
 import { giveNoOfResultsForYesNo } from "./ResultStats";
+import { ToastContainer, toast } from "react-toastify";
 
 const Results = () => {
   const survey_id = useParams().id;
@@ -17,22 +18,41 @@ const Results = () => {
 
   useEffect(() => {
     const fetchResults = async () => {
-      const res = await axios.get(
-        `${process.env.REACT_APP_API_ADDRESS}/survey/${survey_id}/responses`,
-        {
-          params: {
-            survey_id,
+      const user_state = window.localStorage.getItem("_auth_state");
+      const auth_token = window.localStorage.getItem("_auth");
+
+      if (!user_state) {
+        toast.error("Please log in.");
+        return;
+      }
+
+      const owner_id = JSON.parse(user_state).user_id;
+
+      if (!owner_id || !auth_token) {
+        toast.error("Please log in.");
+        return;
+      }
+
+      try {
+        const res = await axios.get(
+          `${process.env.REACT_APP_API_ADDRESS}/survey/${survey_id}/responses`,
+          {
+            params: {
+              survey_id,
+            },
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${auth_token}`,
+            },
           },
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-      setTitle(res.data.survey.title);
-      setQuestions(res.data.questions);
-      setResponses(res.data.responses);
+        );
+        setTitle(res.data.survey.title);
+        setQuestions(res.data.questions);
+        setResponses(res.data.responses);
+      } catch (error) {
+        console.error("Error fetching survey:", error);
+        toast.error("Failed to fetch survey.");
+      }
     };
 
     fetchResults();
@@ -112,58 +132,61 @@ const Results = () => {
   };
 
   return (
-    <ResultsContainer>
-      <h1>{title}</h1>
-      <div>
-        <h2>
-          Responses received :{" "}
-          {responses.length ? responses.length / questions.length : 0}
-        </h2>
-      </div>
-      {questions.map((question) => {
-        const bar_options = generateBar(question);
-        const donut_options = generateDonut(question);
+    <>
+      <ResultsContainer>
+        <h1>{title}</h1>
+        <div>
+          <h2>
+            Responses received :{" "}
+            {responses.length ? responses.length / questions.length : 0}
+          </h2>
+        </div>
+        {questions.map((question) => {
+          const bar_options = generateBar(question);
+          const donut_options = generateDonut(question);
 
-        return (
-          <ResponseContainer>
-            <h1>{question.question}</h1>
-            <h2
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                color: "#dbdbdb",
-              }}
-            >
-              Responses
-            </h2>
-            {question.type !== "custom" ? (
-              <ChartsContainer>
-                <Chart
-                  options={bar_options}
-                  series={bar_options.series}
-                  type={bar_options.chart.type}
-                  width={300}
-                  height={200}
-                />
-                <Chart
-                  options={donut_options.options}
-                  series={donut_options.series}
-                  type="donut"
-                  width={300}
-                  height={200}
-                />
-              </ChartsContainer>
-            ) : (
-              <>
-                {generateCustom(question).map((answer) => (
-                  <h2>{answer}</h2>
-                ))}
-              </>
-            )}
-          </ResponseContainer>
-        );
-      })}
-    </ResultsContainer>
+          return (
+            <ResponseContainer key={question._id}>
+              <h1>{question.question}</h1>
+              <h2
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  color: "#dbdbdb",
+                }}
+              >
+                Responses
+              </h2>
+              {question.type !== "custom" ? (
+                <ChartsContainer>
+                  <Chart
+                    options={bar_options}
+                    series={bar_options.series}
+                    type={bar_options.chart.type}
+                    width={300}
+                    height={200}
+                  />
+                  <Chart
+                    options={donut_options.options}
+                    series={donut_options.series}
+                    type="donut"
+                    width={300}
+                    height={200}
+                  />
+                </ChartsContainer>
+              ) : (
+                <>
+                  {generateCustom(question).map((answer) => (
+                    <h2>{answer}</h2>
+                  ))}
+                </>
+              )}
+            </ResponseContainer>
+          );
+        })}
+      </ResultsContainer>
+      <ToastContainer />
+    </>
   );
 };
 
