@@ -12,6 +12,7 @@ const createSurvey = asyncHandler(async (req, res) => {
   const {
     owner: { id: owner_id },
     title,
+    description,
     questions,
   } = req.body;
 
@@ -29,6 +30,7 @@ const createSurvey = asyncHandler(async (req, res) => {
   const surveyRes = await Survey.create({
     owner_id,
     title,
+    description,
   });
 
   res.status(200).json(surveyRes);

@@ -13,6 +13,7 @@ import { ToastContainer, toast } from "react-toastify";
 const Results = () => {
   const survey_id = useParams().id;
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState([]);
   const [responses, setResponses] = useState([]);
 
@@ -47,6 +48,9 @@ const Results = () => {
           },
         );
         setTitle(res.data.survey.title);
+        if (res.data.survey.description) {
+          setDescription(res.data.survey.description);
+        }
         setQuestions(res.data.questions);
         setResponses(res.data.responses);
       } catch (error) {
@@ -135,6 +139,7 @@ const Results = () => {
     <>
       <ResultsContainer>
         <h1>{title}</h1>
+        <h3>{description}</h3>
         <div>
           <h2>
             Responses received :{" "}

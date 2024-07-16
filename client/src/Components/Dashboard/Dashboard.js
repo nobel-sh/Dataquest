@@ -86,6 +86,7 @@ const Dashboard = () => {
           <SurveyTile
             key={survey._id}
             Title={survey.title}
+            Description={survey.description}
             Date={handleDate(survey.createdAt)}
             survey_id={survey._id}
           />

@@ -10,6 +10,10 @@ const surveySchema = new mongoose.Schema({
     type: String,
     required: [true, "Please provide the survey title"],
   },
+  description: {
+    type: String,
+    required: [true, "Please provide the survey description"],
+  },
   createdAt: {
     type: Date,
     default: Date.now,

@@ -13,7 +13,7 @@ import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const SurveyTile = ({ Title, Date, survey_id }) => {
+const SurveyTile = ({ Title, Date, survey_id, Description }) => {
   const navigate = useNavigate();
   const handleClick = () => {
     window.localStorage.setItem("surveyId", survey_id);
@@ -63,6 +63,7 @@ const SurveyTile = ({ Title, Date, survey_id }) => {
     <>
       <SurveyTileContainer>
         <SurveyTileTitle>{Title}</SurveyTileTitle>
+        <h3>{Description}</h3>
         <SurveyTileDottedlines />
         <SurveyTileInfo>
           <SurveyTileInfoText>Created At : {Date} </SurveyTileInfoText>
