@@ -75,12 +75,8 @@ export const YesNoSurveyAdd = () => {
       </label>
 
       <YesNoOptionsContainer>
-        <span>
-          Option 1 :<input ref={Option1} type="text" name="option-1" />
-        </span>
-        <span>
-          Option 2 :<input ref={Option2} type="text" name="option-2" />
-        </span>
+        <input ref={Option1} type="text" name="option-1" value="option 1" />
+        <input ref={Option2} type="text" name="option-2" value="option 2" />
       </YesNoOptionsContainer>
 
       <button type="submit" onClick={handleClick}>

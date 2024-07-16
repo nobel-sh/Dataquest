@@ -1,12 +1,18 @@
-import React from 'react'
+import React from "react";
 
 const Notfound = () => {
   return (
-    <div style={{height:'70vh',width:'80vw',textAlign:'center',paddingTop:'20vh',backgroundColor:'#2A313C',color:'white'}}>
-
-      <h1 style={{width:'500px',marginLeft:'auto',marginRight:'auto',letterSpacing:'2px'}}>PAGE DOES NOT EXIST</h1>
+    <div
+      style={{
+        height: "90vh",
+        width: "100%",
+        textAlign: "center",
+        padding: "5em",
+      }}
+    >
+      <h1> Requested page not found!</h1>
     </div>
-  )
-}
+  );
+};
 
-export default Notfound
+export default Notfound;

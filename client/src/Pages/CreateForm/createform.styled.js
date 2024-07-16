@@ -1,99 +1,79 @@
 import styled from "styled-components";
 
+export const CenterWrapper = styled.div`
+  display: grid;
+  place-items: center;
+  width: 100%;
+`;
 export const CreateFormContainer = styled.div`
-    height:100vh;
-    width: 82vw;
-    background-color: gainsboro;
-    color:white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding-left: 5%;
-    button{
-        border-radius: 5px;
-        text-decoration: none;
-        margin-left: 100px;
-    }
-    form{
-        background-color: #808cba;
-        width: 70%;
-        margin-top: 30px;
-        padding: 20px;
-        border-radius: 10px;
-    }
-    h2{
-        color:black;
-    }
-`
-export const CreateFromTitle = styled.div`
-    padding-left: 80px;
-    display: flex;
-    gap:60px;
-    h1{
-        font-size: x-large;
-        font-weight: 500;
-        letter-spacing: 1.2px;
-        
-    }
-    input{
-        margin: 0;
-        border: 0;
-        min-width: 600px;
-        height: 35px;
-        border-radius: 5px;
-        border: 1px solid #3498db;
-        padding-left: 10px;
-        color: black;
-        &:focus{
-            outline: none;
-        }
+  background-color: gainsboro;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 2em;
+  padding: 2em;
+  border-radius: 4px;
+`;
 
-    }
+export const HeaderContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  height: 8em;
+  justify-content: space-around;
+  padding: 1em;
+  width: 50em;
+  input {
+    padding-left: 1em;
+    border: none;
+    border-radius: 5px;
+    margin: 8px;
+  }
+`;
 
-`
-export const CreateFormAddQuestion = styled.div`
-    color:white;
-    background-color: white;
-`
+export const TitleInput = styled.input`
+  font-size: 16px;
+  min-height: 48px;
+  border: none;
+`;
+
+export const DescInput = styled.input`
+  font-size: 14px;
+  min-height: 36px;
+`;
 
 export const CreateFormChooseSurvey = styled.div`
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 20px;
-    justify-content: center;
-    width:100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 24px;
+  justify-content: center;
+  width: 100%;
+  margin: 1em;
 
-    margin-top: 20px;
-    select{        
-        font-family: Outfit;
-        font-size: 18px;
-        color: black;
-        letter-spacing: 1.5px;
-    }
+  select {
+    padding: 12px;
+    font-size: 16px;
+    color: black;
+    border: none;
+    border-radius: 4px;
+  }
+`;
 
-    option{
-        color:white;
-        background-color:  #020B19;
-    }
+export const PlusButton = styled.div`
+  text-align: center;
+  background-color: black;
+  color: white;
+  padding: 2em;
+  margin: 0;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-radius: 4px;
+`;
 
-    button{
-        font-family: Outfit; 
-        color: black;
-        background-color: transparent;
-        border-radius: 8px;
-        font-size: 40px;
-        border:none;
-        font-weight: 500;
-        height: 40px;
-        cursor: pointer;
-        text-align: center;
-        vertical-align: middle;
-        padding: 0;
-        &:hover{
-            background-color: rgba(1,1,1,1);
-
-        }
-    }    
-`
+export const QuestionTypeContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin: 1em;
+`;

@@ -18,7 +18,6 @@ const Dashboard = () => {
       owner_id = JSON.parse(user_state).user_id
         ? JSON.parse(user_state).user_id
         : "6426cb196f3bb0a8d860bb23";
-      console.log("Hello mens");
       console.log(process.env);
       const res = await axios.get(
         `${process.env.REACT_APP_API_ADDRESS}/survey`,

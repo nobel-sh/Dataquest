@@ -1,8 +1,13 @@
 import React from "react";
 import {
+  CenterWrapper,
   CreateFormContainer,
-  CreateFromTitle,
   CreateFormChooseSurvey,
+  HeaderContainer,
+  TitleInput,
+  DescInput,
+  QuestionTypeContainer,
+  PlusButton,
 } from "./createform.styled";
 import { useState } from "react";
 import { YesNoSurveyAdd } from "../../Components/YesNoSurvey/YesNoSurveyAdd";
@@ -14,7 +19,7 @@ import { toast } from "react-toastify";
 
 const CreateForm = () => {
   const [dropDownValue, setDropDownValue] = useState("yes/no");
-  const [questions, setQuestions] = useState(<YesNoSurveyAdd />);
+  const [questions, setQuestions] = useState([]);
 
   const handleDropDownChange = (e) => {
     setDropDownValue(e.target.value);
@@ -22,75 +27,81 @@ const CreateForm = () => {
   };
 
   const handleAddSurvey = () => {
-    setQuestions(<h1>Loadin</h1>);
     console.log(dropDownValue);
     if (dropDownValue === "yes/no") {
-      setQuestions(<YesNoSurveyAdd />);
+      questions.push();
+      setQuestions([...questions, <YesNoSurveyAdd />]);
       return;
     } else if (dropDownValue === "dropdown") {
-      setQuestions(<DropDownSurveyAdd />);
+      setQuestions([...questions, <DropDownSurveyAdd />]);
       return;
     } else {
-      setQuestions(<CustomInputAdd />);
+      setQuestions([...questions, <CustomInputAdd />]);
     }
   };
 
   const handleTitle = async (e) => {
-    const surveyId = window.localStorage.getItem("_auth_state");
-    const user_id = JSON.parse(surveyId).user_id;
-    console.log(e.target.value);
-    const data = {
-      owner: {
-        id: user_id,
-      },
-      title: e.target.value,
-    };
-
-    const res = await axios.post(
-      `${process.env.REACT_APP_API_ADDRESS}/survey`,
-      data,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-    console.log(res.data);
-    if (res.status === 200) {
-      toast.info("Survey Added");
-      window.localStorage.setItem("surveyId", res.data._id);
-    } else if (res.status === 400) {
-      toast.error("Title already exists");
-      return;
-    } else {
-      toast.error("Something went wrong");
-    }
+    // const surveyId = window.localStorage.getItem("_auth_state");
+    // const user_id = JSON.parse(surveyId).user_id;
+    // console.log(e.target.value);
+    // const data = {
+    //   owner: {
+    //     id: user_id,
+    //   },
+    //   title: e.target.value,
+    // };
+    // const res = await axios.post(
+    //   `${process.env.REACT_APP_API_ADDRESS}/survey`,
+    //   data,
+    //   {
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //   },
+    // );
+    // console.log(res.data);
+    // if (res.status === 200) {
+    //   toast.info("Survey Added");
+    //   window.localStorage.setItem("surveyId", res.data._id);
+    // } else if (res.status === 400) {
+    //   toast.error("Title already exists");
+    //   return;
+    // } else {
+    //   toast.error("Something went wrong");
+    // }
   };
 
   return (
-    <CreateFormContainer>
-      <form>
-        <CreateFromTitle>
-          <h1>
-            Title : <input type="text" name="title" onBlur={handleTitle} />
-          </h1>
-        </CreateFromTitle>
-      </form>
+    <CenterWrapper>
+      <CreateFormContainer>
+        <HeaderContainer>
+          <TitleInput
+            type="text"
+            name="survey title"
+            placeholder="Survey Title"
+            onBlur={handleTitle}
+          />
+          <DescInput
+            type="text"
+            name="survey description"
+            placeholder="Survey Description"
+            onBlur={handleTitle}
+          />
+        </HeaderContainer>
 
-      <CreateFormChooseSurvey>
-        <h2>Survey Type : </h2>
-        <select value={dropDownValue} onChange={handleDropDownChange}>
-          <option value="yes/no">Yes/No</option>
-          <option value="dropdown">Drop-Down</option>
-          <option value="custom">Custom Input</option>
-        </select>
-        <button onClick={handleAddSurvey}>
-          <BsPlusSquareFill />
-        </button>
-      </CreateFormChooseSurvey>
+        <QuestionTypeContainer>{questions}</QuestionTypeContainer>
 
-      {questions}
-    </CreateFormContainer>
+        <CreateFormChooseSurvey>
+          <h2>Type : </h2>
+          <select value={dropDownValue} onChange={handleDropDownChange}>
+            <option value="yes/no">Yes/No</option>
+            <option value="dropdown">Drop-Down</option>
+            <option value="custom">Custom Input</option>
+          </select>
+          <PlusButton onClick={handleAddSurvey}>ADD</PlusButton>
+        </CreateFormChooseSurvey>
+      </CreateFormContainer>
+    </CenterWrapper>
   );
 };
 
