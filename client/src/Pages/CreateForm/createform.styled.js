@@ -47,7 +47,7 @@ export const CreateFormChooseSurvey = styled.div`
   flex-direction: row;
   align-items: center;
   gap: 24px;
-  justify-content: center;
+  justify-content: space-around;
   width: 100%;
   margin: 1em;
 
@@ -60,12 +60,11 @@ export const CreateFormChooseSurvey = styled.div`
   }
 `;
 
-export const PlusButton = styled.div`
+export const Button = styled.div`
   text-align: center;
-  background-color: black;
+  background-color: gray;
   color: white;
   padding: 2em;
-  margin: 0;
   padding-top: 10px;
   padding-bottom: 10px;
   border-radius: 4px;

@@ -1,87 +1,56 @@
-import React from "react";
+import React, { forwardRef, useImperativeHandle, useState } from "react";
 import {
   YesNoAddContainer,
   YesNoOptionsContainer,
   YesNoQuestionContainer,
 } from "./yesnosurveyadd.styled";
-import { useRef } from "react";
-import axios from "axios";
-import { toast } from "react-toastify";
 
-export const YesNoSurveyAdd = () => {
-  const Option1 = useRef(null);
-  const Option2 = useRef(null);
-  const Title = useRef(null);
+export const YesNoSurveyAdd = forwardRef((props, ref) => {
+  const [title, setTitle] = useState("");
+  const [option1, setOption1] = useState("option 1");
+  const [option2, setOption2] = useState("option 2");
 
-  const handleClick = async (e) => {
-    if (window.localStorage.getItem("surveyId") == null) {
-      toast.error("Please add title first");
-      return;
-    }
-
-    if (
-      Title.current.value === "" ||
-      Option1.current.value === "" ||
-      Option2.current.value === ""
-    ) {
-      toast.error("Please fill all the fields");
-      return;
-    }
-
-    if (Option1.current.value === Option2.current.value) {
-      toast.error("Options cannot be same");
-      return;
-    }
-
-    const _id = window.localStorage.getItem("surveyId");
-
-    const data = {
-      survey: {
-        id: _id,
-      },
-      type: "yes/no",
-      question: Title.current.value,
-      options: [Option1.current.value, Option2.current.value],
-    };
-    try {
-      await axios.post(
-        `${process.env.REACT_APP_API_ADDRESS}/survey/64557ac5591d468fef3908ee/questions`,
-        data,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-      Title.current.value = "";
-      Option1.current.value = "";
-      Option2.current.value = "";
-      toast.success("Question added successfully");
-    } catch (err) {
-      console.log(err);
-      toast.error("Something went wrong");
-    }
-  };
+  useImperativeHandle(ref, () => ({
+    getData: () => {
+      if (title === "" || option1 === "" || option2 === "") {
+        throw new Error("Please fill all the fields");
+      }
+      if (option1 === option2) {
+        throw new Error("Options cannot be the same");
+      }
+      return {
+        type: "yes/no",
+        question: title,
+        options: [option1, option2],
+      };
+    },
+  }));
 
   return (
     <YesNoAddContainer>
       <label>
-        Title :{" "}
+        Title:{" "}
         <YesNoQuestionContainer
           type="text"
           name="question"
-          ref={Title}
-        ></YesNoQuestionContainer>
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+        />
       </label>
-
       <YesNoOptionsContainer>
-        <input ref={Option1} type="text" name="option-1" value="option 1" />
-        <input ref={Option2} type="text" name="option-2" value="option 2" />
+        <input
+          type="text"
+          name="option-1"
+          value={option1}
+          onChange={(e) => setOption1(e.target.value)}
+        />
+        <input
+          type="text"
+          name="option-2"
+          value={option2}
+          onChange={(e) => setOption2(e.target.value)}
+        />
       </YesNoOptionsContainer>
-
-      <button type="submit" onClick={handleClick}>
-        Save
-      </button>
     </YesNoAddContainer>
   );
-};
+});
