@@ -60,15 +60,13 @@ export const DropDownSurveyAdd = forwardRef((props, ref) => {
 
   return (
     <DropDownAddContainer>
-      <span>
-        Title:
         <DropDownQuestionContainer
           type="text"
           name="question"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter your question"
         />
-      </span>
       {options.map((option, index) => (
         <DropDownOption
           key={option.id}
@@ -78,8 +76,7 @@ export const DropDownSurveyAdd = forwardRef((props, ref) => {
           index={index}
         />
       ))}
-
-      <DropDownButton onClick={handleAddOption}>Add Option</DropDownButton>
+      <DropDownButton onClick={handleAddOption}>add</DropDownButton>
     </DropDownAddContainer>
   );
 });

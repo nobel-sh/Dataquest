@@ -7,8 +7,8 @@ import {
 
 export const YesNoSurveyAdd = forwardRef((props, ref) => {
   const [title, setTitle] = useState("");
-  const [option1, setOption1] = useState("option 1");
-  const [option2, setOption2] = useState("option 2");
+  const [option1, setOption1] = useState("Option 1");
+  const [option2, setOption2] = useState("Option 2");
 
   useImperativeHandle(ref, () => ({
     getData: () => {
@@ -28,15 +28,13 @@ export const YesNoSurveyAdd = forwardRef((props, ref) => {
 
   return (
     <YesNoAddContainer>
-      <label>
-        Title:{" "}
         <YesNoQuestionContainer
           type="text"
           name="question"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter your question"
         />
-      </label>
       <YesNoOptionsContainer>
         <input
           type="text"

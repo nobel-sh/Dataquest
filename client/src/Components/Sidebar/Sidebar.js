@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   SidebarContainer,
   SidebarText,
@@ -7,52 +7,60 @@ import {
   SidebarLogout,
   SidebarRoutes,
 } from "../../Styles/sidebar.styled";
-import { FaClipboardList, FaSignOutAlt, FaHome } from "react-icons/fa";
+import LogoImg from "../../pictures/logo1.png";
+import Modal from "../Modal/modal.js";
+import { Profile } from "../../Pages/Profile/profile.js";
 import { Link, useNavigate } from "react-router-dom";
 import { useSignOut } from "react-auth-kit";
-import LogoImg from "../../pictures/logo1.png";
 
 const Sidebar = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const signout = useSignOut();
 
   const handleSignout = () => {
-    console.log("signout");
     signout();
     navigate("/login");
-    navigate(0);
+    window.location.reload(); // Refresh the page to ensure logout
+  };
+
+  const openProfileModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeProfileModal = () => {
+    setIsModalOpen(false);
   };
 
   return (
     <>
       <SidebarContainer>
         <Link to="/">
-          <SidebarImage src={LogoImg} alt="dataquest logo" />
+          <SidebarImage src={LogoImg} alt="DataQuest Logo" />
         </Link>
         <SidebarRoutes>
-          <SidebarLink to={"/"} k>
-            <SidebarText>
-              <FaHome /> Home
-            </SidebarText>
+          <SidebarLink to={"/"}>
+            <SidebarText>Dashboard</SidebarText>
           </SidebarLink>
-
           <SidebarLink to={"/forms"}>
-            <SidebarText>
-              <FaClipboardList /> Create
-            </SidebarText>
+            <SidebarText>Create</SidebarText>
           </SidebarLink>
-
+          <SidebarLink onClick={openProfileModal} style={{ cursor: "pointer" }}>
+            <SidebarText>Profile</SidebarText>
+          </SidebarLink>
           <SidebarLogout>
             <SidebarLink to={"/login"} onClick={handleSignout}>
-              <SidebarText>
-                <FaSignOutAlt /> Logout
-              </SidebarText>
+              <SidebarText>Logout</SidebarText>
             </SidebarLink>
           </SidebarLogout>
         </SidebarRoutes>
       </SidebarContainer>
+      <Modal isOpen={isModalOpen} onClose={closeProfileModal}>
+        <Profile />
+      </Modal>
     </>
   );
 };
 
 export default Sidebar;
+

@@ -7,6 +7,7 @@ import Notfound from "./Components/NotFound/Notfound";
 import CreateForm from "./Pages/CreateForm/CreateForm";
 import ViewSurvey from "./Pages/ViewSurvey/ViewSurvey";
 import Results from "./Pages/Results/Results";
+import { Profile } from "./Pages/Profile/profile";
 import Login from "./Pages/Login/Login";
 import { Signup } from "./Pages/Signup/Signup";
 import { RequireAuth } from "react-auth-kit";
@@ -20,12 +21,12 @@ function App() {
   return (
     <div className="App">
       <Router>
-        {window.location.pathname != "/login" &&
-          window.location.pathname != "/signup" && <Navbar />}
+        {/* {window.location.pathname != "/login" && */}
+          {/* window.location.pathname != "/signup" && <Navbar />} */}
 
         <div style={{ display: "flex" }}>
-          {/* {window.location.pathname != "/login" && */}
-          {/* window.location.pathname != "/signup" && <Sidebar />} */}
+          {window.location.pathname != "/login" &&
+          window.location.pathname != "/signup" && <Sidebar />}
           <Routes>
             <Route
               path="/"
@@ -56,6 +57,14 @@ function App() {
               element={
                 <RequireAuth loginPath="/login">
                   <ViewSurvey />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <RequireAuth loginPath="/login">
+                  <Profile />
                 </RequireAuth>
               }
             />

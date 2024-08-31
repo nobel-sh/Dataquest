@@ -1,0 +1,31 @@
+import React, { useState, useEffect } from "react";
+import { ProfileContainer } from "./profile.styled";
+import jdenticon from "jdenticon";
+
+export const Profile = () => {
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [identiconSvg, setIdenticonSvg] = useState("");
+
+  useEffect(() => {
+    const user_state = window.localStorage.getItem("_auth_state");
+    if (user_state) {
+      const parsedUserState = JSON.parse(user_state);
+      setUserName(parsedUserState.username);
+      setUserEmail(parsedUserState.email);
+      const svg = jdenticon.toSvg(parsedUserState.email, 200); // Use email as seed for identicon
+      setIdenticonSvg(svg);
+    }
+  }, []);
+
+  return (
+    <ProfileContainer>
+      <h2>{userName}</h2>
+      <h3>{userEmail}</h3>
+      <div dangerouslySetInnerHTML={{ __html: identiconSvg }} />
+      <button>Logout</button>
+    </ProfileContainer>
+  );
+};
+
+export default Profile;

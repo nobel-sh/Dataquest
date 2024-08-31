@@ -1,66 +1,78 @@
 import styled from "styled-components";
 
 export const SurveyTileContainer = styled.div`
-    display:flex;
-    flex-direction: column;
-    background-color: rgba(149,109,204,255);
-    color: white;
-    margin: 50px;
-    padding: 15px;
-    border-radius: 20px;
-    align-items: center;
-
-    width: 70vw;
-`
+  display: flex;
+  flex-direction: column;
+  margin: 1em;
+  padding: 2em;
+  border-radius: 8px;
+  align-items: center;
+  background-color: #f9f9f9; 
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  border: 1px solid ligtgray;
+  h3 {
+    font-weight: 400;
+    font-size: 1rem;
+    margin: 1em 0;
+    color: #333333;
+  }
+`;
 
 export const SurveyTileTitle = styled.h1`
-    font-size: x-large;
-    font-weight: 500;
-    letter-spacing: 1.5px;
-`
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+`;
 
 export const SurveyTileDottedlines = styled.div`
-    border-bottom: 2px dotted white;
-    width:inherit;
-`
+  border-bottom: 2px dashed #a0a0a0;
+  width: 100%;
+  margin: 1em 0;
+`;
+
 export const SurveyTileInfo = styled.div`
-    display: flex !important;
-    justify-content: space-around !important;
-    gap:10vw;
-    align-items: center;
-    padding:0;
-`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin: 1em 0;
+`;
+
 export const SurveyTileInfoText = styled.h3`
-    font-weight: 400;
-`
+  font-size: 1rem;
+  font-weight: 400;
+`;
+
 export const SurveyTileOpenButton = styled.button`
-    color: black;
-    background-color: white;
-    border-radius: 10px;
-    height: 2rem;
-    min-width: 6rem;
-    font-size: larger;
-    border: none;
-    font-weight: 600;
-    &:hover{
-        background-color: rgba(255,255,255,0.8);
-    }
-`
+  color: white;
+  background-color: #1e90ff;
+  border-radius: 8px;
+  height: 2.5em;
+  padding: 0 1.5em;
+  font-size: 1rem;
+  border: none;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  &:hover {
+    background-color: #1c86ee;
+  }
+`;
+
 export const LinkContainer = styled.div`
-    padding: 2px;
-    display:flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    gap: 20px;
-    h3{
-        margin:0;
+  padding: 0.5em 0;
+  width: 100%;
+  text-align: center;
+
+  a {
+    text-decoration: underline;
+    cursor: pointer;
+    transition: color 0.2s;
+
+    &:hover {
+      color: #1c86ee;
     }
-    a{
-        text-decoration: underline;
-    }
-    &:hover{
-        cursor: pointer;
-        color: rgb(230,230,230);
-    }
-`
+  }
+`;
+

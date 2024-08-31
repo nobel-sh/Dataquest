@@ -4,6 +4,7 @@ import { useSignIn } from "react-auth-kit";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import LogoImg from "../../pictures/logo1.png";
 
 export const Login = () => {
   const email = useRef(null);
@@ -48,16 +49,17 @@ export const Login = () => {
   };
   return (
     <LoginContainer>
-      <h1> Login to your account </h1>
+      <img src={LogoImg} alt="logo" />
+      <h1> Login</h1>
       <LoginInputContainer onSubmit={handleSubmit}>
         <label>Email</label>
         <input type="email" placeholder="Enter Email" ref={email} />
         <label>Password</label>
         <input type="password" placeholder="Enter Password" ref={password} />
         <button type="submit">Login</button>
-        <h4>
+        <h3>
           Don't have an account? <Link to="/signup">Signup</Link>
-        </h4>
+        </h3>
       </LoginInputContainer>
     </LoginContainer>
   );

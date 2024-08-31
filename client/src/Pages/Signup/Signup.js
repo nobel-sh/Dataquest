@@ -5,6 +5,7 @@ import { useSignIn } from "react-auth-kit";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import LogoImg from "../../pictures/logo1.png";
 
 export const Signup = () => {
   const username = useRef(null);
@@ -57,24 +58,23 @@ export const Signup = () => {
   };
   return (
     <SignupContainer>
-      <SignupInputContainer>
-        <h1>Signup</h1>
-        <label>Username</label>
-        <input type="text" placeholder="Enter username" ref={username} />
-        <label>Email</label>
-        <input type="email" placeholder="Enter email" ref={email} />
-        <label>Password</label>
-        <input type="password" placeholder="Enter password" ref={password} />
-        <label>Confirm Password</label>
-        <input
-          type="password"
-          placeholder="Re enter password"
-          ref={confirmPassword}
-        />
-        <button type="submit" onClick={handleSubmit}>
-          Signup
-        </button>
-      </SignupInputContainer>
+      <img src={LogoImg} alt="Logo" /> {/* Add logo here */}
+      <h1>Signup</h1>
+      <label>Username</label>
+      <input type="text" placeholder="Enter username" ref={username} />
+      <label>Email</label>
+      <input type="email" placeholder="Enter email" ref={email} />
+      <label>Password</label>
+      <input type="password" placeholder="Enter password" ref={password} />
+      <label>Confirm Password</label>
+      <input
+        type="password"
+        placeholder="Re-enter password"
+        ref={confirmPassword}
+      />
+      <button type="submit" onClick={handleSubmit}>
+        Signup
+      </button>
     </SignupContainer>
   );
 };

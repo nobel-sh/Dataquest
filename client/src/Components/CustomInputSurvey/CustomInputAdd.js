@@ -22,13 +22,11 @@ export const CustomInputAdd = forwardRef((props, ref) => {
   return (
     <CustomInputAddContainer>
       <span>
-        <h2>
-          Question:{" "}
           <CustomInputQuestionContainer
             value={title}
             onChange={(e) => setTitle(e.target.value)}
+            placeholder="Enter your question here"
           />
-        </h2>
       </span>
     </CustomInputAddContainer>
   );

@@ -7,28 +7,29 @@ export const YesNoContainer = styled.div`
     align-items: center;
     justify-content: center;
     border-radius:10px;
-    background-color: #020B19;
+    background-color: #f9f9f9;
     margin-top: 30px;
     padding: 10px;
-    color:white;
     gap:10px;
     padding:20px;
-    width: 76vw;
+    width: 60vw;
+    border: 1px solid lightgray;
     h1{
         margin: 10px;
         margin-top: 2px;
+        font-weight: 600;
     }
     h3{
         margin: 0;
+        font-weight: 400;
     }
     button{
         height: 30px;
         width: 100px;
-        background-color: white;
+        background-color: lightgreen;
         color: black;
         border: none;
         border-radius: 5px;
-        margin:5px;
     }
 `
 
@@ -47,7 +48,4 @@ export const YesNoOptionsContainer = styled.div`
         border-radius: 5px;
            
     }
-
-    
-
 `

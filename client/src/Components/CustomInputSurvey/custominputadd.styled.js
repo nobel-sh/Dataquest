@@ -1,19 +1,23 @@
 import styled from "styled-components";
 
 export const CustomInputAddContainer = styled.div`
-  margin: 1em;
-  padding: 1em;
-  background-color: rgb(200, 200, 200);
-  border-radius: 4px;
-  h2 {
-    font-weight: 500;
-  }
+  padding: 2em;
+  background-color: #f9f9f9; 
+  border-radius: 2px;
+  border: 1px solid gray;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 60em;
+
 `;
 
 export const CustomInputQuestionContainer = styled.input`
-  border: none;
-  border-radius: 4px;
-  min-width: 50em;
-  height: 3em;
+  border-radius: 2px;
+  min-width: 50rem;
+  height: 30px;
+  font-size: larger;
+  font-weight: 500;
   padding: 1em;
+  border: 1px solid black;
 `;

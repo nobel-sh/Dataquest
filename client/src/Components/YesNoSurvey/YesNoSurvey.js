@@ -60,7 +60,7 @@ export const YesNoSurvey = ({ questionNo, question, options, _id }) => {
           style={
             selected !== null
               ? {
-                  backgroundColor: selected === options[0] ? "#8da5aa" : "grey",
+                  backgroundColor: selected === options[0] ? "#8da5aa" : "silver",
                 }
               : { backgroundColor: "grey" }
           }
@@ -75,7 +75,7 @@ export const YesNoSurvey = ({ questionNo, question, options, _id }) => {
           style={
             selected !== null
               ? {
-                  backgroundColor: selected === options[1] ? "#8da5aa" : "grey",
+                  backgroundColor: selected === options[1] ? "#8da5aa" : "silver",
                 }
               : { backgroundColor: "grey" }
           }

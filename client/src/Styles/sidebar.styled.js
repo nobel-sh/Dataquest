@@ -5,41 +5,53 @@ export const SidebarContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   width: 16em;
-  height: auto;
-  background-color: #213458;
-  color: white;
+  height: 100vh;
+  background-color: #f9f9f9; 
+  padding: 1.5rem 0;
+  gap: 4em;
 `;
 
-export const SidebarText = styled.h2`
-  font-size: 1em;
-  font-weight: 500;
-  padding: 12px;
-  padding-right: 10px;
-  &:hover {
-    background-color: rgba(112, 43, 208, 255);
-    border-radius: 10px;
-  }
+export const SidebarImage = styled.img`
+  max-width: 160px; 
+  height: auto;
+  margin: 2rem;
 `;
+
+
 export const SidebarRoutes = styled.div`
-  flex: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 100%;
-  gap: 2%;
+`;
+
+export const SidebarText = styled.h2`
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0.5rem;
+  color: inherit;
+  text-align: center;
 `;
 
 export const SidebarLink = styled(Link)`
   text-decoration: none;
-  color: white;
-  font-size: x-large;
+  color: inherit;
+  width: 100%;
+  padding: 0.5rem 0;
+  text-align: center;
+
+  &:hover {
+    background-color: #d0d0d0;
+  }
 `;
-export const SidebarImage = styled.img`
-  flex: 1;
-  margin: 20px;
-  max-width: 90px;
-  height: auto;
+
+export const SidebarLogout = styled.div`
+  width: 100%;
+  padding: 12px;
+  border-top: 1px solid #ccc;
+  &:hover {
+    background-color: #c0c0c0;
+  }
 `;
-export const SidebarLogout = styled.div``;
+

@@ -5,34 +5,34 @@ export const DropDownAddContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: 1em;
   padding: 2em;
-  margin-right: 2rem;
-  border-radius: 4px;
-  background-color: rgb(200, 200, 200);
-  input {
-    margin: 1em;
-    margin-left: 12px;
-    border: 0;
-    height: 25px;
-    width: 10rem;
-    border-radius: 5px;
+  border-radius: 2px;
+  background-color: #f9f9f9; 
+  border : 1px solid gray;
+  width: 60em;
+  input{
+    margin: 10px; 
     height: 30px;
   }
 `;
+
 export const DropDownButton = styled.button`
-  padding: 8px;
-  height: 3em;
+  padding: 1em; 
   border: none;
-  background-color: green;
-  color: white;
   border-radius: 4px;
+  font-size: 1em;
+  font-weight: 500;
+  background-color: gainsboro; 
 `;
 
 export const DropDownQuestionContainer = styled.input`
+  border-radius: 2px;
   min-width: 50rem;
+  height: 30px;
+  font-size: larger;
+  font-weight: 500;
   padding: 1em;
-  margin: 1em;
+  border: 1px solid black;
 `;
 
 export const DropDownAnswersContainer = styled.input`

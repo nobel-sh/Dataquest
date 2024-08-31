@@ -5,43 +5,34 @@ export const CustomInputContainer = styled.div`
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color:white;
-    background-color: #020B19;
+    background-color: #f9f9f9; 
     margin-top: 30px;
     border-radius: 5px;
-    width: 76vw;
+    width: 60vw;
     padding: 20px;
     gap:20px;
     h3{
-       margin: 0;
-        span{
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
+       font-weight: 400; 
     }
     h1{
-        margin: 10px;
-        margin-top: 2px;
+        font-weight: 600;
     }
 
     input{
-        font-family: Outfit;
-        width: 85%;
-        min-height: 1.5rem;
-        border-radius: 3px;
-        border: none;
-        outline: none;
-        padding: 0.5rem;
+        width: 80%;
+        min-height: 1rem;
+        border-radius: 2px;
+        padding: 1rem;
         font-size: 1.2rem;
         font-weight: 500;
+        border: 1px solid lightgray;
     }
     button{
-        height: 30px;
-        width: 100px;
-        background-color: white;
-        color: black;
-        border: none;
+        height: 40px;
+        width: 80px;
         border-radius: 5px;
+        border: none;
         margin:5px;
+        background-color: lightgreen; 
     }
 `

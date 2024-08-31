@@ -140,12 +140,10 @@ const Results = () => {
       <ResultsContainer>
         <h1>{title}</h1>
         <h3>{description}</h3>
-        <div>
-          <h2>
-            Responses received :{" "}
-            {responses.length ? responses.length / questions.length : 0}
-          </h2>
-        </div>
+        <h2>
+            Response(s) : [{""}
+            {responses.length ? responses.length / questions.length : 0}]
+        </h2>
         {questions.map((question) => {
           const bar_options = generateBar(question);
           const donut_options = generateDonut(question);
@@ -157,10 +155,9 @@ const Results = () => {
                 style={{
                   display: "flex",
                   justifyContent: "center",
-                  color: "#dbdbdb",
                 }}
               >
-                Responses
+                responses
               </h2>
               {question.type !== "custom" ? (
                 <ChartsContainer>
@@ -182,7 +179,7 @@ const Results = () => {
               ) : (
                 <>
                   {generateCustom(question).map((answer) => (
-                    <h2>{answer}</h2>
+                    <h3>{answer}</h3>
                   ))}
                 </>
               )}

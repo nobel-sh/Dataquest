@@ -33,10 +33,14 @@ const userLogin = asyncHandler(async (req, res) => {
       process.env.JWT_TOKEN,
       { expiresIn: "30d" },
     );
-    const { username, _id: user_id } = user;
+    const { username, _id: user_id, email } = user;
     res
       .status(200)
-      .json({ accessToken, expiresIn: "10000", user: { username, user_id } });
+      .json({
+        accessToken,
+        expiresIn: "10000",
+        user: { username, user_id, email },
+      });
   } else {
     res.status(401);
     throw new Error("Invalid Password");

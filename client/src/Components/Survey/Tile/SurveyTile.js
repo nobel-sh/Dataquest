@@ -8,17 +8,20 @@ import {
   SurveyTileTitle,
   LinkContainer,
 } from "../../../Styles/surveytile.styled";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { MdCalendarMonth } from "react-icons/md";
 
 const SurveyTile = ({ Title, Date, survey_id, Description }) => {
   const navigate = useNavigate();
+
   const handleClick = () => {
     window.localStorage.setItem("surveyId", survey_id);
     window.location.href = `/results/${survey_id}`;
   };
+
   const handleClipboard = () => {
     navigator.clipboard.writeText(`http://localhost:3000/forms/${survey_id}`);
     toast.success("Copied To Clipboard!", {
@@ -40,7 +43,6 @@ const SurveyTile = ({ Title, Date, survey_id, Description }) => {
       return;
     }
     try {
-      console.log(survey_id);
       const res = await axios.delete(
         `${process.env.REACT_APP_API_ADDRESS}/survey/${survey_id}`,
         {
@@ -51,42 +53,42 @@ const SurveyTile = ({ Title, Date, survey_id, Description }) => {
           },
         },
       );
-      console.log(res.data);
       toast.success("Survey Deleted");
       navigate(0);
     } catch (err) {
-      console.log(err);
       toast.error("Something went wrong");
     }
   };
+
   return (
-    <>
-      <SurveyTileContainer>
-        <SurveyTileTitle>{Title}</SurveyTileTitle>
-        <h3>{Description}</h3>
-        <SurveyTileDottedlines />
-        <SurveyTileInfo>
-          <SurveyTileInfoText>Created At : {Date} </SurveyTileInfoText>
-          <SurveyTileOpenButton onClick={handleClick}>
-            Open
-          </SurveyTileOpenButton>
-          <SurveyTileOpenButton
-            style={{ backgroundColor: "#aa0000", color: "white" }}
-            onClick={handleDelete}
-          >
-            Delete
-          </SurveyTileOpenButton>
-        </SurveyTileInfo>
-        <LinkContainer>
-          <h3>Link: </h3>
-          <a
-            onClick={handleClipboard}
-          >{`http://localhost:3000/forms/${survey_id}`}</a>
-        </LinkContainer>
-      </SurveyTileContainer>
-      {/* <ToastContainer /> */}
-    </>
+    <SurveyTileContainer>
+      <SurveyTileTitle>{Title}</SurveyTileTitle>
+      <h3>{Description}</h3>
+      <SurveyTileDottedlines />
+      <SurveyTileInfo>
+        <SurveyTileInfoText>
+          <MdCalendarMonth style={{ marginRight: '12px' }} /> 
+          {Date}
+          </SurveyTileInfoText>
+        <SurveyTileOpenButton onClick={handleClick}>Open</SurveyTileOpenButton>
+        <SurveyTileOpenButton
+          style={{ backgroundColor: "#d9534f"}}
+          onClick={handleDelete}
+        >
+          Delete
+        </SurveyTileOpenButton>
+      </SurveyTileInfo>
+      <LinkContainer>
+        <span>
+          <b>Link: </b>
+          <a onClick={handleClipboard}>
+            {`http://localhost:3000/forms/${survey_id}`}
+          </a>
+        </span>
+      </LinkContainer>
+    </SurveyTileContainer>
   );
 };
 
 export default SurveyTile;
+
