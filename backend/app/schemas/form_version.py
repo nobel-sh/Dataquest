@@ -9,13 +9,13 @@ from app.schemas.form import FormSchema
 
 
 class FormVersionCreate(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     form_schema: FormSchema = Field(validation_alias="schema", serialization_alias="schema")
 
 
 class FormVersionRead(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
     id: UUID
     form_id: UUID

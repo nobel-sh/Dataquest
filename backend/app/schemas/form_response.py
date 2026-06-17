@@ -27,6 +27,12 @@ class FormResponseRead(FormResponseCreate):
     submitted_at: datetime
 
 
+class FormResponseSubmit(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    answers: dict[str, AnswerValue] = Field(default_factory=dict)
+
+
 class FormResponseSubmission(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

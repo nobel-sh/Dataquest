@@ -13,10 +13,12 @@ from app.schemas.form import (
     FormField,
     FormSchema,
 )
+from app.schemas.form_record import FormCreate, FormRead
 from app.schemas.form_response import (
     FormResponseCreate,
     FormResponseRead,
     FormResponseSubmission,
+    FormResponseSubmit,
 )
 from app.schemas.form_version import FormVersionCreate, FormVersionRead
 
@@ -24,10 +26,13 @@ __all__ = [
     "FieldOption",
     "FieldType",
     "FormField",
+    "FormCreate",
+    "FormRead",
     "FormReviewResult",
     "FormReviewSuggestion",
     "FormResponseCreate",
     "FormResponseRead",
+    "FormResponseSubmit",
     "FormResponseSubmission",
     "FormSchema",
     "FormVersionCreate",
