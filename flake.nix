@@ -36,6 +36,7 @@
               pydantic
               pytest
               ruff
+              sqlalchemy
               uvicorn
             ]
           );
