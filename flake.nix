@@ -31,9 +31,12 @@
         let
           python = pkgs.python312.withPackages (
             ps: with ps; [
+              fastapi
+              httpx
               pydantic
               pytest
               ruff
+              uvicorn
             ]
           );
         in

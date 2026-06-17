@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Dataquest API"
 requires-python = ">=3.12"
 dependencies = [
+  "fastapi",
   "pydantic",
+  "uvicorn",
 ]
 
 [tool.pytest.ini_options]
