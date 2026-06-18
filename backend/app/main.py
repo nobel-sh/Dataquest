@@ -1,24 +1,11 @@
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 
-import app.models  # noqa: F401
-from app.db.base import Base
-from app.db.session import engine
 from app.routes.forms import router as forms_router
 from app.schemas.agent import FormReviewResult
 from app.schemas.form import FormSchema
 from app.schemas.form_response import FormResponseSubmission
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    Base.metadata.create_all(bind=engine)
-    yield
-
-
-app = FastAPI(lifespan=lifespan)
+app = FastAPI()
 app.include_router(forms_router)
 
 

@@ -1,0 +1,5 @@
+Migrations for the backend.
+
+Run migrations from the /backend directory:
+
+    alembic upgrade head
