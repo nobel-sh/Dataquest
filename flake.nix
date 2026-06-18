@@ -45,10 +45,13 @@
         {
           default = pkgs.mkShell {
             packages = with pkgs; [
+              nodejs_22
+              pnpm
               python
             ];
 
             env = {
+              NEXT_TELEMETRY_DISABLED = "1";
               PYTHONDONTWRITEBYTECODE = "1";
               PYTHONUNBUFFERED = "1";
             };

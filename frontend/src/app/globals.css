@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-body: "Manrope", "Avenir Next", "Trebuchet MS", Verdana, sans-serif;
+
+  --color-page: #181a20;
+  --color-panel: #202124;
+  --color-control: #272a33;
+  --color-success: #20372b;
+  --color-error: #3b272d;
+  --color-ink: #f1f3f4;
+  --color-ink-muted: #bdc1c6;
+  --color-ink-inverse: #202124;
+  --color-ink-on-dark: #f8fafd;
+  --color-button-ink: #ffffff;
+  --color-line: #3c4043;
+  --color-line-success: #81c995;
+  --color-line-error: #f28b82;
+  --color-accent: #a142f4;
+  --color-accent-hover: #b96df7;
+  --color-danger: #f28b82;
+  --color-ember: #8ab4f8;
+
+  --shadow-focus: 0 0 0 3px rgba(161, 66, 244, 0.28);
+  --shadow-panel: 0 24px 70px rgba(0, 0, 0, 0.34);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  position: relative;
+  overflow-x: hidden;
+  background: linear-gradient(135deg, #16181d 0%, #1b1d23 46%, #24262d 100%);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px),
+    radial-gradient(circle at 50% 0%, rgba(161, 66, 244, 0.13), transparent 32rem);
+  background-size: 42px 42px, 42px 42px, auto;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+a {
+  color: inherit;
+}
