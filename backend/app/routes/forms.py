@@ -15,7 +15,7 @@ from app.schemas.form_response import (
     FormResponseSubmit,
     validate_response_answers,
 )
-from app.schemas.form_version import FormVersionRead
+from app.schemas.form_version import FormVersionCreate, FormVersionRead
 
 router = APIRouter(prefix="/forms", tags=["forms"])
 DbSession = Annotated[Session, Depends(get_db)]
@@ -71,6 +71,52 @@ def get_form_by_slug(slug: str, db: DbSession) -> FormRead:
     latest_version = get_latest_version(form.id, db)
 
     return build_form_read(form, latest_version)
+
+
+@router.post(
+    "/{form_id}/versions",
+    response_model=FormRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_form_version(
+    form_id: UUID,
+    payload: FormVersionCreate,
+    db: DbSession,
+) -> FormRead:
+    form = db.get(Form, form_id)
+    if form is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
+
+    latest_version = get_latest_version(form.id, db)
+    form.title = payload.form_schema.title
+    form.description = payload.form_schema.description
+
+    version = FormVersion(
+        form=form,
+        version_number=latest_version.version_number + 1,
+        schema_json=payload.form_schema.model_dump(mode="json"),
+    )
+    db.add(version)
+    db.commit()
+    db.refresh(form)
+    db.refresh(version)
+
+    return build_form_read(form, version)
+
+
+@router.get("/{form_id}/versions", response_model=list[FormVersionRead])
+def list_form_versions(form_id: UUID, db: DbSession) -> list[FormVersionRead]:
+    form = db.get(Form, form_id)
+    if form is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
+
+    versions = db.scalars(
+        select(FormVersion)
+        .where(FormVersion.form_id == form.id)
+        .order_by(FormVersion.version_number.asc())
+    ).all()
+
+    return [build_version_read(version) for version in versions]
 
 
 @router.post(
@@ -148,13 +194,17 @@ def build_form_read(form: Form, version: FormVersion) -> FormRead:
         slug=form.slug,
         created_at=form.created_at,
         updated_at=form.updated_at,
-        latest_version=FormVersionRead(
-            id=version.id,
-            form_id=version.form_id,
-            version_number=version.version_number,
-            form_schema=version.schema_json,
-            created_at=version.created_at,
-        ),
+        latest_version=build_version_read(version),
+    )
+
+
+def build_version_read(version: FormVersion) -> FormVersionRead:
+    return FormVersionRead(
+        id=version.id,
+        form_id=version.form_id,
+        version_number=version.version_number,
+        form_schema=version.schema_json,
+        created_at=version.created_at,
     )
 
 
