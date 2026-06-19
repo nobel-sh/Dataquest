@@ -237,9 +237,9 @@ export function FormSchemaBuilder({
             </button>
           </section>
 
-          <details className="border border-line bg-panel">
+          <details className="min-w-0 max-w-full border border-line bg-panel">
             <summary className="cursor-pointer px-5 py-4 font-semibold">Schema preview</summary>
-            <pre className="m-0 overflow-x-auto border-t border-line bg-[#181a20] p-5 text-sm leading-6 text-ink-muted">
+            <pre className="m-0 max-w-full overflow-x-auto whitespace-pre border-t border-line bg-[#181a20] p-5 text-sm leading-6 text-ink-muted">
               {JSON.stringify(normalizedSchema, null, 2)}
             </pre>
           </details>

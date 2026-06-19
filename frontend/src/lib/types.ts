@@ -33,6 +33,11 @@ export type FormSchema = {
   fields: FormField[];
 };
 
+export type GenerateFormResult = {
+  schema: FormSchema;
+  warnings: string[];
+};
+
 export type FormVersion = {
   id: string;
   form_id: string;

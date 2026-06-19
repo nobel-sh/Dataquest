@@ -6,8 +6,10 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.ai.form_generation import get_form_generator
 from app.db.session import get_db
 from app.models.form import Form, FormResponse, FormVersion
+from app.schemas.agent import GenerateFormRequest, GenerateFormResult
 from app.schemas.form import FormSchema
 from app.schemas.form_record import FormCreate, FormRead
 from app.schemas.form_response import (
@@ -49,6 +51,12 @@ def create_form(payload: FormCreate, db: DbSession) -> FormRead:
     db.refresh(version)
 
     return build_form_read(form, version)
+
+
+@router.post("/generate", response_model=GenerateFormResult)
+def generate_form(payload: GenerateFormRequest) -> GenerateFormResult:
+    generator = get_form_generator()
+    return generator.generate(payload.prompt)
 
 
 @router.get("/{form_id}", response_model=FormRead)
