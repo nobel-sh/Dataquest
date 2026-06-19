@@ -1,8 +1,10 @@
 import type { FieldOption, FormField } from "@/lib/types";
+import { PlusIcon, TrashIcon } from "@/components/forms/form-schema-editor/icons";
 import { ErrorList } from "@/components/forms/form-schema-editor/shared";
 import {
   compactInputClassName,
-  secondaryButtonClassName,
+  dangerIconButtonClassName,
+  iconButtonClassName,
 } from "@/components/forms/form-schema-editor/styles";
 
 type OptionsEditorProps = {
@@ -54,8 +56,14 @@ export function OptionsEditor({
     <section className="grid gap-3 border border-line bg-[#181a20] p-4">
       <div className="flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-stretch">
         <div className="font-semibold">Options</div>
-        <button className={secondaryButtonClassName} type="button" onClick={addOption}>
-          Add option
+        <button
+          aria-label="Add option"
+          className={iconButtonClassName}
+          title="Add option"
+          type="button"
+          onClick={addOption}
+        >
+          <PlusIcon />
         </button>
       </div>
 
@@ -76,12 +84,14 @@ export function OptionsEditor({
             onChange={(event) => updateOption(index, { ...option, value: event.target.value })}
           />
           <button
-            className="min-h-control border border-line-error bg-error px-4 py-2 text-sm font-semibold text-ink transition hover:border-danger disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label={`Remove option ${index + 1}`}
+            className={dangerIconButtonClassName}
             disabled={options.length <= 1}
+            title="Remove option"
             type="button"
             onClick={() => removeOption(index)}
           >
-            Remove
+            <TrashIcon />
           </button>
           {optionErrors[`${fieldIndex.toString()}:${index.toString()}`]?.length ? (
             <div className="col-span-3 max-sm:col-span-1">

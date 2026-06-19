@@ -18,6 +18,24 @@ export async function getFormBySlug(slug: string): Promise<FormRecord | null> {
   return response.json();
 }
 
+export async function createForm(slug: string, formSchema: FormSchema): Promise<FormRecord> {
+  const response = await fetch(`${API_BASE_URL}/forms`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ slug, schema: formSchema }),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    const detail = body?.detail ?? `Failed to create form: ${response.status}`;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+
+  return response.json();
+}
+
 export async function submitFormResponse(formId: string, answers: Answers): Promise<FormResponse> {
   const response = await fetch(`${API_BASE_URL}/forms/${formId}/responses`, {
     method: "POST",

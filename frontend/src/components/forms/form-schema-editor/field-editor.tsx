@@ -9,9 +9,11 @@ import { OptionsEditor } from "@/components/forms/form-schema-editor/options-edi
 import { RangeEditor } from "@/components/forms/form-schema-editor/range-editor";
 import { normalizeFieldForType } from "@/components/forms/form-schema-editor/schema";
 import { ErrorList } from "@/components/forms/form-schema-editor/shared";
+import { ArrowDownIcon, ArrowUpIcon, TrashIcon } from "@/components/forms/form-schema-editor/icons";
 import {
   compactInputClassName,
-  secondaryButtonClassName,
+  dangerIconButtonClassName,
+  iconButtonClassName,
 } from "@/components/forms/form-schema-editor/styles";
 
 type FieldEditorProps = {
@@ -53,29 +55,35 @@ export function FieldEditor({
           <div className="font-display text-xl">Field {index + 1}</div>
           <div className="mt-1 text-sm text-ink-muted">{field.id || "unnamed_field"}</div>
         </div>
-        <div className="flex gap-2 max-sm:grid max-sm:grid-cols-3">
+        <div className="flex gap-2">
           <button
-            className={secondaryButtonClassName}
+            aria-label="Move field up"
+            className={iconButtonClassName}
             disabled={isFirst}
+            title="Move field up"
             type="button"
             onClick={() => onMove(-1)}
           >
-            Up
+            <ArrowUpIcon />
           </button>
           <button
-            className={secondaryButtonClassName}
+            aria-label="Move field down"
+            className={iconButtonClassName}
             disabled={isLast}
+            title="Move field down"
             type="button"
             onClick={() => onMove(1)}
           >
-            Down
+            <ArrowDownIcon />
           </button>
           <button
-            className="min-h-control border border-line-error bg-error px-4 py-2 font-semibold text-ink transition hover:border-danger disabled:cursor-not-allowed disabled:opacity-50"
+            aria-label="Remove field"
+            className={dangerIconButtonClassName}
+            title="Remove field"
             type="button"
             onClick={onRemove}
           >
-            Remove
+            <TrashIcon />
           </button>
         </div>
       </div>

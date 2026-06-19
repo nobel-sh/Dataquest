@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
@@ -24,6 +25,12 @@ export default function HomePage() {
           </div>
           <div className="text-ink-onDark/75">Open a published form by slug.</div>
         </div>
+        <Link
+          className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
+          href="/forms/new"
+        >
+          New form
+        </Link>
       </div>
 
       <section className="border border-line bg-panel shadow-panel">
