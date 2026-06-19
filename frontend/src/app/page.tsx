@@ -26,7 +26,7 @@ export default function HomePage() {
         </div>
       </div>
 
-      <section className="overflow-hidden bg-panel shadow-panel">
+      <section className="border border-line bg-panel shadow-panel">
         <div className="p-7 max-sm:p-5">
           <h1 className="text-center m-0 font-display text-[clamp(30px,4vw,46px)] leading-tight">
             Open Form

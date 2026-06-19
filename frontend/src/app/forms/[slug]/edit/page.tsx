@@ -1,15 +1,15 @@
-import { notFound } from "next/navigation";
 import Link from "next/link";
-import { PublicForm } from "@/components/public-form";
+import { notFound } from "next/navigation";
+import { FormSchemaEditor } from "@/components/forms/form-schema-editor";
 import { getFormBySlug } from "@/lib/api";
 
-type FormPageProps = {
+type EditFormPageProps = {
   params: Promise<{
     slug: string;
   }>;
 };
 
-export default async function FormPage({ params }: FormPageProps) {
+export default async function EditFormPage({ params }: EditFormPageProps) {
   const { slug } = await params;
   const form = await getFormBySlug(slug);
 
@@ -20,16 +20,18 @@ export default async function FormPage({ params }: FormPageProps) {
   return (
     <main className="mx-auto w-[calc(100%-32px)] max-w-page py-8 pb-14 max-sm:w-[calc(100%-24px)] max-sm:pt-5">
       <div className="mb-7 flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
-        <div className="font-display text-xl font-bold tracking-wide text-ink-onDark">
-          Dataquest Forms
+        <div>
+          <div className="font-display text-xl font-bold tracking-wide text-ink-onDark">
+            Dataquest Forms
+          </div>
+          <div className="text-ink-onDark/75">/{form.slug}/edit</div>
         </div>
-        <div className="flex items-center gap-3 text-ink-onDark/75 max-sm:flex-wrap">
-          <span>/{form.slug}</span>
+        <div className="flex items-center gap-3 max-sm:flex-wrap">
           <Link
             className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
-            href={`/forms/${form.slug}/edit`}
+            href={`/forms/${form.slug}`}
           >
-            Edit
+            View form
           </Link>
           <Link
             className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
@@ -39,7 +41,8 @@ export default async function FormPage({ params }: FormPageProps) {
           </Link>
         </div>
       </div>
-      <PublicForm form={form} />
+
+      <FormSchemaEditor form={form} />
     </main>
   );
 }

@@ -62,7 +62,7 @@ export function PublicForm({ form }: PublicFormProps) {
   }
 
   return (
-    <section className="overflow-hidden border-line bg-panel shadow-panel">
+    <section className="border border-line bg-panel shadow-panel">
       <header className="border-b border-line bg-panel p-7 max-sm:p-5 flex flex-col items-center">
         <h1 className="m-0 font-display text-[clamp(30px,4vw,46px)] leading-tight text-center">
           {schema.title}
@@ -229,8 +229,9 @@ function FieldInput({ field, value, describedBy, onChange }: FieldInputProps) {
             const checked = value === option.value;
             return (
               <label
-                className={`flex min-h-11 items-center gap-3 border px-4 py-2 transition hover:border-accent hover:bg-[#333642] ${checked ? "border-accent bg-[#30213b]" : "border-line bg-[#30333d]"
-                  }`}
+                className={`flex min-h-11 items-center gap-3 border px-4 py-2 transition hover:border-accent hover:bg-[#333642] ${
+                  checked ? "border-accent bg-[#30213b]" : "border-line bg-[#30333d]"
+                }`}
                 key={option.value}
               >
                 <input
@@ -242,12 +243,12 @@ function FieldInput({ field, value, describedBy, onChange }: FieldInputProps) {
                   onChange={() => onChange(option.value)}
                 />
                 <span
-                  className={`grid size-5 place-items-center border-2 ${checked ? "border-accent bg-accent" : "border-[#5f6368] bg-[#202124]"
-                    }`}
+                  className={`grid size-5 place-items-center border-2 ${
+                    checked ? "border-accent bg-accent" : "border-[#5f6368] bg-[#202124]"
+                  }`}
                 >
                   <span
-                    className={`size-2 bg-ink-button ${checked ? "opacity-100" : "opacity-0"
-                      }`}
+                    className={`size-2 bg-ink-button ${checked ? "opacity-100" : "opacity-0"}`}
                   />
                 </span>
                 {option.label}
@@ -264,8 +265,9 @@ function FieldInput({ field, value, describedBy, onChange }: FieldInputProps) {
             const checked = selectedValues.includes(option.value);
             return (
               <label
-                className={`flex min-h-11 items-center gap-3 border px-4 py-2 transition hover:border-accent hover:bg-[#333642] ${checked ? "border-accent bg-[#30213b]" : "border-line bg-[#30333d]"
-                  }`}
+                className={`flex min-h-11 items-center gap-3 border px-4 py-2 transition hover:border-accent hover:bg-[#333642] ${
+                  checked ? "border-accent bg-[#30213b]" : "border-line bg-[#30333d]"
+                }`}
                 key={option.value}
               >
                 <input
@@ -282,8 +284,9 @@ function FieldInput({ field, value, describedBy, onChange }: FieldInputProps) {
                   }}
                 />
                 <span
-                  className={`grid size-5 place-items-center border-2 text-sm font-black leading-none text-ink-button ${checked ? "border-accent bg-accent" : "border-[#5f6368] bg-[#202124]"
-                    }`}
+                  className={`grid size-5 place-items-center border-2 text-sm font-black leading-none text-ink-button ${
+                    checked ? "border-accent bg-accent" : "border-[#5f6368] bg-[#202124]"
+                  }`}
                 >
                   <span className={checked ? "opacity-100" : "opacity-0"}>✓</span>
                 </span>
