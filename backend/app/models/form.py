@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import ForeignKey, Index, UniqueConstraint
@@ -9,6 +9,9 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON, DateTime, Integer, String
 
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.user import User
 
 
 def utc_now() -> datetime:
@@ -19,6 +22,11 @@ class Form(Base):
     __tablename__ = "forms"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    owner_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        index=True,
+        default=None,
+    )
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str | None] = mapped_column(String(1000), default=None)
     slug: Mapped[str] = mapped_column(String(120), unique=True, index=True)
@@ -29,6 +37,7 @@ class Form(Base):
         onupdate=utc_now,
     )
 
+    owner: Mapped[User | None] = relationship(back_populates="forms")
     versions: Mapped[list[FormVersion]] = relationship(
         back_populates="form",
         cascade="all, delete-orphan",

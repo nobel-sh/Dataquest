@@ -27,6 +27,12 @@ export default function HomePage() {
         </div>
         <Link
           className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
+          href="/auth"
+        >
+          Account
+        </Link>
+        <Link
+          className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
           href="/forms/new"
         >
           New form

@@ -6,6 +6,7 @@ import type {
   FormVersion,
   GenerateFormResult,
 } from "@/lib/types";
+import { authHeaders } from "@/lib/auth";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
 
@@ -33,6 +34,7 @@ export async function createForm(slug: string, formSchema: FormSchema): Promise<
   const response = await fetch(`${API_BASE_URL}/forms`, {
     method: "POST",
     headers: {
+      ...authHeaders(),
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ slug, schema: formSchema }),
@@ -51,6 +53,7 @@ export async function generateForm(prompt: string): Promise<GenerateFormResult> 
   const response = await fetch(`${API_BASE_URL}/forms/generate`, {
     method: "POST",
     headers: {
+      ...authHeaders(),
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ prompt }),
@@ -85,6 +88,7 @@ export async function submitFormResponse(formId: string, answers: Answers): Prom
 
 export async function listFormResponses(formId: string): Promise<FormResponse[]> {
   const response = await fetch(`${API_BASE_URL}/forms/${formId}/responses`, {
+    headers: authHeaders(),
     cache: "no-store",
   });
 
@@ -97,6 +101,7 @@ export async function listFormResponses(formId: string): Promise<FormResponse[]>
 
 export async function listFormVersions(formId: string): Promise<FormVersion[]> {
   const response = await fetch(`${API_BASE_URL}/forms/${formId}/versions`, {
+    headers: authHeaders(),
     cache: "no-store",
   });
 
@@ -114,6 +119,7 @@ export async function createFormVersion(
   const response = await fetch(`${API_BASE_URL}/forms/${formId}/versions`, {
     method: "POST",
     headers: {
+      ...authHeaders(),
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ schema: formSchema }),

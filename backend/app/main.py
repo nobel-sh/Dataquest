@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
+from app.routes.auth import router as auth_router
 from app.routes.forms import router as forms_router
 from app.schemas.agent import FormReviewResult
 from app.schemas.form import FormSchema
@@ -16,6 +17,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.include_router(auth_router)
 app.include_router(forms_router)
 
 

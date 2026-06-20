@@ -66,3 +66,14 @@ export type FormResponse = {
   answers: Answers;
   submitted_at: string;
 };
+
+export type User = {
+  id: string;
+  email: string;
+};
+
+export type AuthToken = {
+  access_token: string;
+  token_type: "bearer";
+  user: User;
+};

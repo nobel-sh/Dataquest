@@ -7,6 +7,8 @@ from pydantic import BaseModel
 
 class Settings(BaseModel):
     database_url: str = "sqlite:///./dataquest.db"
+    auth_secret_key: str = "change-me-in-development"
+    access_token_ttl_seconds: int = 60 * 60 * 24
     cors_origins: list[str] = [
         "http://127.0.0.1:3000",
         "http://localhost:3000",
@@ -24,6 +26,10 @@ def get_settings() -> Settings:
 
     return Settings(
         database_url=os.getenv("DATABASE_URL", defaults.database_url),
+        auth_secret_key=os.getenv("AUTH_SECRET_KEY", defaults.auth_secret_key),
+        access_token_ttl_seconds=int(
+            os.getenv("ACCESS_TOKEN_TTL_SECONDS", defaults.access_token_ttl_seconds)
+        ),
         ai_provider=os.getenv("AI_PROVIDER", defaults.ai_provider),
         gemini_api_key=os.getenv("GEMINI_API_KEY", defaults.gemini_api_key),
         gemini_model=os.getenv("GEMINI_MODEL", defaults.gemini_model),

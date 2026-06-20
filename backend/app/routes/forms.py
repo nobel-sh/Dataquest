@@ -11,6 +11,8 @@ from sqlalchemy.orm import Session
 from app.ai.form_generation import get_form_generator
 from app.db.session import get_db
 from app.models.form import Form, FormResponse, FormVersion
+from app.models.user import User
+from app.routes.dependencies import get_current_user
 from app.schemas.agent import GenerateFormRequest, GenerateFormResult
 from app.schemas.form import FieldOption, FormSchema
 from app.schemas.form_record import FormCreate, FormRead
@@ -23,11 +25,13 @@ from app.schemas.form_version import FormVersionCreate, FormVersionRead
 
 router = APIRouter(prefix="/forms", tags=["forms"])
 DbSession = Annotated[Session, Depends(get_db)]
+CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 @router.post("", response_model=FormRead, status_code=status.HTTP_201_CREATED)
-def create_form(payload: FormCreate, db: DbSession) -> FormRead:
+def create_form(payload: FormCreate, db: DbSession, current_user: CurrentUser) -> FormRead:
     form = Form(
+        owner=current_user,
         title=payload.form_schema.title,
         description=payload.form_schema.description,
         slug=payload.slug,
@@ -56,16 +60,15 @@ def create_form(payload: FormCreate, db: DbSession) -> FormRead:
 
 
 @router.post("/generate", response_model=GenerateFormResult)
-def generate_form(payload: GenerateFormRequest) -> GenerateFormResult:
+def generate_form(payload: GenerateFormRequest, _current_user: CurrentUser) -> GenerateFormResult:
     generator = get_form_generator()
     return generator.generate(payload.prompt)
 
 
 @router.get("/{form_id}", response_model=FormRead)
-def get_form(form_id: UUID, db: DbSession) -> FormRead:
+def get_form(form_id: UUID, db: DbSession, current_user: CurrentUser) -> FormRead:
     form = db.get(Form, form_id)
-    if form is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
+    form = ensure_form_owner(form, current_user)
 
     latest_version = get_latest_version(form.id, db)
 
@@ -92,10 +95,10 @@ def create_form_version(
     form_id: UUID,
     payload: FormVersionCreate,
     db: DbSession,
+    current_user: CurrentUser,
 ) -> FormRead:
     form = db.get(Form, form_id)
-    if form is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
+    form = ensure_form_owner(form, current_user)
 
     latest_version = get_latest_version(form.id, db)
     form.title = payload.form_schema.title
@@ -115,10 +118,13 @@ def create_form_version(
 
 
 @router.get("/{form_id}/versions", response_model=list[FormVersionRead])
-def list_form_versions(form_id: UUID, db: DbSession) -> list[FormVersionRead]:
+def list_form_versions(
+    form_id: UUID,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> list[FormVersionRead]:
     form = db.get(Form, form_id)
-    if form is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
+    form = ensure_form_owner(form, current_user)
 
     versions = db.scalars(
         select(FormVersion)
@@ -167,7 +173,12 @@ def submit_form_response(
 
 
 @router.get("/{form_id}/responses/export")
-def export_form_responses(form_id: UUID, db: DbSession, format: str = "csv") -> Response:
+def export_form_responses(
+    form_id: UUID,
+    db: DbSession,
+    current_user: CurrentUser,
+    format: str = "csv",
+) -> Response:
     if format != "csv":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -175,8 +186,7 @@ def export_form_responses(form_id: UUID, db: DbSession, format: str = "csv") -> 
         )
 
     form = db.get(Form, form_id)
-    if form is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
+    form = ensure_form_owner(form, current_user)
 
     latest_version = get_latest_version(form.id, db)
     form_schema = FormSchema.model_validate(latest_version.schema_json)
@@ -199,10 +209,13 @@ def export_form_responses(form_id: UUID, db: DbSession, format: str = "csv") -> 
 
 
 @router.get("/{form_id}/responses", response_model=list[FormResponseRead])
-def list_form_responses(form_id: UUID, db: DbSession) -> list[FormResponseRead]:
+def list_form_responses(
+    form_id: UUID,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> list[FormResponseRead]:
     form = db.get(Form, form_id)
-    if form is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
+    form = ensure_form_owner(form, current_user)
 
     responses = db.scalars(
         select(FormResponse)
@@ -211,6 +224,12 @@ def list_form_responses(form_id: UUID, db: DbSession) -> list[FormResponseRead]:
     ).all()
 
     return [build_response_read(response) for response in responses]
+
+
+def ensure_form_owner(form: Form | None, current_user: User) -> Form:
+    if form is None or form.owner_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
+    return form
 
 
 def build_responses_csv(

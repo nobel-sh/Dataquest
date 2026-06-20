@@ -7,6 +7,7 @@ from app.schemas.agent import (
     GenerateFormResult,
     ReviewSeverity,
 )
+from app.schemas.auth import AuthToken, UserCreate, UserRead
 from app.schemas.form import (
     FieldOption,
     FieldType,
@@ -40,4 +41,7 @@ __all__ = [
     "GenerateFormRequest",
     "GenerateFormResult",
     "ReviewSeverity",
+    "AuthToken",
+    "UserCreate",
+    "UserRead",
 ]
