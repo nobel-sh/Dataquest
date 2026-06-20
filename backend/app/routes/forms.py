@@ -1,7 +1,9 @@
+import csv
+from io import StringIO
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -10,7 +12,7 @@ from app.ai.form_generation import get_form_generator
 from app.db.session import get_db
 from app.models.form import Form, FormResponse, FormVersion
 from app.schemas.agent import GenerateFormRequest, GenerateFormResult
-from app.schemas.form import FormSchema
+from app.schemas.form import FieldOption, FormSchema
 from app.schemas.form_record import FormCreate, FormRead
 from app.schemas.form_response import (
     FormResponseRead,
@@ -164,6 +166,38 @@ def submit_form_response(
     return build_response_read(response)
 
 
+@router.get("/{form_id}/responses/export")
+def export_form_responses(form_id: UUID, db: DbSession, format: str = "csv") -> Response:
+    if format != "csv":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="only csv export is supported",
+        )
+
+    form = db.get(Form, form_id)
+    if form is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
+
+    latest_version = get_latest_version(form.id, db)
+    form_schema = FormSchema.model_validate(latest_version.schema_json)
+    versions = db.scalars(select(FormVersion).where(FormVersion.form_id == form.id)).all()
+    version_numbers_by_id = {version.id: version.version_number for version in versions}
+    responses = db.scalars(
+        select(FormResponse)
+        .where(FormResponse.form_id == form.id)
+        .order_by(FormResponse.submitted_at.asc(), FormResponse.id.asc())
+    ).all()
+
+    csv_body = build_responses_csv(form_schema, responses, version_numbers_by_id)
+    return Response(
+        content=csv_body,
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="{form.slug}-responses.csv"',
+        },
+    )
+
+
 @router.get("/{form_id}/responses", response_model=list[FormResponseRead])
 def list_form_responses(form_id: UUID, db: DbSession) -> list[FormResponseRead]:
     form = db.get(Form, form_id)
@@ -177,6 +211,49 @@ def list_form_responses(form_id: UUID, db: DbSession) -> list[FormResponseRead]:
     ).all()
 
     return [build_response_read(response) for response in responses]
+
+
+def build_responses_csv(
+    form_schema: FormSchema,
+    responses: list[FormResponse],
+    version_numbers_by_id: dict[UUID, int],
+) -> str:
+    buffer = StringIO()
+    writer = csv.writer(buffer)
+    fields = form_schema.fields
+
+    writer.writerow(["submitted_at", "version", *[field.label for field in fields]])
+
+    for response in responses:
+        writer.writerow(
+            [
+                response.submitted_at.isoformat(),
+                f"v{version_numbers_by_id.get(response.form_version_id, 'unknown')}",
+                *[
+                    format_export_answer(response.answers_json.get(field.id), field.options)
+                    for field in fields
+                ],
+            ]
+        )
+
+    return buffer.getvalue()
+
+
+def format_export_answer(value: object, options: list[FieldOption] | None) -> str:
+    if value is None or value == "":
+        return ""
+
+    option_labels_by_value = (
+        {option.value: option.label for option in options} if options is not None else {}
+    )
+
+    if isinstance(value, list):
+        return "; ".join(option_labels_by_value.get(str(item), str(item)) for item in value)
+
+    if isinstance(value, bool):
+        return "true" if value else "false"
+
+    return option_labels_by_value.get(str(value), str(value))
 
 
 def get_latest_version(form_id: UUID, db: Session) -> FormVersion:

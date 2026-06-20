@@ -1,6 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getFormBySlug, listFormResponses, listFormVersions } from "@/lib/api";
+import {
+  formResponsesExportUrl,
+  getFormBySlug,
+  listFormResponses,
+  listFormVersions,
+} from "@/lib/api";
 import type { AnswerValue, FieldOption, FormField, FormResponse } from "@/lib/types";
 
 type ResponsesPageProps = {
@@ -35,12 +40,20 @@ export default async function ResponsesPage({ params }: ResponsesPageProps) {
           </div>
           <div className="text-ink-onDark/75">/{form.slug}/responses</div>
         </div>
-        <Link
-          className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
-          href={`/forms/${form.slug}`}
-        >
-          View form
-        </Link>
+        <div className="flex items-center gap-3 max-sm:flex-wrap">
+          <a
+            className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
+            href={formResponsesExportUrl(form.id)}
+          >
+            Export CSV
+          </a>
+          <Link
+            className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
+            href={`/forms/${form.slug}`}
+          >
+            View form
+          </Link>
+        </div>
       </div>
 
       <section className="border border-line bg-panel shadow-panel">
