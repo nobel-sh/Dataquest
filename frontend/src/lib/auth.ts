@@ -2,6 +2,8 @@ import type { AuthToken, User } from "@/lib/types";
 import { getApiBaseUrl } from "@/lib/config";
 
 let refreshSessionPromise: Promise<AuthToken | null> | null = null;
+const CSRF_COOKIE_NAME = "dataquest_csrf_token";
+const CSRF_HEADER_NAME = "X-CSRF-Token";
 
 export async function register(email: string, password: string): Promise<AuthToken> {
   return authRequest("/auth/register", email, password);
@@ -33,6 +35,7 @@ export async function refreshSession(): Promise<AuthToken | null> {
   refreshSessionPromise = (async () => {
     const response = await fetch(`${getApiBaseUrl()}/auth/refresh`, {
       method: "POST",
+      headers: csrfHeaders(),
       credentials: "include",
     });
 
@@ -53,6 +56,7 @@ export async function refreshSession(): Promise<AuthToken | null> {
 export async function logoutSession(): Promise<void> {
   await fetch(`${getApiBaseUrl()}/auth/logout`, {
     method: "POST",
+    headers: csrfHeaders(),
     credentials: "include",
   });
 }
@@ -62,7 +66,7 @@ export async function authenticatedFetch(
   initFactory: () => RequestInit,
 ): Promise<Response> {
   const initialResponse = await fetch(input, {
-    ...initFactory(),
+    ...withCsrfHeader(initFactory()),
     credentials: "include",
   });
 
@@ -76,7 +80,7 @@ export async function authenticatedFetch(
   }
 
   const retryResponse = await fetch(input, {
-    ...initFactory(),
+    ...withCsrfHeader(initFactory()),
     credentials: "include",
   });
   return retryResponse;
@@ -99,6 +103,57 @@ async function authRequest(path: string, email: string, password: string): Promi
   }
 
   return response.json();
+}
+
+
+function withCsrfHeader(init: RequestInit): RequestInit {
+  const method = init.method?.toUpperCase() ?? "GET";
+  if (["GET", "HEAD", "OPTIONS"].includes(method)) {
+    return init;
+  }
+
+  return {
+    ...init,
+    headers: {
+      ...headersToRecord(init.headers),
+      ...csrfHeaders(),
+    },
+  };
+}
+
+
+function csrfHeaders(): HeadersInit {
+  const token = readCookie(CSRF_COOKIE_NAME);
+  return token ? { [CSRF_HEADER_NAME]: token } : {};
+}
+
+
+function readCookie(name: string): string | null {
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  const prefix = `${name}=`;
+  const cookie = document.cookie
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(prefix));
+
+  return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : null;
+}
+
+
+function headersToRecord(headers: HeadersInit | undefined): Record<string, string> {
+  if (!headers) {
+    return {};
+  }
+  if (headers instanceof Headers) {
+    return Object.fromEntries(headers.entries());
+  }
+  if (Array.isArray(headers)) {
+    return Object.fromEntries(headers);
+  }
+  return headers;
 }
 
 async function fetchCurrentUser(): Promise<User | null> {

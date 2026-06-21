@@ -71,6 +71,10 @@ def create_refresh_token() -> str:
     return base64url_encode(secrets.token_bytes(48))
 
 
+def create_csrf_token() -> str:
+    return base64url_encode(secrets.token_bytes(32))
+
+
 def hash_refresh_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 

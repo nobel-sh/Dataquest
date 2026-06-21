@@ -14,6 +14,11 @@ class Settings(BaseModel):
     access_token_cookie_path: str = "/"
     access_token_cookie_secure: bool = False
     access_token_cookie_samesite: str = "lax"
+    csrf_cookie_name: str = "dataquest_csrf_token"
+    csrf_header_name: str = "X-CSRF-Token"
+    csrf_cookie_path: str = "/"
+    csrf_cookie_secure: bool = False
+    csrf_cookie_samesite: str = "lax"
     refresh_token_ttl_seconds: int = 60 * 60 * 24 * 30
     refresh_token_cookie_name: str = "dataquest_refresh_token"
     refresh_token_cookie_path: str = "/auth"
@@ -56,6 +61,17 @@ def get_settings() -> Settings:
         access_token_cookie_samesite=os.getenv(
             "ACCESS_TOKEN_COOKIE_SAMESITE",
             defaults.access_token_cookie_samesite,
+        ).lower(),
+        csrf_cookie_name=os.getenv("CSRF_COOKIE_NAME", defaults.csrf_cookie_name),
+        csrf_header_name=os.getenv("CSRF_HEADER_NAME", defaults.csrf_header_name),
+        csrf_cookie_path=os.getenv("CSRF_COOKIE_PATH", defaults.csrf_cookie_path),
+        csrf_cookie_secure=_parse_bool(
+            os.getenv("CSRF_COOKIE_SECURE"),
+            defaults.csrf_cookie_secure,
+        ),
+        csrf_cookie_samesite=os.getenv(
+            "CSRF_COOKIE_SAMESITE",
+            defaults.csrf_cookie_samesite,
         ).lower(),
         refresh_token_ttl_seconds=int(
             os.getenv("REFRESH_TOKEN_TTL_SECONDS", defaults.refresh_token_ttl_seconds)

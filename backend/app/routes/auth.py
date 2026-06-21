@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.security import (
     create_access_token,
+    create_csrf_token,
     create_refresh_token,
     hash_password,
     hash_refresh_token,
@@ -90,6 +91,7 @@ def refresh_session(request: Request, response: Response, db: DbSession) -> Auth
     access_token = build_auth_token(user)
     set_access_cookie(response, access_token.access_token)
     set_refresh_cookie(response, response_token)
+    set_csrf_cookie(response)
     logger.info("session refreshed user_id=%s session_id=%s", user.id, refresh_token.session_id)
     return access_token
 
@@ -109,6 +111,7 @@ def logout_session(request: Request, response: Response, db: DbSession) -> None:
     finally:
         clear_access_cookie(response)
         clear_refresh_cookie(response)
+        clear_csrf_cookie(response)
 
 
 @router.get("/me", response_model=UserRead)
@@ -122,6 +125,7 @@ def issue_session(user: User, db: Session, response: Response) -> AuthToken:
     auth_token = build_auth_token(user)
     set_access_cookie(response, auth_token.access_token)
     set_refresh_cookie(response, refresh_token_value)
+    set_csrf_cookie(response)
     return auth_token
 
 
@@ -222,6 +226,20 @@ def set_access_cookie(response: Response, token_value: str) -> None:
     )
 
 
+def set_csrf_cookie(response: Response) -> None:
+    settings = get_settings()
+    response.set_cookie(
+        key=settings.csrf_cookie_name,
+        value=create_csrf_token(),
+        max_age=settings.refresh_token_ttl_seconds,
+        expires=settings.refresh_token_ttl_seconds,
+        path=settings.csrf_cookie_path,
+        secure=settings.csrf_cookie_secure,
+        httponly=False,
+        samesite=settings.csrf_cookie_samesite,
+    )
+
+
 def clear_refresh_cookie(response: Response) -> None:
     settings = get_settings()
     response.delete_cookie(
@@ -235,6 +253,14 @@ def clear_access_cookie(response: Response) -> None:
     response.delete_cookie(
         key=settings.access_token_cookie_name,
         path=settings.access_token_cookie_path,
+    )
+
+
+def clear_csrf_cookie(response: Response) -> None:
+    settings = get_settings()
+    response.delete_cookie(
+        key=settings.csrf_cookie_name,
+        path=settings.csrf_cookie_path,
     )
 
 
