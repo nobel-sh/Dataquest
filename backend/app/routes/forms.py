@@ -57,7 +57,7 @@ def create_form(payload: FormCreate, db: DbSession, current_user: CurrentUser) -
     db.refresh(form)
     db.refresh(version)
 
-    return build_form_read(form, version)
+    return build_form_read(form, version, db, current_user)
 
 
 @router.post("/generate", response_model=GenerateFormResult)
@@ -78,7 +78,10 @@ def list_forms(
 
     forms = db.scalars(statement.order_by(Form.updated_at.desc())).all()
 
-    return [build_form_read(form, get_latest_version(form.id, db)) for form in forms]
+    return [
+        build_form_read(form, get_latest_version(form.id, db), db, current_user)
+        for form in forms
+    ]
 
 
 @router.patch("/{form_id}/settings", response_model=FormRead)
@@ -101,7 +104,7 @@ def update_form_settings(
     db.commit()
     db.refresh(form)
 
-    return build_form_read(form, latest_version)
+    return build_form_read(form, latest_version, db, current_user)
 
 
 @router.get("/{form_id}", response_model=FormRead)
@@ -111,18 +114,18 @@ def get_form(form_id: UUID, db: DbSession, current_user: CurrentUser) -> FormRea
 
     latest_version = get_latest_version(form.id, db)
 
-    return build_form_read(form, latest_version)
+    return build_form_read(form, latest_version, db, current_user)
 
 
 @router.get("/slug/{slug}", response_model=FormRead)
-def get_form_by_slug(slug: str, db: DbSession) -> FormRead:
+def get_form_by_slug(slug: str, db: DbSession, current_user: OptionalCurrentUser) -> FormRead:
     form = db.scalar(select(Form).where(Form.slug == slug))
     if form is None or form.archived:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
 
     latest_version = get_latest_version(form.id, db)
 
-    return build_form_read(form, latest_version)
+    return build_form_read(form, latest_version, db, current_user)
 
 
 @router.post(
@@ -153,7 +156,7 @@ def create_form_version(
     db.refresh(form)
     db.refresh(version)
 
-    return build_form_read(form, version)
+    return build_form_read(form, version, db, current_user)
 
 
 @router.get("/{form_id}/versions", response_model=list[FormVersionRead])
@@ -199,6 +202,20 @@ def submit_form_response(
             detail="login required to submit this form",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    if current_user is not None:
+        existing_response = db.scalar(
+            select(FormResponse)
+            .where(
+                FormResponse.form_id == form.id,
+                FormResponse.respondent_user_id == current_user.id,
+            )
+            .limit(1)
+        )
+        if existing_response is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="user has already submitted a response for this form",
+            )
 
     latest_version = get_latest_version(form.id, db)
     form_schema = FormSchema.model_validate(latest_version.schema_json)
@@ -342,7 +359,12 @@ def get_latest_version(form_id: UUID, db: Session) -> FormVersion:
     return latest_version
 
 
-def build_form_read(form: Form, version: FormVersion) -> FormRead:
+def build_form_read(
+    form: Form,
+    version: FormVersion,
+    db: Session,
+    current_user: User | None,
+) -> FormRead:
     return FormRead(
         id=form.id,
         title=form.title,
@@ -350,11 +372,27 @@ def build_form_read(form: Form, version: FormVersion) -> FormRead:
         slug=form.slug,
         accepting_responses=form.accepting_responses,
         requires_login=form.requires_login,
+        has_responded=has_user_responded(form.id, current_user, db),
         archived=form.archived,
         created_at=form.created_at,
         updated_at=form.updated_at,
         latest_version=build_version_read(version),
     )
+
+
+def has_user_responded(form_id: UUID, current_user: User | None, db: Session) -> bool:
+    if current_user is None:
+        return False
+
+    response_id = db.scalar(
+        select(FormResponse.id)
+        .where(
+            FormResponse.form_id == form_id,
+            FormResponse.respondent_user_id == current_user.id,
+        )
+        .limit(1)
+    )
+    return response_id is not None
 
 
 def build_version_read(version: FormVersion) -> FormVersionRead:

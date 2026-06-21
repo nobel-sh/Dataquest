@@ -255,7 +255,7 @@ export function FormsDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[repeat(4,minmax(0,1fr))_auto] items-stretch border-b border-line text-sm max-xl:grid-cols-4 max-lg:grid-cols-2 max-sm:grid-cols-1">
+              <div className="grid grid-cols-[repeat(4,minmax(0,1fr))_auto] items-stretch border-b border-line text-sm max-xl:grid-cols-3 max-lg:grid-cols-2 max-sm:grid-cols-1">
                 <Metric
                   label="Version"
                   value={`v${form.latest_version.version_number.toString()}`}
@@ -266,7 +266,7 @@ export function FormsDashboard() {
                   value={form.accepting_responses ? "Open" : "Closed"}
                 />
                 <Metric label="Access" value={form.requires_login ? "Login" : "Public"} />
-                <div className="flex items-center gap-2 p-4 max-xl:col-span-4 max-lg:col-span-2 max-sm:col-span-1 max-sm:flex-col max-sm:items-stretch">
+                <div className="flex items-center gap-2 p-4 max-xl:col-span-3 max-lg:col-span-2 max-sm:col-span-1 max-sm:flex-col max-sm:items-stretch">
                   {view === "active" ? (
                     <>
                       <button

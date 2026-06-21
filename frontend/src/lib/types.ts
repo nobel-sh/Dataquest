@@ -53,6 +53,7 @@ export type FormRecord = {
   slug: string;
   accepting_responses: boolean;
   requires_login: boolean;
+  has_responded: boolean;
   archived: boolean;
   created_at: string;
   updated_at: string;

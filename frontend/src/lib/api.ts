@@ -16,6 +16,7 @@ export function formResponsesExportUrl(formId: string): string {
 
 export async function getFormBySlug(slug: string): Promise<FormRecord | null> {
   const response = await fetch(`${API_BASE_URL}/forms/slug/${encodeURIComponent(slug)}`, {
+    headers: authHeaders(),
     cache: "no-store",
   });
 
@@ -69,7 +70,11 @@ export async function listForms(includeArchived = false): Promise<FormRecord[]> 
 
 export async function updateFormSettings(
   formId: string,
-  settings: { accepting_responses?: boolean; requires_login?: boolean; archived?: boolean },
+  settings: {
+    accepting_responses?: boolean;
+    requires_login?: boolean;
+    archived?: boolean;
+  },
 ): Promise<FormRecord> {
   const response = await fetch(`${API_BASE_URL}/forms/${formId}/settings`, {
     method: "PATCH",

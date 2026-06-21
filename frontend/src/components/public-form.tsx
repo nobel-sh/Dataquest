@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { submitFormResponse } from "@/lib/api";
+import { getFormBySlug, submitFormResponse } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import type { Answers, AnswerValue, FormField, FormRecord, User } from "@/lib/types";
 
@@ -21,6 +21,7 @@ export function PublicForm({ form }: PublicFormProps) {
   const [answers, setAnswers] = useState<Answers>(() => initialAnswers(schema.fields));
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [hasResponded, setHasResponded] = useState(form.has_responded);
   const [isCheckingSession, setIsCheckingSession] = useState(form.requires_login);
   const [submitState, setSubmitState] = useState<"idle" | "submitting" | "success" | "error">(
     "idle",
@@ -32,19 +33,18 @@ export function PublicForm({ form }: PublicFormProps) {
     [schema.fields],
   );
   const loginRequired = form.requires_login && !currentUser;
+  const duplicateBlocked = hasResponded;
 
   useEffect(() => {
-    if (!form.requires_login) {
-      return;
-    }
-
     let cancelled = false;
 
     async function loadSession() {
       try {
         const user = await getCurrentUser();
+        const latestForm = user ? await getFormBySlug(form.slug) : null;
         if (!cancelled) {
           setCurrentUser(user);
+          setHasResponded(latestForm?.has_responded ?? false);
         }
       } catch {
         if (!cancelled) {
@@ -62,7 +62,7 @@ export function PublicForm({ form }: PublicFormProps) {
     return () => {
       cancelled = true;
     };
-  }, [form.requires_login]);
+  }, [form.requires_login, form.slug]);
 
   function setAnswer(fieldId: string, value: AnswerValue) {
     setAnswers((current) => ({ ...current, [fieldId]: value }));
@@ -85,6 +85,11 @@ export function PublicForm({ form }: PublicFormProps) {
       setSubmitMessage("Login is required to submit this form.");
       return;
     }
+    if (duplicateBlocked) {
+      setSubmitState("error");
+      setSubmitMessage("You have already submitted a response to this form.");
+      return;
+    }
 
     const nextErrors = validateRequiredAnswers(requiredFields, answers);
     setErrors(nextErrors);
@@ -100,6 +105,7 @@ export function PublicForm({ form }: PublicFormProps) {
 
     try {
       await submitFormResponse(form.id, compactAnswers(answers));
+      setHasResponded(true);
       setSubmitState("success");
       setSubmitMessage("Response submitted.");
     } catch (error) {
@@ -128,7 +134,10 @@ export function PublicForm({ form }: PublicFormProps) {
             {isCheckingSession ? (
               "Checking login..."
             ) : currentUser ? (
-              <span>Submitting as {currentUser.email}</span>
+              <span>
+                Submitting as {currentUser.email}
+                {hasResponded ? "; you have already responded." : "."}
+              </span>
             ) : (
               <div className="flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-stretch">
                 <span>Login is required to submit this form.</span>
@@ -148,6 +157,14 @@ export function PublicForm({ form }: PublicFormProps) {
         <div className="border-b border-line bg-[#181a20] p-7 max-sm:p-5">
           <div className="border border-line-error bg-error px-4 py-4">
             This form is not accepting responses.
+          </div>
+        </div>
+      ) : null}
+
+      {duplicateBlocked ? (
+        <div className="border-b border-line bg-[#181a20] p-7 max-sm:p-5">
+          <div className="border border-line-error bg-error px-4 py-4">
+            You have already submitted a response to this form.
           </div>
         </div>
       ) : null}
@@ -184,7 +201,8 @@ export function PublicForm({ form }: PublicFormProps) {
               submitState === "submitting" ||
               !form.accepting_responses ||
               isCheckingSession ||
-              loginRequired
+              loginRequired ||
+              duplicateBlocked
             }
             type="submit"
           >
