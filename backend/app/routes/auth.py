@@ -1,3 +1,4 @@
+import logging
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 from uuid import UUID, uuid4
@@ -24,6 +25,7 @@ from app.schemas.auth import AuthToken, UserCreate, UserRead
 router = APIRouter(prefix="/auth", tags=["auth"])
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+logger = logging.getLogger("app.auth")
 
 
 @router.post("/register", response_model=AuthToken, status_code=status.HTTP_201_CREATED)
@@ -47,7 +49,9 @@ def register_user(
 
     db.refresh(user)
     revoke_refresh_token_from_request(request, db)
-    return issue_session(user, db, response)
+    auth_token = issue_session(user, db, response)
+    logger.info("user registered user_id=%s", user.id)
+    return auth_token
 
 
 @router.post("/login", response_model=AuthToken)
@@ -65,7 +69,9 @@ def login_user(
         )
 
     revoke_refresh_token_from_request(request, db)
-    return issue_session(user, db, response)
+    auth_token = issue_session(user, db, response)
+    logger.info("user logged in user_id=%s", user.id)
+    return auth_token
 
 
 @router.post("/refresh", response_model=AuthToken)
@@ -84,6 +90,7 @@ def refresh_session(request: Request, response: Response, db: DbSession) -> Auth
     access_token = build_auth_token(user)
     set_access_cookie(response, access_token.access_token)
     set_refresh_cookie(response, response_token)
+    logger.info("session refreshed user_id=%s session_id=%s", user.id, refresh_token.session_id)
     return access_token
 
 
@@ -94,6 +101,11 @@ def logout_session(request: Request, response: Response, db: DbSession) -> None:
         if refresh_token is not None and refresh_token.revoked_at is None:
             refresh_token.revoked_at = utc_now()
             db.commit()
+            logger.info(
+                "session logged out user_id=%s session_id=%s",
+                refresh_token.user_id,
+                refresh_token.session_id,
+            )
     finally:
         clear_access_cookie(response)
         clear_refresh_cookie(response)
@@ -144,6 +156,11 @@ def get_refresh_token_from_request(
 
     if refresh_token.revoked_at is not None:
         if detect_reuse:
+            logger.warning(
+                "refresh token reuse detected user_id=%s session_id=%s",
+                refresh_token.user_id,
+                refresh_token.session_id,
+            )
             revoke_refresh_token_family(refresh_token, db)
             db.commit()
         return None
@@ -151,6 +168,11 @@ def get_refresh_token_from_request(
     if to_utc_datetime(refresh_token.expires_at) <= utc_now():
         refresh_token.revoked_at = utc_now()
         db.commit()
+        logger.info(
+            "expired refresh token revoked user_id=%s session_id=%s",
+            refresh_token.user_id,
+            refresh_token.session_id,
+        )
         return None
 
     return refresh_token

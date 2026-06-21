@@ -1,4 +1,5 @@
 import csv
+import logging
 from io import StringIO
 from typing import Annotated
 from uuid import UUID
@@ -27,6 +28,7 @@ router = APIRouter(prefix="/forms", tags=["forms"])
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
 OptionalCurrentUser = Annotated[User | None, Depends(get_optional_current_user)]
+logger = logging.getLogger("app.forms")
 
 
 @router.post("", response_model=FormRead, status_code=status.HTTP_201_CREATED)
@@ -57,13 +59,27 @@ def create_form(payload: FormCreate, db: DbSession, current_user: CurrentUser) -
     db.refresh(form)
     db.refresh(version)
 
+    logger.info(
+        "form created form_id=%s owner_id=%s version=%s field_count=%s",
+        form.id,
+        current_user.id,
+        version.version_number,
+        len(payload.form_schema.fields),
+    )
     return build_form_read(form, version, db, current_user)
 
 
 @router.post("/generate", response_model=GenerateFormResult)
 def generate_form(payload: GenerateFormRequest, _current_user: CurrentUser) -> GenerateFormResult:
     generator = get_form_generator()
-    return generator.generate(payload.prompt)
+    result = generator.generate(payload.prompt)
+    logger.info(
+        "form schema generated user_id=%s field_count=%s warning_count=%s",
+        _current_user.id,
+        len(result.form_schema.fields),
+        len(result.warnings),
+    )
+    return result
 
 
 @router.get("", response_model=list[FormRead])
@@ -104,6 +120,15 @@ def update_form_settings(
     db.commit()
     db.refresh(form)
 
+    logger.info(
+        "form settings updated form_id=%s owner_id=%s accepting_responses=%s "
+        "requires_login=%s archived=%s",
+        form.id,
+        current_user.id,
+        form.accepting_responses,
+        form.requires_login,
+        form.archived,
+    )
     return build_form_read(form, latest_version, db, current_user)
 
 
@@ -156,6 +181,13 @@ def create_form_version(
     db.refresh(form)
     db.refresh(version)
 
+    logger.info(
+        "form version created form_id=%s owner_id=%s version=%s field_count=%s",
+        form.id,
+        current_user.id,
+        version.version_number,
+        len(payload.form_schema.fields),
+    )
     return build_form_read(form, version, db, current_user)
 
 
@@ -238,6 +270,13 @@ def submit_form_response(
     db.commit()
     db.refresh(response)
 
+    logger.info(
+        "form response submitted form_id=%s version=%s response_id=%s authenticated=%s",
+        form.id,
+        latest_version.version_number,
+        response.id,
+        current_user is not None,
+    )
     return build_response_read(response)
 
 
@@ -268,6 +307,13 @@ def export_form_responses(
     ).all()
 
     csv_body = build_responses_csv(form_schema, responses, version_numbers_by_id)
+    logger.info(
+        "form responses exported form_id=%s owner_id=%s format=%s response_count=%s",
+        form.id,
+        current_user.id,
+        format,
+        len(responses),
+    )
     return Response(
         content=csv_body,
         media_type="text/csv",
