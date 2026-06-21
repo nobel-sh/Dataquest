@@ -5,7 +5,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -419,6 +419,7 @@ def build_form_read(
         accepting_responses=form.accepting_responses,
         requires_login=form.requires_login,
         has_responded=has_user_responded(form.id, current_user, db),
+        response_count=get_response_count(form.id, db),
         archived=form.archived,
         created_at=form.created_at,
         updated_at=form.updated_at,
@@ -439,6 +440,15 @@ def has_user_responded(form_id: UUID, current_user: User | None, db: Session) ->
         .limit(1)
     )
     return response_id is not None
+
+
+def get_response_count(form_id: UUID, db: Session) -> int:
+    return (
+        db.scalar(
+            select(func.count()).select_from(FormResponse).where(FormResponse.form_id == form_id)
+        )
+        or 0
+    )
 
 
 def build_version_read(version: FormVersion) -> FormVersionRead:

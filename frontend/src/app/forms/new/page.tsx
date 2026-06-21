@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AppBrand } from "@/components/app-brand";
 import { NewFormCreator } from "@/components/forms/new-form-creator";
 
 export default function NewFormPage() {
@@ -6,9 +7,7 @@ export default function NewFormPage() {
     <main className="mx-auto w-[calc(100%-32px)] max-w-page py-8 pb-14 max-sm:w-[calc(100%-24px)] max-sm:pt-5">
       <div className="mb-7 flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
         <div>
-          <div className="font-display text-xl font-bold tracking-wide text-ink-onDark">
-            Dataquest Forms
-          </div>
+          <AppBrand />
           <div className="text-ink-onDark/75">/forms/new</div>
         </div>
         <div className="flex gap-2 max-sm:w-full max-sm:flex-col">

@@ -34,6 +34,7 @@ class FormRead(BaseModel):
     accepting_responses: bool
     requires_login: bool
     has_responded: bool
+    response_count: int
     archived: bool
     created_at: datetime
     updated_at: datetime

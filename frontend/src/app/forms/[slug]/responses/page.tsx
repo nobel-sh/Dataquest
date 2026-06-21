@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AppBrand } from "@/components/app-brand";
 import { ResponsesViewer } from "@/components/forms/responses-viewer";
 import { getFormBySlug } from "@/lib/api";
 
@@ -21,9 +22,7 @@ export default async function ResponsesPage({ params }: ResponsesPageProps) {
     <main className="mx-auto w-[calc(100%-32px)] max-w-page py-8 pb-14 max-sm:w-[calc(100%-24px)] max-sm:pt-5">
       <div className="mb-7 flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
         <div>
-          <div className="font-display text-xl font-bold tracking-wide text-ink-onDark">
-            Dataquest Forms
-          </div>
+          <AppBrand />
           <div className="text-ink-onDark/75">/{form.slug}/responses</div>
         </div>
         <Link

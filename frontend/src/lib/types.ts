@@ -54,6 +54,7 @@ export type FormRecord = {
   accepting_responses: boolean;
   requires_login: boolean;
   has_responded: boolean;
+  response_count: number;
   archived: boolean;
   created_at: string;
   updated_at: string;

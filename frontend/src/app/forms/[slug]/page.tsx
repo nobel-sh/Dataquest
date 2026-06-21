@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { AppBrand } from "@/components/app-brand";
 import { PublicForm } from "@/components/public-form";
 import { getFormBySlug } from "@/lib/api";
 
@@ -20,9 +21,7 @@ export default async function FormPage({ params }: FormPageProps) {
   return (
     <main className="mx-auto w-[calc(100%-32px)] max-w-page py-8 pb-14 max-sm:w-[calc(100%-24px)] max-sm:pt-5">
       <div className="mb-7 flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
-        <div className="font-display text-xl font-bold tracking-wide text-ink-onDark">
-          Dataquest Forms
-        </div>
+        <AppBrand />
         <div className="flex items-center gap-3 text-ink-onDark/75 max-sm:flex-wrap">
           <span>/{form.slug}</span>
           <Link
