@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { clearAccessToken, getCurrentUser, login, register, setAccessToken } from "@/lib/auth";
+import { getCurrentUser, login, logoutSession, register } from "@/lib/auth";
 import type { User } from "@/lib/types";
 
 const inputClassName =
@@ -56,7 +56,6 @@ export function AuthPanel() {
     try {
       const result =
         mode === "login" ? await login(email, password) : await register(email, password);
-      setAccessToken(result.access_token);
       setCurrentUser(result.user);
       router.push("/forms");
     } catch (error) {
@@ -66,8 +65,8 @@ export function AuthPanel() {
     }
   }
 
-  function logout() {
-    clearAccessToken();
+  async function logout() {
+    await logoutSession();
     setCurrentUser(null);
     setMessage("Logged out.");
     router.refresh();

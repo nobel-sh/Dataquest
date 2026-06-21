@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+import app.models  # noqa: F401
 from app.core.config import get_settings
 from app.routes.auth import router as auth_router
 from app.routes.forms import router as forms_router

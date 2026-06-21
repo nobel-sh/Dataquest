@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useMemo, useState } from "react";
 import { listForms, updateFormSettings } from "@/lib/api";
-import { clearAccessToken, getCurrentUser } from "@/lib/auth";
+import { getCurrentUser, logoutSession } from "@/lib/auth";
 import type { FormRecord, User } from "@/lib/types";
 
 export function FormsDashboard() {
@@ -49,8 +49,8 @@ export function FormsDashboard() {
     };
   }, [view]);
 
-  function logout() {
-    clearAccessToken();
+  async function logout() {
+    await logoutSession();
     setCurrentUser(null);
     setForms([]);
     setError("Logged out. Login again to view your forms.");

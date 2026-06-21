@@ -5,6 +5,7 @@ import hashlib
 import hmac
 import json
 import os
+import secrets
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -64,6 +65,14 @@ def create_access_token(user_id: UUID, settings: Settings | None = None) -> str:
     signing_input = f"{base64url_json(header)}.{base64url_json(payload)}"
     signature = sign_token(signing_input, resolved_settings.auth_secret_key)
     return f"{signing_input}.{signature}"
+
+
+def create_refresh_token() -> str:
+    return base64url_encode(secrets.token_bytes(48))
+
+
+def hash_refresh_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def decode_access_token(token: str, settings: Settings | None = None) -> UUID:

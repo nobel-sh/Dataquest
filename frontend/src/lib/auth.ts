@@ -1,27 +1,7 @@
 import type { AuthToken, User } from "@/lib/types";
+import { getApiBaseUrl } from "@/lib/config";
 
-const AUTH_TOKEN_KEY = "dataquest_access_token";
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
-
-export function getAccessToken(): string | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  return window.localStorage.getItem(AUTH_TOKEN_KEY);
-}
-
-export function setAccessToken(token: string): void {
-  window.localStorage.setItem(AUTH_TOKEN_KEY, token);
-}
-
-export function clearAccessToken(): void {
-  window.localStorage.removeItem(AUTH_TOKEN_KEY);
-}
-
-export function authHeaders(): HeadersInit {
-  const token = getAccessToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
+let refreshSessionPromise: Promise<AuthToken | null> | null = null;
 
 export async function register(email: string, password: string): Promise<AuthToken> {
   return authRequest("/auth/register", email, password);
@@ -32,34 +12,83 @@ export async function login(email: string, password: string): Promise<AuthToken>
 }
 
 export async function getCurrentUser(): Promise<User | null> {
-  const token = getAccessToken();
-  if (!token) {
+  const sessionUser = await fetchCurrentUser();
+  if (sessionUser) {
+    return sessionUser;
+  }
+
+  const refreshedSession = await refreshSession();
+  if (!refreshedSession) {
     return null;
   }
 
-  const response = await fetch(`${API_BASE_URL}/auth/me`, {
-    headers: authHeaders(),
-    cache: "no-store",
+  return fetchCurrentUser();
+}
+
+export async function refreshSession(): Promise<AuthToken | null> {
+  if (refreshSessionPromise) {
+    return refreshSessionPromise;
+  }
+
+  refreshSessionPromise = (async () => {
+    const response = await fetch(`${getApiBaseUrl()}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return response.json();
+  })();
+
+  try {
+    return await refreshSessionPromise;
+  } finally {
+    refreshSessionPromise = null;
+  }
+}
+
+export async function logoutSession(): Promise<void> {
+  await fetch(`${getApiBaseUrl()}/auth/logout`, {
+    method: "POST",
+    credentials: "include",
+  });
+}
+
+export async function authenticatedFetch(
+  input: RequestInfo | URL,
+  initFactory: () => RequestInit,
+): Promise<Response> {
+  const initialResponse = await fetch(input, {
+    ...initFactory(),
+    credentials: "include",
   });
 
-  if (response.status === 401 || response.status === 403) {
-    clearAccessToken();
-    return null;
+  if (initialResponse.status !== 401 && initialResponse.status !== 403) {
+    return initialResponse;
   }
 
-  if (!response.ok) {
-    throw new Error(`Failed to load current user: ${response.status}`);
+  const refreshedSession = await refreshSession();
+  if (!refreshedSession) {
+    return initialResponse;
   }
 
-  return response.json();
+  const retryResponse = await fetch(input, {
+    ...initFactory(),
+    credentials: "include",
+  });
+  return retryResponse;
 }
 
 async function authRequest(path: string, email: string, password: string): Promise<AuthToken> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${getApiBaseUrl()}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
+    credentials: "include",
     body: JSON.stringify({ email, password }),
   });
 
@@ -67,6 +96,23 @@ async function authRequest(path: string, email: string, password: string): Promi
     const body = await response.json().catch(() => null);
     const detail = body?.detail ?? `Authentication failed: ${response.status}`;
     throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+
+  return response.json();
+}
+
+async function fetchCurrentUser(): Promise<User | null> {
+  const response = await fetch(`${getApiBaseUrl()}/auth/me`, {
+    cache: "no-store",
+    credentials: "include",
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Failed to load current user: ${response.status}`);
   }
 
   return response.json();

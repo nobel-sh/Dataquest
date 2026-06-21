@@ -1,3 +1,5 @@
+import { authenticatedFetch } from "@/lib/auth";
+import { getApiBaseUrl } from "@/lib/config";
 import type {
   Answers,
   FormRecord,
@@ -6,19 +8,18 @@ import type {
   FormVersion,
   GenerateFormResult,
 } from "@/lib/types";
-import { authHeaders } from "@/lib/auth";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 export function formResponsesExportUrl(formId: string): string {
-  return `${API_BASE_URL}/forms/${formId}/responses/export?format=csv`;
+  return `${getApiBaseUrl()}/forms/${formId}/responses/export?format=csv`;
 }
 
 export async function getFormBySlug(slug: string): Promise<FormRecord | null> {
-  const response = await fetch(`${API_BASE_URL}/forms/slug/${encodeURIComponent(slug)}`, {
-    headers: authHeaders(),
-    cache: "no-store",
-  });
+  const response = await authenticatedFetch(
+    `${getApiBaseUrl()}/forms/slug/${encodeURIComponent(slug)}`,
+    () => ({
+      cache: "no-store",
+    }),
+  );
 
   if (response.status === 404) {
     return null;
@@ -32,14 +33,13 @@ export async function getFormBySlug(slug: string): Promise<FormRecord | null> {
 }
 
 export async function createForm(slug: string, formSchema: FormSchema): Promise<FormRecord> {
-  const response = await fetch(`${API_BASE_URL}/forms`, {
+  const response = await authenticatedFetch(`${getApiBaseUrl()}/forms`, () => ({
     method: "POST",
     headers: {
-      ...authHeaders(),
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ slug, schema: formSchema }),
-  });
+  }));
 
   if (!response.ok) {
     const body = await response.json().catch(() => null);
@@ -56,10 +56,12 @@ export async function listForms(includeArchived = false): Promise<FormRecord[]> 
     searchParams.set("include_archived", "true");
   }
   const query = searchParams.toString();
-  const response = await fetch(`${API_BASE_URL}/forms${query ? `?${query}` : ""}`, {
-    headers: authHeaders(),
-    cache: "no-store",
-  });
+  const response = await authenticatedFetch(
+    `${getApiBaseUrl()}/forms${query ? `?${query}` : ""}`,
+    () => ({
+      cache: "no-store",
+    }),
+  );
 
   if (!response.ok) {
     throw new Error(`Failed to load forms: ${response.status}`);
@@ -76,14 +78,16 @@ export async function updateFormSettings(
     archived?: boolean;
   },
 ): Promise<FormRecord> {
-  const response = await fetch(`${API_BASE_URL}/forms/${formId}/settings`, {
-    method: "PATCH",
-    headers: {
-      ...authHeaders(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(settings),
-  });
+  const response = await authenticatedFetch(
+    `${getApiBaseUrl()}/forms/${formId}/settings`,
+    () => ({
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(settings),
+    }),
+  );
 
   if (!response.ok) {
     const body = await response.json().catch(() => null);
@@ -95,14 +99,13 @@ export async function updateFormSettings(
 }
 
 export async function generateForm(prompt: string): Promise<GenerateFormResult> {
-  const response = await fetch(`${API_BASE_URL}/forms/generate`, {
+  const response = await authenticatedFetch(`${getApiBaseUrl()}/forms/generate`, () => ({
     method: "POST",
     headers: {
-      ...authHeaders(),
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ prompt }),
-  });
+  }));
 
   if (!response.ok) {
     const body = await response.json().catch(() => null);
@@ -114,14 +117,16 @@ export async function generateForm(prompt: string): Promise<GenerateFormResult> 
 }
 
 export async function submitFormResponse(formId: string, answers: Answers): Promise<FormResponse> {
-  const response = await fetch(`${API_BASE_URL}/forms/${formId}/responses`, {
-    method: "POST",
-    headers: {
-      ...authHeaders(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ answers }),
-  });
+  const response = await authenticatedFetch(
+    `${getApiBaseUrl()}/forms/${formId}/responses`,
+    () => ({
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ answers }),
+    }),
+  );
 
   if (!response.ok) {
     const body = await response.json().catch(() => null);
@@ -133,10 +138,12 @@ export async function submitFormResponse(formId: string, answers: Answers): Prom
 }
 
 export async function listFormResponses(formId: string): Promise<FormResponse[]> {
-  const response = await fetch(`${API_BASE_URL}/forms/${formId}/responses`, {
-    headers: authHeaders(),
-    cache: "no-store",
-  });
+  const response = await authenticatedFetch(
+    `${getApiBaseUrl()}/forms/${formId}/responses`,
+    () => ({
+      cache: "no-store",
+    }),
+  );
 
   if (!response.ok) {
     throw new Error(`Failed to load responses: ${response.status}`);
@@ -146,10 +153,12 @@ export async function listFormResponses(formId: string): Promise<FormResponse[]>
 }
 
 export async function listFormVersions(formId: string): Promise<FormVersion[]> {
-  const response = await fetch(`${API_BASE_URL}/forms/${formId}/versions`, {
-    headers: authHeaders(),
-    cache: "no-store",
-  });
+  const response = await authenticatedFetch(
+    `${getApiBaseUrl()}/forms/${formId}/versions`,
+    () => ({
+      cache: "no-store",
+    }),
+  );
 
   if (!response.ok) {
     throw new Error(`Failed to load form versions: ${response.status}`);
@@ -162,14 +171,16 @@ export async function createFormVersion(
   formId: string,
   formSchema: FormSchema,
 ): Promise<FormRecord> {
-  const response = await fetch(`${API_BASE_URL}/forms/${formId}/versions`, {
-    method: "POST",
-    headers: {
-      ...authHeaders(),
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ schema: formSchema }),
-  });
+  const response = await authenticatedFetch(
+    `${getApiBaseUrl()}/forms/${formId}/versions`,
+    () => ({
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ schema: formSchema }),
+    }),
+  );
 
   if (!response.ok) {
     const body = await response.json().catch(() => null);
