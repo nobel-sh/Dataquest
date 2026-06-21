@@ -42,22 +42,11 @@ body {
 body {
   position: relative;
   overflow-x: hidden;
-  background: linear-gradient(135deg, #16181d 0%, #1b1d23 46%, #24262d 100%);
+  background:
+    radial-gradient(circle at 22% 0%, rgba(138, 180, 248, 0.1), transparent 28rem),
+    linear-gradient(135deg, #15171b 0%, #1b1d22 54%, #202126 100%);
   color: var(--color-ink);
   font-family: var(--font-body);
-}
-
-body::before {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  content: "";
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px),
-    radial-gradient(circle at 50% 0%, rgba(161, 66, 244, 0.13), transparent 32rem);
-  background-size: 42px 42px, 42px 42px, auto;
 }
 
 button,

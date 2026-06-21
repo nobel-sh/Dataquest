@@ -82,7 +82,7 @@ export default function HomePage() {
     <main className="mx-auto w-[calc(100%-32px)] max-w-page py-8 pb-14 max-sm:w-[calc(100%-24px)] max-sm:pt-5">
       <header className="mb-8 flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
         <div>
-          <AppBrand bold={false} />
+          <AppBrand />
         </div>
         <nav className="flex items-center gap-2 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
           {currentUser ? (
@@ -106,8 +106,7 @@ export default function HomePage() {
         </nav>
       </header>
 
-      <section className="relative grid min-h-[560px] overflow-hidden border border-line bg-[#181a20] p-8 shadow-panel max-sm:p-5">
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.028)_1px,transparent_1px)] bg-[size:48px_48px]" />
+      <section className="relative grid min-h-[560px] overflow-hidden border border-line bg-[radial-gradient(circle_at_18%_0%,rgba(138,180,248,0.12),transparent_30rem),linear-gradient(145deg,#181a20_0%,#1b1d23_58%,#202126_100%)] p-8 shadow-panel max-sm:p-5">
         <div className="relative grid max-w-[760px] content-between gap-10">
           <div>
             <div className="mb-5 inline-flex border border-line bg-panel px-3 py-2 text-xs uppercase text-ink-muted">
@@ -242,7 +241,7 @@ function LoggedOutHome({
     <main className="mx-auto w-[calc(100%-32px)] max-w-page py-8 pb-14 max-sm:w-[calc(100%-24px)] max-sm:pt-5">
       <header className="mb-8 flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
         <div>
-          <AppBrand bold={false} />
+          <AppBrand />
         </div>
         <nav className="flex items-center gap-2 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
           <Link className={linkButtonClassName} href="/auth">
@@ -251,8 +250,7 @@ function LoggedOutHome({
         </nav>
       </header>
 
-      <section className="relative grid min-h-[560px] overflow-hidden border border-line bg-[#181a20] p-8 shadow-panel max-sm:p-5">
-        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.028)_1px,transparent_1px)] bg-[size:48px_48px]" />
+      <section className="relative grid min-h-[560px] overflow-hidden border border-line bg-[radial-gradient(circle_at_18%_0%,rgba(138,180,248,0.12),transparent_30rem),linear-gradient(145deg,#181a20_0%,#1b1d23_58%,#202126_100%)] p-8 shadow-panel max-sm:p-5">
         <div className="relative grid max-w-[760px] content-between gap-10">
           <div>
             <div className="mb-5 inline-flex border border-line bg-panel px-3 py-2 text-xs uppercase text-ink-muted">

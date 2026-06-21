@@ -1,15 +1,9 @@
 import Link from "next/link";
 
-type AppBrandProps = {
-  bold?: boolean;
-};
-
-export function AppBrand({ bold = true }: AppBrandProps) {
+export function AppBrand() {
   return (
     <Link
-      className={`font-display text-xl tracking-wide text-ink-onDark transition hover:text-accent ${
-        bold ? "font-bold" : ""
-      }`}
+      className="font-display text-[1.75rem] tracking-wide text-ink-onDark transition hover:text-accent"
       href="/"
     >
       Dataquest Forms
