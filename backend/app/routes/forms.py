@@ -65,6 +65,15 @@ def generate_form(payload: GenerateFormRequest, _current_user: CurrentUser) -> G
     return generator.generate(payload.prompt)
 
 
+@router.get("", response_model=list[FormRead])
+def list_forms(db: DbSession, current_user: CurrentUser) -> list[FormRead]:
+    forms = db.scalars(
+        select(Form).where(Form.owner_id == current_user.id).order_by(Form.updated_at.desc())
+    ).all()
+
+    return [build_form_read(form, get_latest_version(form.id, db)) for form in forms]
+
+
 @router.get("/{form_id}", response_model=FormRead)
 def get_form(form_id: UUID, db: DbSession, current_user: CurrentUser) -> FormRead:
     form = db.get(Form, form_id)

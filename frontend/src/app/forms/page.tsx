@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { NewFormCreator } from "@/components/forms/new-form-creator";
+import { FormsDashboard } from "@/components/forms/forms-dashboard";
 
-export default function NewFormPage() {
+export default function FormsPage() {
   return (
     <main className="mx-auto w-[calc(100%-32px)] max-w-page py-8 pb-14 max-sm:w-[calc(100%-24px)] max-sm:pt-5">
       <div className="mb-7 flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
@@ -9,25 +9,25 @@ export default function NewFormPage() {
           <div className="font-display text-xl font-bold tracking-wide text-ink-onDark">
             Dataquest Forms
           </div>
-          <div className="text-ink-onDark/75">/forms/new</div>
+          <div className="text-ink-onDark/75">/forms</div>
         </div>
         <div className="flex gap-2 max-sm:w-full max-sm:flex-col">
-          <Link
-            className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
-            href="/forms"
-          >
-            My forms
-          </Link>
           <Link
             className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
             href="/"
           >
             Home
           </Link>
+          <Link
+            className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
+            href="/auth"
+          >
+            Account
+          </Link>
         </div>
       </div>
 
-      <NewFormCreator />
+      <FormsDashboard />
     </main>
   );
 }

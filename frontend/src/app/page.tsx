@@ -25,18 +25,26 @@ export default function HomePage() {
           </div>
           <div className="text-ink-onDark/75">Open a published form by slug.</div>
         </div>
-        <Link
-          className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
-          href="/auth"
-        >
-          Account
-        </Link>
-        <Link
-          className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
-          href="/forms/new"
-        >
-          New form
-        </Link>
+        <div className="flex gap-2 max-sm:w-full max-sm:flex-col">
+          <Link
+            className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
+            href="/forms"
+          >
+            My forms
+          </Link>
+          <Link
+            className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
+            href="/auth"
+          >
+            Account
+          </Link>
+          <Link
+            className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
+            href="/forms/new"
+          >
+            New form
+          </Link>
+        </div>
       </div>
 
       <section className="border border-line bg-panel shadow-panel">

@@ -49,6 +49,19 @@ export async function createForm(slug: string, formSchema: FormSchema): Promise<
   return response.json();
 }
 
+export async function listForms(): Promise<FormRecord[]> {
+  const response = await fetch(`${API_BASE_URL}/forms`, {
+    headers: authHeaders(),
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to load forms: ${response.status}`);
+  }
+
+  return response.json();
+}
+
 export async function generateForm(prompt: string): Promise<GenerateFormResult> {
   const response = await fetch(`${API_BASE_URL}/forms/generate`, {
     method: "POST",
