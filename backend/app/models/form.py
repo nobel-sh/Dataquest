@@ -31,6 +31,7 @@ class Form(Base):
     description: Mapped[str | None] = mapped_column(String(1000), default=None)
     slug: Mapped[str] = mapped_column(String(120), unique=True, index=True)
     accepting_responses: Mapped[bool] = mapped_column(Boolean, default=True)
+    requires_login: Mapped[bool] = mapped_column(Boolean, default=False)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
@@ -76,6 +77,11 @@ class FormResponse(Base):
     form_id: Mapped[UUID] = mapped_column(ForeignKey("forms.id", ondelete="CASCADE"), index=True)
     form_version_id: Mapped[UUID] = mapped_column(
         ForeignKey("form_versions.id", ondelete="RESTRICT"),
+    )
+    respondent_user_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        index=True,
+        default=None,
     )
     answers_json: Mapped[dict[str, Any]] = mapped_column(JSON)
     submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)

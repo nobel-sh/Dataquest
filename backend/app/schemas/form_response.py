@@ -19,6 +19,7 @@ class FormResponseCreate(BaseModel):
 
     form_id: UUID
     form_version_id: UUID
+    respondent_user_id: UUID | None = None
     answers: dict[str, AnswerValue] = Field(default_factory=dict)
 
 

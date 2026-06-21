@@ -1,8 +1,10 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import Link from "next/link";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { submitFormResponse } from "@/lib/api";
-import type { Answers, AnswerValue, FormField, FormRecord } from "@/lib/types";
+import { getCurrentUser } from "@/lib/auth";
+import type { Answers, AnswerValue, FormField, FormRecord, User } from "@/lib/types";
 
 const controlClassName =
   "min-h-control w-full border border-line bg-[#30333d] px-4 py-3 text-ink outline-none transition placeholder:text-ink-muted/70 hover:border-[#5f6368] focus:border-accent focus:bg-[#333642] focus:shadow-focus";
@@ -18,6 +20,8 @@ export function PublicForm({ form }: PublicFormProps) {
   const schema = form.latest_version.schema;
   const [answers, setAnswers] = useState<Answers>(() => initialAnswers(schema.fields));
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isCheckingSession, setIsCheckingSession] = useState(form.requires_login);
   const [submitState, setSubmitState] = useState<"idle" | "submitting" | "success" | "error">(
     "idle",
   );
@@ -27,6 +31,38 @@ export function PublicForm({ form }: PublicFormProps) {
     () => schema.fields.filter((field) => field.required).map((field) => field.id),
     [schema.fields],
   );
+  const loginRequired = form.requires_login && !currentUser;
+
+  useEffect(() => {
+    if (!form.requires_login) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadSession() {
+      try {
+        const user = await getCurrentUser();
+        if (!cancelled) {
+          setCurrentUser(user);
+        }
+      } catch {
+        if (!cancelled) {
+          setCurrentUser(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsCheckingSession(false);
+        }
+      }
+    }
+
+    void loadSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [form.requires_login]);
 
   function setAnswer(fieldId: string, value: AnswerValue) {
     setAnswers((current) => ({ ...current, [fieldId]: value }));
@@ -42,6 +78,11 @@ export function PublicForm({ form }: PublicFormProps) {
     if (!form.accepting_responses) {
       setSubmitState("error");
       setSubmitMessage("This form is not accepting responses.");
+      return;
+    }
+    if (loginRequired) {
+      setSubmitState("error");
+      setSubmitMessage("Login is required to submit this form.");
       return;
     }
 
@@ -81,6 +122,28 @@ export function PublicForm({ form }: PublicFormProps) {
         ) : null}
       </header>
 
+      {form.requires_login ? (
+        <div className="border-b border-line bg-[#181a20] p-7 max-sm:p-5">
+          <div className="border border-line bg-panel px-4 py-4">
+            {isCheckingSession ? (
+              "Checking login..."
+            ) : currentUser ? (
+              <span>Submitting as {currentUser.email}</span>
+            ) : (
+              <div className="flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-stretch">
+                <span>Login is required to submit this form.</span>
+                <Link
+                  className="border border-accent bg-accent px-4 py-2 text-center font-bold tracking-wide text-ink-button transition hover:border-accent-hover hover:bg-accent-hover"
+                  href="/auth"
+                >
+                  Login
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+
       {!form.accepting_responses ? (
         <div className="border-b border-line bg-[#181a20] p-7 max-sm:p-5">
           <div className="border border-line-error bg-error px-4 py-4">
@@ -117,7 +180,12 @@ export function PublicForm({ form }: PublicFormProps) {
         <div className="flex items-center justify-end gap-3 border-t border-line bg-panel px-7 py-5 max-sm:flex-col max-sm:items-stretch max-sm:p-5">
           <button
             className={primaryButtonClassName}
-            disabled={submitState === "submitting" || !form.accepting_responses}
+            disabled={
+              submitState === "submitting" ||
+              !form.accepting_responses ||
+              isCheckingSession ||
+              loginRequired
+            }
             type="submit"
           >
             {submitState === "submitting" ? "Submitting" : "Submit response"}

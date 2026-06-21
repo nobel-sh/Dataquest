@@ -12,7 +12,7 @@ from app.ai.form_generation import get_form_generator
 from app.db.session import get_db
 from app.models.form import Form, FormResponse, FormVersion
 from app.models.user import User
-from app.routes.dependencies import get_current_user
+from app.routes.dependencies import get_current_user, get_optional_current_user
 from app.schemas.agent import GenerateFormRequest, GenerateFormResult
 from app.schemas.form import FieldOption, FormSchema
 from app.schemas.form_record import FormCreate, FormRead, FormSettingsUpdate
@@ -26,6 +26,7 @@ from app.schemas.form_version import FormVersionCreate, FormVersionRead
 router = APIRouter(prefix="/forms", tags=["forms"])
 DbSession = Annotated[Session, Depends(get_db)]
 CurrentUser = Annotated[User, Depends(get_current_user)]
+OptionalCurrentUser = Annotated[User | None, Depends(get_optional_current_user)]
 
 
 @router.post("", response_model=FormRead, status_code=status.HTTP_201_CREATED)
@@ -91,6 +92,8 @@ def update_form_settings(
     form = ensure_form_owner(form, current_user)
     if payload.accepting_responses is not None:
         form.accepting_responses = payload.accepting_responses
+    if payload.requires_login is not None:
+        form.requires_login = payload.requires_login
     if payload.archived is not None:
         form.archived = payload.archived
     latest_version = get_latest_version(form.id, db)
@@ -180,6 +183,7 @@ def submit_form_response(
     form_id: UUID,
     payload: FormResponseSubmit,
     db: DbSession,
+    current_user: OptionalCurrentUser,
 ) -> FormResponseRead:
     form = db.get(Form, form_id)
     if form is None or form.archived:
@@ -188,6 +192,12 @@ def submit_form_response(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="form is not accepting responses",
+        )
+    if form.requires_login and current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="login required to submit this form",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     latest_version = get_latest_version(form.id, db)
@@ -204,6 +214,7 @@ def submit_form_response(
     response = FormResponse(
         form=form,
         form_version=latest_version,
+        respondent_user_id=current_user.id if current_user is not None else None,
         answers_json=normalized_answers,
     )
     db.add(response)
@@ -338,6 +349,7 @@ def build_form_read(form: Form, version: FormVersion) -> FormRead:
         description=form.description,
         slug=form.slug,
         accepting_responses=form.accepting_responses,
+        requires_login=form.requires_login,
         archived=form.archived,
         created_at=form.created_at,
         updated_at=form.updated_at,
@@ -360,6 +372,7 @@ def build_response_read(response: FormResponse) -> FormResponseRead:
         id=response.id,
         form_id=response.form_id,
         form_version_id=response.form_version_id,
+        respondent_user_id=response.respondent_user_id,
         answers=response.answers_json,
         submitted_at=response.submitted_at,
     )

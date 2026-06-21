@@ -79,6 +79,28 @@ export function FormsDashboard() {
     }
   }
 
+  async function toggleRequiresLogin(form: FormRecord) {
+    setUpdatingFormId(form.id);
+    setError(null);
+
+    try {
+      const updatedForm = await updateFormSettings(form.id, {
+        requires_login: !form.requires_login,
+      });
+      setForms((currentForms) =>
+        currentForms.map((currentForm) =>
+          currentForm.id === updatedForm.id ? updatedForm : currentForm,
+        ),
+      );
+    } catch (updateError) {
+      setError(
+        updateError instanceof Error ? updateError.message : "Failed to update form settings.",
+      );
+    } finally {
+      setUpdatingFormId(null);
+    }
+  }
+
   async function archiveForm(form: FormRecord) {
     setUpdatingFormId(form.id);
     setError(null);
@@ -233,7 +255,7 @@ export function FormsDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[repeat(3,minmax(0,1fr))_auto] items-stretch border-b border-line text-sm max-lg:grid-cols-3 max-sm:grid-cols-1">
+              <div className="grid grid-cols-[repeat(4,minmax(0,1fr))_auto] items-stretch border-b border-line text-sm max-xl:grid-cols-4 max-lg:grid-cols-2 max-sm:grid-cols-1">
                 <Metric
                   label="Version"
                   value={`v${form.latest_version.version_number.toString()}`}
@@ -243,7 +265,8 @@ export function FormsDashboard() {
                   label="Responses"
                   value={form.accepting_responses ? "Open" : "Closed"}
                 />
-                <div className="flex items-center gap-2 p-4 max-lg:col-span-3 max-sm:col-span-1 max-sm:flex-col max-sm:items-stretch">
+                <Metric label="Access" value={form.requires_login ? "Login" : "Public"} />
+                <div className="flex items-center gap-2 p-4 max-xl:col-span-4 max-lg:col-span-2 max-sm:col-span-1 max-sm:flex-col max-sm:items-stretch">
                   {view === "active" ? (
                     <>
                       <button
@@ -257,6 +280,14 @@ export function FormsDashboard() {
                         onClick={() => void toggleAcceptingResponses(form)}
                       >
                         {form.accepting_responses ? "Close" : "Open"}
+                      </button>
+                      <button
+                        className="border border-line bg-[#30333d] px-3 py-2 text-center text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
+                        disabled={updatingFormId === form.id}
+                        type="button"
+                        onClick={() => void toggleRequiresLogin(form)}
+                      >
+                        {form.requires_login ? "Make public" : "Require login"}
                       </button>
                       <button
                         className="border border-line-error bg-error px-3 py-2 text-center text-sm text-ink transition hover:border-danger"

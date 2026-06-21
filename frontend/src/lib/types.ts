@@ -52,6 +52,7 @@ export type FormRecord = {
   description?: string | null;
   slug: string;
   accepting_responses: boolean;
+  requires_login: boolean;
   archived: boolean;
   created_at: string;
   updated_at: string;
@@ -65,6 +66,7 @@ export type FormResponse = {
   id: string;
   form_id: string;
   form_version_id: string;
+  respondent_user_id?: string | null;
   answers: Answers;
   submitted_at: string;
 };
