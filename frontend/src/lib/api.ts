@@ -62,6 +62,28 @@ export async function listForms(): Promise<FormRecord[]> {
   return response.json();
 }
 
+export async function updateFormSettings(
+  formId: string,
+  acceptingResponses: boolean,
+): Promise<FormRecord> {
+  const response = await fetch(`${API_BASE_URL}/forms/${formId}/settings`, {
+    method: "PATCH",
+    headers: {
+      ...authHeaders(),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ accepting_responses: acceptingResponses }),
+  });
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    const detail = body?.detail ?? `Failed to update form settings: ${response.status}`;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+
+  return response.json();
+}
+
 export async function generateForm(prompt: string): Promise<GenerateFormResult> {
   const response = await fetch(`${API_BASE_URL}/forms/generate`, {
     method: "POST",

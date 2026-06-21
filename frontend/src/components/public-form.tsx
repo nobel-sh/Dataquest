@@ -39,6 +39,12 @@ export function PublicForm({ form }: PublicFormProps) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!form.accepting_responses) {
+      setSubmitState("error");
+      setSubmitMessage("This form is not accepting responses.");
+      return;
+    }
+
     const nextErrors = validateRequiredAnswers(requiredFields, answers);
     setErrors(nextErrors);
 
@@ -75,6 +81,14 @@ export function PublicForm({ form }: PublicFormProps) {
         ) : null}
       </header>
 
+      {!form.accepting_responses ? (
+        <div className="border-b border-line bg-[#181a20] p-7 max-sm:p-5">
+          <div className="border border-line-error bg-error px-4 py-4">
+            This form is not accepting responses.
+          </div>
+        </div>
+      ) : null}
+
       <form onSubmit={submit}>
         <div className="grid gap-4 bg-[#181a20] p-7 max-sm:p-5">
           {submitMessage ? (
@@ -103,7 +117,7 @@ export function PublicForm({ form }: PublicFormProps) {
         <div className="flex items-center justify-end gap-3 border-t border-line bg-panel px-7 py-5 max-sm:flex-col max-sm:items-stretch max-sm:p-5">
           <button
             className={primaryButtonClassName}
-            disabled={submitState === "submitting"}
+            disabled={submitState === "submitting" || !form.accepting_responses}
             type="submit"
           >
             {submitState === "submitting" ? "Submitting" : "Submit response"}

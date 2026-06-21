@@ -15,7 +15,7 @@ from app.models.user import User
 from app.routes.dependencies import get_current_user
 from app.schemas.agent import GenerateFormRequest, GenerateFormResult
 from app.schemas.form import FieldOption, FormSchema
-from app.schemas.form_record import FormCreate, FormRead
+from app.schemas.form_record import FormCreate, FormRead, FormSettingsUpdate
 from app.schemas.form_response import (
     FormResponseRead,
     FormResponseSubmit,
@@ -72,6 +72,24 @@ def list_forms(db: DbSession, current_user: CurrentUser) -> list[FormRead]:
     ).all()
 
     return [build_form_read(form, get_latest_version(form.id, db)) for form in forms]
+
+
+@router.patch("/{form_id}/settings", response_model=FormRead)
+def update_form_settings(
+    form_id: UUID,
+    payload: FormSettingsUpdate,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> FormRead:
+    form = db.get(Form, form_id)
+    form = ensure_form_owner(form, current_user)
+    form.accepting_responses = payload.accepting_responses
+    latest_version = get_latest_version(form.id, db)
+
+    db.commit()
+    db.refresh(form)
+
+    return build_form_read(form, latest_version)
 
 
 @router.get("/{form_id}", response_model=FormRead)
@@ -157,6 +175,11 @@ def submit_form_response(
     form = db.get(Form, form_id)
     if form is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
+    if not form.accepting_responses:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="form is not accepting responses",
+        )
 
     latest_version = get_latest_version(form.id, db)
     form_schema = FormSchema.model_validate(latest_version.schema_json)
@@ -305,6 +328,7 @@ def build_form_read(form: Form, version: FormVersion) -> FormRead:
         title=form.title,
         description=form.description,
         slug=form.slug,
+        accepting_responses=form.accepting_responses,
         created_at=form.created_at,
         updated_at=form.updated_at,
         latest_version=build_version_read(version),

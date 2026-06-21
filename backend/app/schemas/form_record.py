@@ -16,6 +16,12 @@ class FormCreate(BaseModel):
     form_schema: FormSchema = Field(validation_alias="schema", serialization_alias="schema")
 
 
+class FormSettingsUpdate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    accepting_responses: bool
+
+
 class FormRead(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -23,6 +29,7 @@ class FormRead(BaseModel):
     title: str
     description: str | None
     slug: str
+    accepting_responses: bool
     created_at: datetime
     updated_at: datetime
     latest_version: FormVersionRead

@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
-import { listForms } from "@/lib/api";
+import { listForms, updateFormSettings } from "@/lib/api";
 import { clearAccessToken, getCurrentUser } from "@/lib/auth";
 import type { FormRecord, User } from "@/lib/types";
 
@@ -13,6 +13,7 @@ export function FormsDashboard() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [updatingFormId, setUpdatingFormId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,6 +51,26 @@ export function FormsDashboard() {
     setCurrentUser(null);
     setForms([]);
     setError("Logged out. Login again to view your forms.");
+  }
+
+  async function toggleAcceptingResponses(form: FormRecord) {
+    setUpdatingFormId(form.id);
+    setError(null);
+
+    try {
+      const updatedForm = await updateFormSettings(form.id, !form.accepting_responses);
+      setForms((currentForms) =>
+        currentForms.map((currentForm) =>
+          currentForm.id === updatedForm.id ? updatedForm : currentForm,
+        ),
+      );
+    } catch (updateError) {
+      setError(
+        updateError instanceof Error ? updateError.message : "Failed to update form settings.",
+      );
+    } finally {
+      setUpdatingFormId(null);
+    }
   }
 
   const totalFields = useMemo(
@@ -154,8 +175,23 @@ export function FormsDashboard() {
                   value={`v${form.latest_version.version_number.toString()}`}
                 />
                 <Metric label="Fields" value={form.latest_version.schema.fields.length.toString()} />
-                <Metric label="Created" value={formatDate(form.created_at)} />
+                <Metric
+                  label="Responses"
+                  value={form.accepting_responses ? "Open" : "Closed"}
+                />
                 <div className="flex items-center gap-2 p-4 max-lg:col-span-3 max-sm:col-span-1 max-sm:flex-col max-sm:items-stretch">
+                  <button
+                    className={`border px-3 py-2 text-center text-sm transition ${
+                      form.accepting_responses
+                        ? "border-line-error bg-error text-ink"
+                        : "border-line-success bg-success text-ink"
+                    }`}
+                    disabled={updatingFormId === form.id}
+                    type="button"
+                    onClick={() => void toggleAcceptingResponses(form)}
+                  >
+                    {form.accepting_responses ? "Close" : "Open"}
+                  </button>
                   <DashboardLink href={`/forms/${form.slug}`}>View</DashboardLink>
                   <DashboardLink href={`/forms/${form.slug}/edit`}>Edit</DashboardLink>
                   <DashboardLink href={`/forms/${form.slug}/responses`}>Responses</DashboardLink>

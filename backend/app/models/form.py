@@ -6,7 +6,7 @@ from uuid import UUID, uuid4
 
 from sqlalchemy import ForeignKey, Index, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy.types import JSON, DateTime, Integer, String
+from sqlalchemy.types import JSON, Boolean, DateTime, Integer, String
 
 from app.db.base import Base
 
@@ -30,6 +30,7 @@ class Form(Base):
     title: Mapped[str] = mapped_column(String(200))
     description: Mapped[str | None] = mapped_column(String(1000), default=None)
     slug: Mapped[str] = mapped_column(String(120), unique=True, index=True)
+    accepting_responses: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
