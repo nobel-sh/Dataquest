@@ -68,7 +68,9 @@ def generate_form(payload: GenerateFormRequest, _current_user: CurrentUser) -> G
 @router.get("", response_model=list[FormRead])
 def list_forms(db: DbSession, current_user: CurrentUser) -> list[FormRead]:
     forms = db.scalars(
-        select(Form).where(Form.owner_id == current_user.id).order_by(Form.updated_at.desc())
+        select(Form)
+        .where(Form.owner_id == current_user.id, Form.archived.is_(False))
+        .order_by(Form.updated_at.desc())
     ).all()
 
     return [build_form_read(form, get_latest_version(form.id, db)) for form in forms]
@@ -83,7 +85,10 @@ def update_form_settings(
 ) -> FormRead:
     form = db.get(Form, form_id)
     form = ensure_form_owner(form, current_user)
-    form.accepting_responses = payload.accepting_responses
+    if payload.accepting_responses is not None:
+        form.accepting_responses = payload.accepting_responses
+    if payload.archived is not None:
+        form.archived = payload.archived
     latest_version = get_latest_version(form.id, db)
 
     db.commit()
@@ -105,7 +110,7 @@ def get_form(form_id: UUID, db: DbSession, current_user: CurrentUser) -> FormRea
 @router.get("/slug/{slug}", response_model=FormRead)
 def get_form_by_slug(slug: str, db: DbSession) -> FormRead:
     form = db.scalar(select(Form).where(Form.slug == slug))
-    if form is None:
+    if form is None or form.archived:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
 
     latest_version = get_latest_version(form.id, db)
@@ -173,7 +178,7 @@ def submit_form_response(
     db: DbSession,
 ) -> FormResponseRead:
     form = db.get(Form, form_id)
-    if form is None:
+    if form is None or form.archived:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
     if not form.accepting_responses:
         raise HTTPException(
@@ -329,6 +334,7 @@ def build_form_read(form: Form, version: FormVersion) -> FormRead:
         description=form.description,
         slug=form.slug,
         accepting_responses=form.accepting_responses,
+        archived=form.archived,
         created_at=form.created_at,
         updated_at=form.updated_at,
         latest_version=build_version_read(version),

@@ -64,7 +64,7 @@ export async function listForms(): Promise<FormRecord[]> {
 
 export async function updateFormSettings(
   formId: string,
-  acceptingResponses: boolean,
+  settings: { accepting_responses?: boolean; archived?: boolean },
 ): Promise<FormRecord> {
   const response = await fetch(`${API_BASE_URL}/forms/${formId}/settings`, {
     method: "PATCH",
@@ -72,7 +72,7 @@ export async function updateFormSettings(
       ...authHeaders(),
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ accepting_responses: acceptingResponses }),
+    body: JSON.stringify(settings),
   });
 
   if (!response.ok) {

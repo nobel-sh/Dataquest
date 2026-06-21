@@ -31,6 +31,7 @@ class Form(Base):
     description: Mapped[str | None] = mapped_column(String(1000), default=None)
     slug: Mapped[str] = mapped_column(String(120), unique=True, index=True)
     accepting_responses: Mapped[bool] = mapped_column(Boolean, default=True)
+    archived: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

@@ -19,7 +19,8 @@ class FormCreate(BaseModel):
 class FormSettingsUpdate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    accepting_responses: bool
+    accepting_responses: bool | None = None
+    archived: bool | None = None
 
 
 class FormRead(BaseModel):
@@ -30,6 +31,7 @@ class FormRead(BaseModel):
     description: str | None
     slug: str
     accepting_responses: bool
+    archived: bool
     created_at: datetime
     updated_at: datetime
     latest_version: FormVersionRead

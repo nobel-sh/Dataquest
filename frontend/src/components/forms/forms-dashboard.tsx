@@ -58,7 +58,9 @@ export function FormsDashboard() {
     setError(null);
 
     try {
-      const updatedForm = await updateFormSettings(form.id, !form.accepting_responses);
+      const updatedForm = await updateFormSettings(form.id, {
+        accepting_responses: !form.accepting_responses,
+      });
       setForms((currentForms) =>
         currentForms.map((currentForm) =>
           currentForm.id === updatedForm.id ? updatedForm : currentForm,
@@ -68,6 +70,22 @@ export function FormsDashboard() {
       setError(
         updateError instanceof Error ? updateError.message : "Failed to update form settings.",
       );
+    } finally {
+      setUpdatingFormId(null);
+    }
+  }
+
+  async function archiveForm(form: FormRecord) {
+    setUpdatingFormId(form.id);
+    setError(null);
+
+    try {
+      const updatedForm = await updateFormSettings(form.id, { archived: true });
+      setForms((currentForms) =>
+        currentForms.filter((currentForm) => currentForm.id !== updatedForm.id),
+      );
+    } catch (archiveError) {
+      setError(archiveError instanceof Error ? archiveError.message : "Failed to archive form.");
     } finally {
       setUpdatingFormId(null);
     }
@@ -191,6 +209,14 @@ export function FormsDashboard() {
                     onClick={() => void toggleAcceptingResponses(form)}
                   >
                     {form.accepting_responses ? "Close" : "Open"}
+                  </button>
+                  <button
+                    className="border border-line-error bg-error px-3 py-2 text-center text-sm text-ink transition hover:border-danger"
+                    disabled={updatingFormId === form.id}
+                    type="button"
+                    onClick={() => void archiveForm(form)}
+                  >
+                    Archive
                   </button>
                   <DashboardLink href={`/forms/${form.slug}`}>View</DashboardLink>
                   <DashboardLink href={`/forms/${form.slug}/edit`}>Edit</DashboardLink>
