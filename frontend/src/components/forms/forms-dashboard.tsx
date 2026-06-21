@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { listForms, updateFormSettings } from "@/lib/api";
 import { clearAccessToken, getCurrentUser } from "@/lib/auth";
@@ -255,7 +254,7 @@ export function FormsDashboard() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[repeat(4,minmax(0,1fr))_auto] items-stretch border-b border-line text-sm max-xl:grid-cols-3 max-lg:grid-cols-2 max-sm:grid-cols-1">
+              <div className="grid grid-cols-4 items-stretch border-b border-line text-sm max-lg:grid-cols-2 max-sm:grid-cols-1">
                 <Metric
                   label="Version"
                   value={`v${form.latest_version.version_number.toString()}`}
@@ -266,55 +265,64 @@ export function FormsDashboard() {
                   value={form.accepting_responses ? "Open" : "Closed"}
                 />
                 <Metric label="Access" value={form.requires_login ? "Login" : "Public"} />
-                <div className="flex items-center gap-2 p-4 max-xl:col-span-3 max-lg:col-span-2 max-sm:col-span-1 max-sm:flex-col max-sm:items-stretch">
+              </div>
+
+              <div className="flex items-center justify-between gap-3 p-4 max-lg:flex-col max-lg:items-stretch">
+                <div className="flex flex-wrap gap-2 max-sm:grid max-sm:grid-cols-3">
                   {view === "active" ? (
                     <>
-                      <button
-                        className={`border px-3 py-2 text-center text-sm transition ${
-                          form.accepting_responses
-                            ? "border-line-error bg-error text-ink"
-                            : "border-line-success bg-success text-ink"
-                        }`}
-                        disabled={updatingFormId === form.id}
-                        type="button"
-                        onClick={() => void toggleAcceptingResponses(form)}
-                      >
-                        {form.accepting_responses ? "Close" : "Open"}
-                      </button>
-                      <button
-                        className="border border-line bg-[#30333d] px-3 py-2 text-center text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
-                        disabled={updatingFormId === form.id}
-                        type="button"
-                        onClick={() => void toggleRequiresLogin(form)}
-                      >
-                        {form.requires_login ? "Make public" : "Require login"}
-                      </button>
-                      <button
-                        className="border border-line-error bg-error px-3 py-2 text-center text-sm text-ink transition hover:border-danger"
-                        disabled={updatingFormId === form.id}
-                        type="button"
-                        onClick={() => void archiveForm(form)}
-                      >
-                        Archive
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      className="border border-line-success bg-success px-3 py-2 text-center text-sm text-ink transition hover:border-line-success"
-                      disabled={updatingFormId === form.id}
-                      type="button"
-                      onClick={() => void unarchiveForm(form)}
-                    >
-                      Unarchive
-                    </button>
-                  )}
-                  {view === "active" ? (
-                    <>
-                      <DashboardLink href={`/forms/${form.slug}`}>View</DashboardLink>
-                      <DashboardLink href={`/forms/${form.slug}/edit`}>Edit</DashboardLink>
-                      <DashboardLink href={`/forms/${form.slug}/responses`}>Responses</DashboardLink>
+                      <DashboardLink
+                        href={`/forms/${form.slug}`}
+                        icon={<EyeIcon />}
+                        label="View"
+                      />
+                      <DashboardLink
+                        href={`/forms/${form.slug}/edit`}
+                        icon={<EditIcon />}
+                        label="Edit"
+                      />
+                      <DashboardLink
+                        href={`/forms/${form.slug}/responses`}
+                        icon={<RowsIcon />}
+                        label="Responses"
+                      />
                     </>
                   ) : null}
+                </div>
+
+                <div className="flex flex-wrap justify-end gap-2 max-lg:justify-start max-sm:grid max-sm:grid-cols-2">
+                  {view === "active" ? (
+                    <>
+                      <ActionButton
+                        icon={form.accepting_responses ? <CloseIcon /> : <OpenIcon />}
+                        label={form.accepting_responses ? "Close responses" : "Open responses"}
+                        tone={form.accepting_responses ? "danger" : "success"}
+                        disabled={updatingFormId === form.id}
+                        onClick={() => void toggleAcceptingResponses(form)}
+                      />
+                      <ActionButton
+                        icon={<LockIcon />}
+                        label={form.requires_login ? "Make public" : "Require login"}
+                        disabled={updatingFormId === form.id}
+                        onClick={() => void toggleRequiresLogin(form)}
+                      />
+                      <ActionButton
+                        icon={<ArchiveIcon />}
+                        label="Archive"
+                        tone="danger"
+                        disabled={updatingFormId === form.id}
+                        onClick={() => void archiveForm(form)}
+                      />
+                    </>
+                  ) : (
+                    <ActionButton
+                      icon={<RestoreIcon />}
+                      label="Unarchive"
+                      tone="success"
+                      disabled={updatingFormId === form.id}
+                      onClick={() => void unarchiveForm(form)}
+                    />
+                  )}
                 </div>
               </div>
             </article>
@@ -334,14 +342,127 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function DashboardLink({ href, children }: { href: string; children: ReactNode }) {
+function DashboardLink({ href, icon, label }: { href: string; icon: React.ReactNode; label: string }) {
   return (
     <Link
-      className="border border-line bg-[#30333d] px-3 py-2 text-center text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
+      aria-label={label}
+      className="grid min-h-control min-w-control place-items-center border border-line bg-[#30333d] px-3 py-2 text-ink transition hover:border-accent hover:text-ink-onDark max-sm:min-w-0"
       href={href as Route}
+      title={label}
     >
-      {children}
+      {icon}
     </Link>
+  );
+}
+
+function ActionButton({
+  disabled,
+  icon,
+  label,
+  tone = "neutral",
+  onClick,
+}: {
+  disabled?: boolean;
+  icon: React.ReactNode;
+  label: string;
+  tone?: "neutral" | "success" | "danger";
+  onClick: () => void;
+}) {
+  const toneClassName =
+    tone === "success"
+      ? "border-line-success bg-success hover:border-line-success"
+      : tone === "danger"
+        ? "border-line-error bg-error hover:border-danger"
+        : "border-line bg-[#30333d] hover:border-accent";
+
+  return (
+    <button
+      aria-label={label}
+      className={`flex min-h-control items-center justify-center gap-2 border px-3 py-2 text-sm text-ink transition ${toneClassName}`}
+      disabled={disabled}
+      title={label}
+      type="button"
+      onClick={onClick}
+    >
+      {icon}
+      <span className="max-sm:sr-only">{label}</span>
+    </button>
+  );
+}
+
+function ArchiveIcon() {
+  return (
+    <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M4 7h16" />
+      <path d="M6 7l1 13h10l1-13" />
+      <path d="M9 11h6" />
+      <path d="M8 7V4h8v3" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M7 7l10 10" />
+      <path d="M17 7 7 17" />
+    </svg>
+  );
+}
+
+function EditIcon() {
+  return (
+    <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M4 20h16" />
+      <path d="M6 16 16.5 5.5 19 8 8.5 18.5 6 19z" />
+    </svg>
+  );
+}
+
+function EyeIcon() {
+  return (
+    <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" />
+      <path d="M12 9a3 3 0 1 1 0 6 3 3 0 0 1 0-6z" />
+    </svg>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M7 11V8a5 5 0 0 1 10 0v3" />
+      <path d="M5 11h14v10H5z" />
+    </svg>
+  );
+}
+
+function OpenIcon() {
+  return (
+    <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M5 12h14" />
+      <path d="m13 6 6 6-6 6" />
+    </svg>
+  );
+}
+
+function RestoreIcon() {
+  return (
+    <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M4 7h10a6 6 0 1 1-5.2 9" />
+      <path d="M4 7l4-4" />
+      <path d="M4 7l4 4" />
+    </svg>
+  );
+}
+
+function RowsIcon() {
+  return (
+    <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M4 6h16" />
+      <path d="M4 12h16" />
+      <path d="M4 18h16" />
+    </svg>
   );
 }
 

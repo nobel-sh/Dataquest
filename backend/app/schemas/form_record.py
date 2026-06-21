@@ -33,6 +33,7 @@ class FormRead(BaseModel):
     slug: str
     accepting_responses: bool
     requires_login: bool
+    has_responded: bool
     archived: bool
     created_at: datetime
     updated_at: datetime
