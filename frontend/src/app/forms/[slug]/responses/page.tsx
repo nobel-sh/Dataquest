@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppBrand } from "@/components/app-brand";
 import { ResponsesViewer } from "@/components/forms/responses-viewer";
+import { SessionMenu } from "@/components/session-menu";
 import { getFormBySlug } from "@/lib/api";
 
 type ResponsesPageProps = {
@@ -25,12 +26,15 @@ export default async function ResponsesPage({ params }: ResponsesPageProps) {
           <AppBrand />
           <div className="text-ink-onDark/75">/{form.slug}/responses</div>
         </div>
-        <Link
-          className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
-          href={`/forms/${form.slug}`}
-        >
-          View form
-        </Link>
+        <div className="flex items-center gap-3 max-sm:flex-wrap">
+          <Link
+            className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
+            href={`/forms/${form.slug}`}
+          >
+            View form
+          </Link>
+          <SessionMenu />
+        </div>
       </div>
 
       <ResponsesViewer form={form} />

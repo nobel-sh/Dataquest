@@ -5,8 +5,9 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { AppBrand } from "@/components/app-brand";
+import { SessionMenu } from "@/components/session-menu";
 import { listForms } from "@/lib/api";
-import { getCurrentUser, logoutSession } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import type { FormRecord, User } from "@/lib/types";
 
 const linkButtonClassName =
@@ -61,12 +62,6 @@ export default function HomePage() {
     };
   }, []);
 
-  async function logout() {
-    await logoutSession();
-    setCurrentUser(null);
-    setRecentForms([]);
-  }
-
   async function copyPublicLink(form: FormRecord) {
     const url = `${window.location.origin}/forms/${form.slug}`;
     await navigator.clipboard.writeText(url);
@@ -94,26 +89,9 @@ export default function HomePage() {
         <div>
           <AppBrand />
         </div>
-        <nav className="flex items-center gap-2 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
-          {currentUser ? (
-            <div className="flex items-center border border-line bg-panel max-sm:grid max-sm:grid-cols-[1fr_auto]">
-              <div className="max-w-[220px] truncate px-3 py-2 text-sm text-ink-muted">
-                {currentUser.email}
-              </div>
-              <button
-                className="min-h-control border-0 border-l border-line bg-[#30333d] px-3 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:text-ink-onDark"
-                type="button"
-                onClick={() => void logout()}
-              >
-                Logout
-              </button>
-            </div>
-          ) : (
-            <Link className={linkButtonClassName} href="/auth">
-              Sign in
-            </Link>
-          )}
-        </nav>
+        <div className="flex items-center gap-2 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
+          <SessionMenu />
+        </div>
       </header>
 
       <section className="relative grid min-h-[560px] overflow-hidden border border-line bg-[radial-gradient(circle_at_18%_0%,rgba(138,180,248,0.12),transparent_30rem),linear-gradient(145deg,#181a20_0%,#1b1d23_58%,#202126_100%)] p-8 shadow-panel max-sm:p-5">
@@ -261,11 +239,9 @@ function LoggedOutHome({
         <div>
           <AppBrand />
         </div>
-        <nav className="flex items-center gap-2 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
-          <Link className={linkButtonClassName} href="/auth">
-            Sign in
-          </Link>
-        </nav>
+        <div className="flex items-center gap-2 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
+          <SessionMenu />
+        </div>
       </header>
 
       <section className="relative grid min-h-[560px] overflow-hidden border border-line bg-[radial-gradient(circle_at_18%_0%,rgba(138,180,248,0.12),transparent_30rem),linear-gradient(145deg,#181a20_0%,#1b1d23_58%,#202126_100%)] p-8 shadow-panel max-sm:p-5">

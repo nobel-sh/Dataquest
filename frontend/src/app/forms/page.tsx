@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppBrand } from "@/components/app-brand";
 import { FormsDashboard } from "@/components/forms/forms-dashboard";
+import { SessionMenu } from "@/components/session-menu";
 
 export default function FormsPage() {
   return (
@@ -17,12 +18,7 @@ export default function FormsPage() {
           >
             Home
           </Link>
-          <Link
-            className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
-            href="/auth"
-          >
-            Account
-          </Link>
+          <SessionMenu />
         </div>
       </div>
 

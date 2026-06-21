@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppBrand } from "@/components/app-brand";
 import { FormSchemaEditor } from "@/components/forms/form-schema-editor";
+import { SessionMenu } from "@/components/session-menu";
 import { getFormBySlug } from "@/lib/api";
 
 type EditFormPageProps = {
@@ -38,6 +39,7 @@ export default async function EditFormPage({ params }: EditFormPageProps) {
           >
             Responses
           </Link>
+          <SessionMenu />
         </div>
       </div>
 

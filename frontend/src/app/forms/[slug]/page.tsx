@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { AppBrand } from "@/components/app-brand";
 import { PublicForm } from "@/components/public-form";
+import { SessionMenu } from "@/components/session-menu";
 import { getFormBySlug } from "@/lib/api";
 
 type FormPageProps = {
@@ -36,6 +37,7 @@ export default async function FormPage({ params }: FormPageProps) {
           >
             Responses
           </Link>
+          <SessionMenu />
         </div>
       </div>
       <PublicForm form={form} />

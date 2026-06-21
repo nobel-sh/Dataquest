@@ -21,7 +21,7 @@ from app.db.session import get_db
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
 from app.routes.dependencies import get_current_user
-from app.schemas.auth import AuthToken, UserCreate, UserRead
+from app.schemas.auth import AuthToken, EmailUpdate, PasswordUpdate, UserCreate, UserRead
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 DbSession = Annotated[Session, Depends(get_db)]
@@ -119,6 +119,58 @@ def get_me(current_user: CurrentUser) -> UserRead:
     return UserRead(id=current_user.id, email=current_user.email)
 
 
+@router.patch("/me", response_model=UserRead)
+def update_email(
+    payload: EmailUpdate,
+    request: Request,
+    current_user: CurrentUser,
+    db: DbSession,
+) -> UserRead:
+    if not verify_password(payload.current_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid email or password",
+        )
+
+    current_user.email = payload.email.lower()
+    try:
+        db.commit()
+    except IntegrityError as error:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="email already registered",
+        ) from error
+
+    db.refresh(current_user)
+    logger.info("user email updated user_id=%s", current_user.id)
+    return UserRead(id=current_user.id, email=current_user.email)
+
+
+@router.patch("/password", response_model=UserRead)
+def update_password(
+    payload: PasswordUpdate,
+    request: Request,
+    current_user: CurrentUser,
+    db: DbSession,
+) -> UserRead:
+    if not verify_password(payload.current_password, current_user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid email or password",
+        )
+
+    current_user.password_hash = hash_password(payload.new_password)
+    current_refresh_token = get_refresh_token_from_request(request, db)
+    if current_refresh_token is not None:
+        revoke_refresh_token_family(current_refresh_token, db)
+    else:
+        revoke_user_refresh_tokens(current_user.id, db)
+    db.commit()
+    logger.info("user password updated user_id=%s", current_user.id)
+    return UserRead(id=current_user.id, email=current_user.email)
+
+
 def issue_session(user: User, db: Session, response: Response) -> AuthToken:
     refresh_token_value = create_session_refresh_token(user, db)
     db.commit()
@@ -194,6 +246,14 @@ def revoke_refresh_token_family(refresh_token: RefreshToken, db: Session) -> Non
     now = utc_now()
     db.query(RefreshToken).filter(
         RefreshToken.session_id == refresh_token.session_id,
+        RefreshToken.revoked_at.is_(None),
+    ).update({RefreshToken.revoked_at: now}, synchronize_session=False)
+
+
+def revoke_user_refresh_tokens(user_id: UUID, db: Session) -> None:
+    now = utc_now()
+    db.query(RefreshToken).filter(
+        RefreshToken.user_id == user_id,
         RefreshToken.revoked_at.is_(None),
     ).update({RefreshToken.revoked_at: now}, synchronize_session=False)
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppBrand } from "@/components/app-brand";
 import { NewFormCreator } from "@/components/forms/new-form-creator";
+import { SessionMenu } from "@/components/session-menu";
 
 export default function NewFormPage() {
   return (
@@ -23,6 +24,7 @@ export default function NewFormPage() {
           >
             Home
           </Link>
+          <SessionMenu />
         </div>
       </div>
 

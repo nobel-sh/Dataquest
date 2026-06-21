@@ -61,6 +61,23 @@ export async function logoutSession(): Promise<void> {
   });
 }
 
+export async function updateEmail(currentPassword: string, email: string): Promise<User> {
+  return updateAccount("/auth/me", {
+    current_password: currentPassword,
+    email,
+  });
+}
+
+export async function updatePassword(
+  currentPassword: string,
+  newPassword: string,
+): Promise<User> {
+  return updateAccount("/auth/password", {
+    current_password: currentPassword,
+    new_password: newPassword,
+  });
+}
+
 export async function authenticatedFetch(
   input: RequestInfo | URL,
   initFactory: () => RequestInit,
@@ -99,6 +116,27 @@ async function authRequest(path: string, email: string, password: string): Promi
   if (!response.ok) {
     const body = await response.json().catch(() => null);
     const detail = body?.detail ?? `Authentication failed: ${response.status}`;
+    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+  }
+
+  return response.json();
+}
+
+async function updateAccount(
+  path: string,
+  payload: Record<string, string>,
+): Promise<User> {
+  const response = await authenticatedFetch(`${getApiBaseUrl()}${path}`, () => ({
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  }));
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    const detail = body?.detail ?? `Failed to update account: ${response.status}`;
     throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
   }
 
