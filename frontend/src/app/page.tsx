@@ -22,6 +22,7 @@ export default function HomePage() {
   const [recentFormsError, setRecentFormsError] = useState<string | null>(null);
   const [isLoadingRecentForms, setIsLoadingRecentForms] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [copiedFormId, setCopiedFormId] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +65,15 @@ export default function HomePage() {
     await logoutSession();
     setCurrentUser(null);
     setRecentForms([]);
+  }
+
+  async function copyPublicLink(form: FormRecord) {
+    const url = `${window.location.origin}/forms/${form.slug}`;
+    await navigator.clipboard.writeText(url);
+    setCopiedFormId(form.id);
+    window.setTimeout(() => {
+      setCopiedFormId((currentValue) => (currentValue === form.id ? null : currentValue));
+    }, 1500);
   }
 
   function openForm(event: FormEvent<HTMLFormElement>) {
@@ -200,23 +210,31 @@ export default function HomePage() {
                       className="min-w-0 transition hover:text-accent"
                       href={`/forms/${form.slug}`}
                     >
-                      <div className="truncate font-display text-xl leading-tight">{form.title}</div>
+                      <div className="truncate font-display text-xl leading-tight max-sm:text-[1.1rem]">
+                        {form.title}
+                      </div>
                     </Link>
-                    <div className="mt-1 truncate text-sm text-ink-muted">/{form.slug}</div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="truncate text-sm text-ink-muted">/{form.slug}</div>
+                    <div className="flex flex-wrap gap-2 max-sm:gap-1.5">
                       <StatusChip isOpen={form.accepting_responses} />
                       <AccessChip requiresLogin={form.requires_login} />
-                      <RecentSurveyMeta
-                        label="Responses"
-                        value={form.response_count.toString()}
+                      <ResponsesLink
+                        count={form.response_count}
+                        href={`/forms/${form.slug}/responses`}
                       />
                       <RecentSurveyMeta label="Updated" value={formatDate(form.updated_at)} />
                     </div>
                   </div>
-                  <div className="flex items-center justify-end gap-2 max-lg:justify-start max-sm:grid max-sm:grid-cols-3">
+                  <div className="flex items-center justify-end gap-2 max-lg:justify-start max-sm:grid max-sm:grid-cols-2">
                     <SurveyAction href={`/forms/${form.slug}`} label="Open" />
                     <SurveyAction href={`/forms/${form.slug}/edit`} label="Edit" />
-                    <SurveyAction href={`/forms/${form.slug}/responses`} label="Responses" />
+                    <button
+                      className="inline-flex min-h-control items-center justify-center border border-line bg-[#30333d] px-3 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:text-ink-onDark"
+                      type="button"
+                      onClick={() => void copyPublicLink(form)}
+                    >
+                      {copiedFormId === form.id ? "Copied" : "Copy link"}
+                    </button>
                   </div>
                 </article>
               ))}
@@ -302,10 +320,22 @@ function LoggedOutHome({
 
 function RecentSurveyMeta({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-line bg-[#30333d] px-3 py-2 text-sm">
+    <div className="border border-line bg-[#30333d] px-3 py-2 text-sm max-sm:px-2.5 max-sm:py-2">
       <div className="font-semibold text-ink">{value}</div>
       <div className="mt-1 text-xs uppercase text-ink-muted">{label}</div>
     </div>
+  );
+}
+
+function ResponsesLink({ count, href }: { count: number; href: string }) {
+  return (
+    <Link
+      className="inline-flex items-center gap-2 border border-line bg-[#30333d] px-3 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:text-ink-onDark max-sm:px-2.5 max-sm:py-2"
+      href={href as Route}
+    >
+      <span>{count}</span>
+      <span className="text-ink-muted">responses</span>
+    </Link>
   );
 }
 
