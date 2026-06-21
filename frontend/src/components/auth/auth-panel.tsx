@@ -1,8 +1,9 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { login, register, setAccessToken } from "@/lib/auth";
+import { clearAccessToken, getCurrentUser, login, register, setAccessToken } from "@/lib/auth";
+import type { User } from "@/lib/types";
 
 const inputClassName =
   "min-h-control w-full border border-line bg-[#30333d] px-4 py-3 text-ink outline-none transition placeholder:text-ink-muted/70 hover:border-[#5f6368] focus:border-accent focus:bg-[#333642] focus:shadow-focus";
@@ -16,7 +17,36 @@ export function AuthPanel() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadSession() {
+      try {
+        const user = await getCurrentUser();
+        if (!cancelled) {
+          setCurrentUser(user);
+        }
+      } catch {
+        if (!cancelled) {
+          setCurrentUser(null);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingSession(false);
+        }
+      }
+    }
+
+    void loadSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -27,12 +57,20 @@ export function AuthPanel() {
       const result =
         mode === "login" ? await login(email, password) : await register(email, password);
       setAccessToken(result.access_token);
-      router.push("/");
+      setCurrentUser(result.user);
+      router.push("/forms");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Authentication failed.");
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function logout() {
+    clearAccessToken();
+    setCurrentUser(null);
+    setMessage("Logged out.");
+    router.refresh();
   }
 
   return (
@@ -43,6 +81,26 @@ export function AuthPanel() {
           {mode === "login" ? "Login" : "Register"}
         </h1>
       </header>
+
+      <div className="border-b border-line bg-[#181a20] p-7 max-sm:p-5">
+        <div className="flex items-center justify-between gap-4 border border-line bg-panel p-4 max-sm:flex-col max-sm:items-stretch">
+          <div>
+            <div className="text-sm uppercase text-ink-muted">Current session</div>
+            <div className="mt-1 font-semibold">
+              {isLoadingSession ? "Checking session..." : currentUser?.email ?? "Not logged in"}
+            </div>
+          </div>
+          {currentUser ? (
+            <button
+              className="min-h-control border border-line bg-[#30333d] px-4 py-2 font-semibold text-ink transition hover:border-accent hover:bg-[#333642]"
+              type="button"
+              onClick={logout}
+            >
+              Logout
+            </button>
+          ) : null}
+        </div>
+      </div>
 
       <form onSubmit={submit}>
         <div className="grid gap-5 bg-[#181a20] p-7 max-sm:p-5">

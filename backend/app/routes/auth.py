@@ -8,10 +8,12 @@ from sqlalchemy.orm import Session
 from app.core.security import create_access_token, hash_password, verify_password
 from app.db.session import get_db
 from app.models.user import User
+from app.routes.dependencies import get_current_user
 from app.schemas.auth import AuthToken, UserCreate, UserRead
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 DbSession = Annotated[Session, Depends(get_db)]
+CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
 @router.post("/register", response_model=AuthToken, status_code=status.HTTP_201_CREATED)
@@ -42,6 +44,11 @@ def login_user(payload: UserCreate, db: DbSession) -> AuthToken:
         )
 
     return build_auth_token(user)
+
+
+@router.get("/me", response_model=UserRead)
+def get_me(current_user: CurrentUser) -> UserRead:
+    return UserRead(id=current_user.id, email=current_user.email)
 
 
 def build_auth_token(user: User) -> AuthToken:

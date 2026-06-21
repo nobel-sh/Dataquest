@@ -5,10 +5,12 @@ import type { Route } from "next";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { listForms } from "@/lib/api";
-import type { FormRecord } from "@/lib/types";
+import { clearAccessToken, getCurrentUser } from "@/lib/auth";
+import type { FormRecord, User } from "@/lib/types";
 
 export function FormsDashboard() {
   const [forms, setForms] = useState<FormRecord[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -20,8 +22,9 @@ export function FormsDashboard() {
       setError(null);
 
       try {
-        const nextForms = await listForms();
+        const [user, nextForms] = await Promise.all([getCurrentUser(), listForms()]);
         if (!cancelled) {
+          setCurrentUser(user);
           setForms(nextForms);
         }
       } catch (loadError) {
@@ -42,6 +45,13 @@ export function FormsDashboard() {
     };
   }, []);
 
+  function logout() {
+    clearAccessToken();
+    setCurrentUser(null);
+    setForms([]);
+    setError("Logged out. Login again to view your forms.");
+  }
+
   const totalFields = useMemo(
     () => forms.reduce((sum, form) => sum + form.latest_version.schema.fields.length, 0),
     [forms],
@@ -56,13 +66,34 @@ export function FormsDashboard() {
             <h1 className="m-0 mt-2 font-display text-[clamp(30px,4vw,46px)] leading-tight">
               My Forms
             </h1>
+            <div className="mt-2 text-sm text-ink-muted">
+              {currentUser ? currentUser.email : "Login required"}
+            </div>
           </div>
-          <Link
-            className="border border-accent bg-accent px-4 py-2 font-bold tracking-wide text-ink-button shadow-[0_8px_18px_rgba(161,66,244,0.22)] transition hover:border-accent-hover hover:bg-accent-hover"
-            href="/forms/new"
-          >
-            New form
-          </Link>
+          <div className="flex gap-2 max-sm:w-full max-sm:flex-col">
+            {currentUser ? (
+              <button
+                className="border border-line bg-[#30333d] px-4 py-2 font-semibold text-ink transition hover:border-accent hover:bg-[#333642]"
+                type="button"
+                onClick={logout}
+              >
+                Logout
+              </button>
+            ) : (
+              <Link
+                className="border border-line bg-[#30333d] px-4 py-2 font-semibold text-ink transition hover:border-accent hover:bg-[#333642]"
+                href="/auth"
+              >
+                Login
+              </Link>
+            )}
+            <Link
+              className="border border-accent bg-accent px-4 py-2 font-bold tracking-wide text-ink-button shadow-[0_8px_18px_rgba(161,66,244,0.22)] transition hover:border-accent-hover hover:bg-accent-hover"
+              href="/forms/new"
+            >
+              New form
+            </Link>
+          </div>
         </div>
 
         <div className="mt-4 grid grid-cols-3 border border-line text-sm max-sm:grid-cols-1">
