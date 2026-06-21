@@ -49,8 +49,13 @@ export async function createForm(slug: string, formSchema: FormSchema): Promise<
   return response.json();
 }
 
-export async function listForms(): Promise<FormRecord[]> {
-  const response = await fetch(`${API_BASE_URL}/forms`, {
+export async function listForms(includeArchived = false): Promise<FormRecord[]> {
+  const searchParams = new URLSearchParams();
+  if (includeArchived) {
+    searchParams.set("include_archived", "true");
+  }
+  const query = searchParams.toString();
+  const response = await fetch(`${API_BASE_URL}/forms${query ? `?${query}` : ""}`, {
     headers: authHeaders(),
     cache: "no-store",
   });

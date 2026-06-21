@@ -48,6 +48,7 @@
               nodejs_22
               pnpm
               python
+              sqlite
             ];
 
             env = {

@@ -66,12 +66,16 @@ def generate_form(payload: GenerateFormRequest, _current_user: CurrentUser) -> G
 
 
 @router.get("", response_model=list[FormRead])
-def list_forms(db: DbSession, current_user: CurrentUser) -> list[FormRead]:
-    forms = db.scalars(
-        select(Form)
-        .where(Form.owner_id == current_user.id, Form.archived.is_(False))
-        .order_by(Form.updated_at.desc())
-    ).all()
+def list_forms(
+    db: DbSession,
+    current_user: CurrentUser,
+    include_archived: bool = False,
+) -> list[FormRead]:
+    statement = select(Form).where(Form.owner_id == current_user.id)
+    if not include_archived:
+        statement = statement.where(Form.archived.is_(False))
+
+    forms = db.scalars(statement.order_by(Form.updated_at.desc())).all()
 
     return [build_form_read(form, get_latest_version(form.id, db)) for form in forms]
 

@@ -12,6 +12,7 @@ export function FormsDashboard() {
   const [forms, setForms] = useState<FormRecord[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<"active" | "archived">("active");
   const [isLoading, setIsLoading] = useState(true);
   const [updatingFormId, setUpdatingFormId] = useState<string | null>(null);
 
@@ -23,10 +24,13 @@ export function FormsDashboard() {
       setError(null);
 
       try {
-        const [user, nextForms] = await Promise.all([getCurrentUser(), listForms()]);
+        const [user, nextForms] = await Promise.all([
+          getCurrentUser(),
+          listForms(view === "archived"),
+        ]);
         if (!cancelled) {
           setCurrentUser(user);
-          setForms(nextForms);
+          setForms(filterFormsForView(nextForms, view));
         }
       } catch (loadError) {
         if (!cancelled) {
@@ -44,7 +48,7 @@ export function FormsDashboard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [view]);
 
   function logout() {
     clearAccessToken();
@@ -86,6 +90,24 @@ export function FormsDashboard() {
       );
     } catch (archiveError) {
       setError(archiveError instanceof Error ? archiveError.message : "Failed to archive form.");
+    } finally {
+      setUpdatingFormId(null);
+    }
+  }
+
+  async function unarchiveForm(form: FormRecord) {
+    setUpdatingFormId(form.id);
+    setError(null);
+
+    try {
+      const updatedForm = await updateFormSettings(form.id, { archived: false });
+      setForms((currentForms) =>
+        currentForms.filter((currentForm) => currentForm.id !== updatedForm.id),
+      );
+    } catch (unarchiveError) {
+      setError(
+        unarchiveError instanceof Error ? unarchiveError.message : "Failed to unarchive form.",
+      );
     } finally {
       setUpdatingFormId(null);
     }
@@ -140,6 +162,26 @@ export function FormsDashboard() {
           <Metric label="Fields" value={isLoading ? "..." : totalFields.toString()} />
           <Metric label="Latest version" value={latestVersionLabel(forms)} />
         </div>
+        <div className="mt-4 inline-grid grid-cols-2 border border-line text-sm">
+          <button
+            className={`px-4 py-2 transition ${
+              view === "active" ? "bg-accent text-ink-button" : "bg-[#30333d] text-ink"
+            }`}
+            type="button"
+            onClick={() => setView("active")}
+          >
+            Active
+          </button>
+          <button
+            className={`border-l border-line px-4 py-2 transition ${
+              view === "archived" ? "bg-accent text-ink-button" : "bg-[#30333d] text-ink"
+            }`}
+            type="button"
+            onClick={() => setView("archived")}
+          >
+            Archived
+          </button>
+        </div>
       </header>
 
       {error ? (
@@ -160,14 +202,18 @@ export function FormsDashboard() {
           <div className="border border-line bg-panel p-5">
             <strong>No forms yet.</strong>
             <p className="m-0 mt-2 text-ink-muted">
-              Create a form manually or generate a draft from an AI prompt.
+              {view === "active"
+                ? "Create a form manually or generate a draft from an AI prompt."
+                : "Archived forms will appear here."}
             </p>
-            <Link
-              className="mt-4 inline-block border border-accent bg-accent px-4 py-2 font-bold tracking-wide text-ink-button transition hover:border-accent-hover hover:bg-accent-hover"
-              href="/forms/new"
-            >
-              Create form
-            </Link>
+            {view === "active" ? (
+              <Link
+                className="mt-4 inline-block border border-accent bg-accent px-4 py-2 font-bold tracking-wide text-ink-button transition hover:border-accent-hover hover:bg-accent-hover"
+                href="/forms/new"
+              >
+                Create form
+              </Link>
+            ) : null}
           </div>
         </div>
       ) : (
@@ -198,29 +244,46 @@ export function FormsDashboard() {
                   value={form.accepting_responses ? "Open" : "Closed"}
                 />
                 <div className="flex items-center gap-2 p-4 max-lg:col-span-3 max-sm:col-span-1 max-sm:flex-col max-sm:items-stretch">
-                  <button
-                    className={`border px-3 py-2 text-center text-sm transition ${
-                      form.accepting_responses
-                        ? "border-line-error bg-error text-ink"
-                        : "border-line-success bg-success text-ink"
-                    }`}
-                    disabled={updatingFormId === form.id}
-                    type="button"
-                    onClick={() => void toggleAcceptingResponses(form)}
-                  >
-                    {form.accepting_responses ? "Close" : "Open"}
-                  </button>
-                  <button
-                    className="border border-line-error bg-error px-3 py-2 text-center text-sm text-ink transition hover:border-danger"
-                    disabled={updatingFormId === form.id}
-                    type="button"
-                    onClick={() => void archiveForm(form)}
-                  >
-                    Archive
-                  </button>
-                  <DashboardLink href={`/forms/${form.slug}`}>View</DashboardLink>
-                  <DashboardLink href={`/forms/${form.slug}/edit`}>Edit</DashboardLink>
-                  <DashboardLink href={`/forms/${form.slug}/responses`}>Responses</DashboardLink>
+                  {view === "active" ? (
+                    <>
+                      <button
+                        className={`border px-3 py-2 text-center text-sm transition ${
+                          form.accepting_responses
+                            ? "border-line-error bg-error text-ink"
+                            : "border-line-success bg-success text-ink"
+                        }`}
+                        disabled={updatingFormId === form.id}
+                        type="button"
+                        onClick={() => void toggleAcceptingResponses(form)}
+                      >
+                        {form.accepting_responses ? "Close" : "Open"}
+                      </button>
+                      <button
+                        className="border border-line-error bg-error px-3 py-2 text-center text-sm text-ink transition hover:border-danger"
+                        disabled={updatingFormId === form.id}
+                        type="button"
+                        onClick={() => void archiveForm(form)}
+                      >
+                        Archive
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="border border-line-success bg-success px-3 py-2 text-center text-sm text-ink transition hover:border-line-success"
+                      disabled={updatingFormId === form.id}
+                      type="button"
+                      onClick={() => void unarchiveForm(form)}
+                    >
+                      Unarchive
+                    </button>
+                  )}
+                  {view === "active" ? (
+                    <>
+                      <DashboardLink href={`/forms/${form.slug}`}>View</DashboardLink>
+                      <DashboardLink href={`/forms/${form.slug}/edit`}>Edit</DashboardLink>
+                      <DashboardLink href={`/forms/${form.slug}/responses`}>Responses</DashboardLink>
+                    </>
+                  ) : null}
                 </div>
               </div>
             </article>
@@ -257,6 +320,10 @@ function latestVersionLabel(forms: FormRecord[]): string {
   }
 
   return `v${Math.max(...forms.map((form) => form.latest_version.version_number)).toString()}`;
+}
+
+function filterFormsForView(forms: FormRecord[], view: "active" | "archived"): FormRecord[] {
+  return forms.filter((form) => form.archived === (view === "archived"));
 }
 
 function formatDate(value: string): string {
