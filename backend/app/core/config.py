@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 
 class Settings(BaseModel):
+    app_env: str = "development"
     database_url: str = "sqlite:///./dataquest.db"
     log_level: str = "INFO"
     auth_secret_key: str = "change-me-in-development"
@@ -39,7 +40,8 @@ def get_settings() -> Settings:
     defaults = Settings()
     cors_origins = os.getenv("CORS_ORIGINS")
 
-    return Settings(
+    settings = Settings(
+        app_env=os.getenv("APP_ENV", defaults.app_env).lower(),
         database_url=os.getenv("DATABASE_URL", defaults.database_url),
         log_level=os.getenv("LOG_LEVEL", defaults.log_level).upper(),
         auth_secret_key=os.getenv("AUTH_SECRET_KEY", defaults.auth_secret_key),
@@ -100,6 +102,37 @@ def get_settings() -> Settings:
             if cors_origins
             else defaults.cors_origins
         ),
+    )
+    validate_settings(settings)
+    return settings
+
+
+def validate_settings(settings: Settings) -> None:
+    if settings.app_env != "production":
+        return
+
+    errors: list[str] = []
+    if settings.auth_secret_key == Settings().auth_secret_key:
+        errors.append("AUTH_SECRET_KEY must be changed in production")
+    if not settings.access_token_cookie_secure:
+        errors.append("ACCESS_TOKEN_COOKIE_SECURE must be true in production")
+    if not settings.refresh_token_cookie_secure:
+        errors.append("REFRESH_TOKEN_COOKIE_SECURE must be true in production")
+    if not settings.csrf_cookie_secure:
+        errors.append("CSRF_COOKIE_SECURE must be true in production")
+    if any(is_local_origin(origin) for origin in settings.cors_origins):
+        errors.append("CORS_ORIGINS must not include localhost in production")
+
+    if errors:
+        raise RuntimeError("; ".join(errors))
+
+
+def is_local_origin(origin: str) -> bool:
+    normalized = origin.lower()
+    return (
+        "localhost" in normalized
+        or "127.0.0.1" in normalized
+        or "0.0.0.0" in normalized
     )
 
 
