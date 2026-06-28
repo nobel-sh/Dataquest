@@ -1,6 +1,8 @@
 import hmac
 import logging
+import re
 import time
+from uuid import uuid4
 
 from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -21,6 +23,8 @@ configure_logging(settings.log_level)
 logger = logging.getLogger("app.request")
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 CSRF_EXEMPT_PATHS = {"/auth/login", "/auth/register"}
+REQUEST_ID_HEADER = "X-Request-ID"
+REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9_.:-]{1,128}$")
 
 app = FastAPI()
 app.add_middleware(
@@ -29,6 +33,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=[REQUEST_ID_HEADER],
 )
 app.include_router(auth_router)
 app.include_router(forms_router)
@@ -45,14 +50,17 @@ async def enforce_csrf(request: Request, call_next):
             csrf_header,
         ):
             logger.warning(
-                "csrf validation failed method=%s path=%s",
+                "csrf validation failed request_id=%s method=%s path=%s",
+                get_request_id(request),
                 request.method,
                 request.url.path,
             )
-            return JSONResponse(
+            response = JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
                 content={"detail": "invalid csrf token"},
             )
+            response.headers[REQUEST_ID_HEADER] = get_request_id(request)
+            return response
 
     return await call_next(request)
 
@@ -65,7 +73,8 @@ async def log_requests(request: Request, call_next):
     except Exception:
         elapsed_ms = (time.perf_counter() - start_time) * 1000
         logger.exception(
-            "request failed method=%s path=%s elapsed_ms=%.2f",
+            "request failed request_id=%s method=%s path=%s elapsed_ms=%.2f",
+            get_request_id(request),
             request.method,
             request.url.path,
             elapsed_ms,
@@ -77,13 +86,34 @@ async def log_requests(request: Request, call_next):
 
     elapsed_ms = (time.perf_counter() - start_time) * 1000
     logger.info(
-        "request complete method=%s path=%s status_code=%s elapsed_ms=%.2f",
+        "request complete request_id=%s method=%s path=%s status_code=%s elapsed_ms=%.2f",
+        get_request_id(request),
         request.method,
         request.url.path,
         response.status_code,
         elapsed_ms,
     )
     return response
+
+
+@app.middleware("http")
+async def assign_request_id(request: Request, call_next):
+    request_id = resolve_request_id(request.headers.get(REQUEST_ID_HEADER))
+    request.state.request_id = request_id
+    response = await call_next(request)
+    response.headers[REQUEST_ID_HEADER] = request_id
+    return response
+
+
+def resolve_request_id(value: str | None) -> str:
+    if value and REQUEST_ID_PATTERN.fullmatch(value):
+        return value
+
+    return f"req_{uuid4().hex}"
+
+
+def get_request_id(request: Request) -> str:
+    return getattr(request.state, "request_id", "unknown")
 
 
 def should_check_csrf(request: Request) -> bool:
