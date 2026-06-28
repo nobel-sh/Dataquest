@@ -15,6 +15,11 @@ from app.db.session import get_db
 from app.models.form import Form, FormResponse, FormVersion
 from app.models.user import User
 from app.routes.dependencies import get_current_user, get_optional_current_user
+from app.services.forms_access import (
+    require_form_owner,
+    require_public_form,
+    require_submittable_form,
+)
 from app.schemas.agent import GenerateFormRequest, GenerateFormResult
 from app.schemas.form import FieldOption, FormSchema
 from app.schemas.form_record import FormCreate, FormRead, FormSettingsUpdate
@@ -127,7 +132,7 @@ def update_form_settings(
     current_user: CurrentUser,
 ) -> FormRead:
     form = db.get(Form, form_id)
-    form = ensure_form_owner(form, current_user)
+    form = require_form_owner(form, current_user)
     if payload.accepting_responses is not None:
         form.accepting_responses = payload.accepting_responses
     if payload.requires_login is not None:
@@ -157,7 +162,7 @@ def update_form_settings(
 @router.get("/{form_id}", response_model=FormRead)
 def get_form(form_id: UUID, db: DbSession, current_user: CurrentUser) -> FormRead:
     form = db.get(Form, form_id)
-    form = ensure_form_owner(form, current_user)
+    form = require_form_owner(form, current_user)
 
     latest_version = get_latest_version(form.id, db)
 
@@ -167,8 +172,7 @@ def get_form(form_id: UUID, db: DbSession, current_user: CurrentUser) -> FormRea
 @router.get("/slug/{slug}", response_model=FormRead)
 def get_form_by_slug(slug: str, db: DbSession, current_user: OptionalCurrentUser) -> FormRead:
     form = db.scalar(select(Form).where(Form.slug == slug))
-    if form is None or form.archived:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
+    form = require_public_form(form)
 
     latest_version = get_latest_version(form.id, db)
 
@@ -188,7 +192,7 @@ def create_form_version(
     current_user: CurrentUser,
 ) -> FormRead:
     form = db.get(Form, form_id)
-    form = ensure_form_owner(form, current_user)
+    form = require_form_owner(form, current_user)
 
     latest_version = get_latest_version(form.id, db)
     form.title = payload.form_schema.title
@@ -225,7 +229,7 @@ def list_form_versions(
     current_user: CurrentUser,
 ) -> list[FormVersionRead]:
     form = db.get(Form, form_id)
-    form = ensure_form_owner(form, current_user)
+    form = require_form_owner(form, current_user)
 
     versions = db.scalars(
         select(FormVersion)
@@ -248,34 +252,7 @@ def submit_form_response(
     db: DbSession,
     current_user: OptionalCurrentUser,
 ) -> FormResponseRead:
-    form = db.get(Form, form_id)
-    if form is None or form.archived:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
-    if not form.accepting_responses:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="form is not accepting responses",
-        )
-    if form.requires_login and current_user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="login required to submit this form",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    if current_user is not None:
-        existing_response = db.scalar(
-            select(FormResponse)
-            .where(
-                FormResponse.form_id == form.id,
-                FormResponse.respondent_user_id == current_user.id,
-            )
-            .limit(1)
-        )
-        if existing_response is not None:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="user has already submitted a response for this form",
-            )
+    form = require_submittable_form(db.get(Form, form_id), current_user, db)
 
     latest_version = get_latest_version(form.id, db)
     form_schema = FormSchema.model_validate(latest_version.schema_json)
@@ -327,7 +304,7 @@ def export_form_responses(
         )
 
     form = db.get(Form, form_id)
-    form = ensure_form_owner(form, current_user)
+    form = require_form_owner(form, current_user)
 
     latest_version = get_latest_version(form.id, db)
     form_schema = FormSchema.model_validate(latest_version.schema_json)
@@ -367,7 +344,7 @@ def list_form_responses(
     current_user: CurrentUser,
 ) -> list[FormResponseRead]:
     form = db.get(Form, form_id)
-    form = ensure_form_owner(form, current_user)
+    form = require_form_owner(form, current_user)
 
     responses = db.scalars(
         select(FormResponse)
@@ -376,12 +353,6 @@ def list_form_responses(
     ).all()
 
     return [build_response_read(response) for response in responses]
-
-
-def ensure_form_owner(form: Form | None, current_user: User) -> Form:
-    if form is None or form.owner_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="form not found")
-    return form
 
 
 def build_responses_csv(
