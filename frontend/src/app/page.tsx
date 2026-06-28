@@ -1,21 +1,15 @@
 "use client";
 
-import { FormEvent, ReactNode, useEffect, useState } from "react";
-import Link from "next/link";
-import type { Route } from "next";
+import type { FormEvent } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AppBrand } from "@/components/app-brand";
-import { SessionMenu } from "@/components/session-menu";
-import { LinkButton, Skeleton } from "@/components/ui/primitives";
-import {
-  controlButtonClassName,
-  formSlugButtonClassName,
-  formSlugInputClassName,
-  pageShellClassName,
-} from "@/components/ui/styles";
+import { HomeHeader } from "@/components/home/home-header";
+import { HomeHero } from "@/components/home/home-hero";
+import { RecentSurveys } from "@/components/home/recent-surveys";
+import { LinkButton } from "@/components/ui/primitives";
+import { pageShellClassName } from "@/components/ui/styles";
 import { listForms } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
-import { formatShortDate } from "@/lib/format";
 import type { FormRecord, User } from "@/lib/types";
 
 export default function HomePage() {
@@ -121,272 +115,26 @@ export default function HomePage() {
         submitLabel="Open slug"
         actions={
           <>
-              <LinkButton variant="primary" href="/forms/new">
-                New form
-              </LinkButton>
-              <LinkButton variant="panel" href="/forms">
-                Open workspace
-              </LinkButton>
+            <LinkButton variant="primary" href="/forms/new">
+              New form
+            </LinkButton>
+            <LinkButton variant="panel" href="/forms">
+              Open workspace
+            </LinkButton>
           </>
         }
         onSlugChange={setSlug}
         onSubmit={openForm}
       />
 
-      <section className="mt-5 border border-line bg-panel shadow-panel">
-        <header className="flex items-center justify-between gap-4 border-b border-line p-5 max-sm:flex-col max-sm:items-start">
-          <div>
-            <h2 className="m-0 font-display text-2xl leading-tight">Recent surveys</h2>
-            <div className="mt-1 text-sm text-ink-muted">The latest forms in your workspace.</div>
-          </div>
-          <LinkButton variant="panel" className="max-sm:w-full" href="/forms">
-            View all
-          </LinkButton>
-        </header>
-
-        <div className="bg-[#181a20] p-5">
-          {isLoadingRecentForms ? (
-            <RecentSurveySkeleton />
-          ) : recentFormsError ? (
-            <div className="border border-line bg-panel p-4 text-ink-muted">
-              {recentFormsError}
-            </div>
-          ) : !currentUser ? (
-            <div className="grid gap-4 border border-line bg-panel p-5 sm:grid-cols-[1fr_auto] sm:items-center">
-              <div>
-                <div className="font-display text-xl">Sign in to see recent surveys.</div>
-                <div className="mt-1 text-sm text-ink-muted">
-                  Your workspace forms and response counts will appear here.
-                </div>
-              </div>
-              <LinkButton variant="primary" href="/auth">
-                Sign in
-              </LinkButton>
-            </div>
-          ) : recentForms.length === 0 ? (
-            <div className="border border-line bg-panel p-4 text-ink-muted">
-              No surveys yet. Create your first form to start collecting responses.
-            </div>
-          ) : (
-            <div className="grid gap-2">
-              {recentForms.map((form) => (
-                <article
-                  className="grid min-w-0 grid-cols-[1fr_auto] gap-4 border border-line bg-panel p-4 transition hover:border-accent hover:bg-[#262932] max-lg:grid-cols-1"
-                  key={form.id}
-                >
-                  <div className="grid min-w-0 gap-3">
-                    <Link
-                      className="min-w-0 transition hover:text-accent"
-                      href={`/forms/${form.slug}`}
-                    >
-                      <div className="truncate font-display text-xl leading-tight max-sm:text-[1.1rem]">
-                        {form.title}
-                      </div>
-                    </Link>
-                    <div className="break-all text-sm text-ink-muted">/{form.slug}</div>
-                    <div className="flex flex-wrap gap-2 max-sm:gap-1.5">
-                      <StatusChip isOpen={form.accepting_responses} />
-                      <AccessChip requiresLogin={form.requires_login} />
-                      <ResponsesLink
-                        count={form.response_count}
-                        href={`/forms/${form.slug}/responses`}
-                      />
-                      <RecentSurveyMeta label="Updated" value={formatShortDate(form.updated_at)} />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end max-lg:justify-start">
-                    <SurveyAction href={`/forms/${form.slug}`} label="Open" />
-                    <SurveyAction href={`/forms/${form.slug}/edit`} label="Edit" />
-                    <button
-                      className={controlButtonClassName}
-                      type="button"
-                      onClick={() => void copyPublicLink(form)}
-                    >
-                      {copiedFormId === form.id ? "Copied" : "Copy link"}
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+      <RecentSurveys
+        copiedFormId={copiedFormId}
+        currentUser={currentUser}
+        error={recentFormsError}
+        forms={recentForms}
+        isLoading={isLoadingRecentForms}
+        onCopyPublicLink={(form) => void copyPublicLink(form)}
+      />
     </main>
-  );
-}
-
-function HomeHeader() {
-  return (
-    <header className="mb-8 flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
-      <AppBrand />
-      <div className="flex items-center gap-2 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
-        <SessionMenu />
-      </div>
-    </header>
-  );
-}
-
-function HomeHero({
-  actions,
-  description,
-  eyebrow,
-  slug,
-  slugAriaLabel,
-  submitLabel,
-  title,
-  onSlugChange,
-  onSubmit,
-}: {
-  actions: ReactNode;
-  description: string;
-  eyebrow: string;
-  slug: string;
-  slugAriaLabel: string;
-  submitLabel: string;
-  title: string;
-  onSlugChange: (value: string) => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-}) {
-  return (
-    <section className="relative grid min-h-[560px] overflow-hidden border border-line bg-[radial-gradient(circle_at_18%_0%,rgba(138,180,248,0.12),transparent_30rem),linear-gradient(145deg,#181a20_0%,#1b1d23_58%,#202126_100%)] p-8 shadow-panel max-sm:min-h-[520px] max-sm:p-5">
-      <div className="relative grid max-w-[760px] content-between gap-10">
-        <div>
-          <div className="mb-5 inline-flex border border-line bg-panel px-3 py-2 text-xs uppercase text-ink-muted">
-            {eyebrow}
-          </div>
-          <h1 className="m-0 font-display text-5xl leading-tight max-sm:text-4xl">{title}</h1>
-          <p className="mt-5 text-lg leading-8 text-ink-muted max-sm:text-base max-sm:leading-7">
-            {description}
-          </p>
-        </div>
-
-        <div className="grid gap-5">
-          <div className="grid gap-3 sm:flex">{actions}</div>
-          <form
-            className="grid max-w-[640px] grid-cols-[1fr_auto] border border-line bg-panel max-sm:grid-cols-1"
-            onSubmit={onSubmit}
-          >
-            <input
-              className={formSlugInputClassName}
-              value={slug}
-              onChange={(event) => onSlugChange(event.target.value)}
-              placeholder="student-feedback"
-              aria-label={slugAriaLabel}
-            />
-            <button className={formSlugButtonClassName} type="submit">
-              {submitLabel}
-            </button>
-          </form>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function RecentSurveyMeta({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0 border border-line bg-[#30333d] px-3 py-2 text-sm max-sm:px-2.5 max-sm:py-2">
-      <div className="break-words font-semibold text-ink">{value}</div>
-      <div className="mt-1 text-xs uppercase text-ink-muted">{label}</div>
-    </div>
-  );
-}
-
-function ResponsesLink({ count, href }: { count: number; href: string }) {
-  return (
-    <Link
-      className={`${controlButtonClassName} min-w-0 gap-2 max-sm:px-2.5 max-sm:py-2`}
-      href={href as Route}
-    >
-      <span>{count}</span>
-      <span className="text-ink-muted">responses</span>
-    </Link>
-  );
-}
-
-function StatusChip({ isOpen }: { isOpen: boolean }) {
-  return (
-    <div
-      className={`inline-flex items-center gap-2 border px-3 py-2 text-sm font-semibold ${isOpen
-        ? "border-line-success bg-success text-ink"
-        : "border-line-error bg-error text-ink"
-        }`}
-    >
-      <span className={isOpen ? "size-2 bg-[#7ec07c]" : "size-2 bg-[#e06c75]"} />
-      {isOpen ? "Open" : "Closed"}
-    </div>
-  );
-}
-
-function AccessChip({ requiresLogin }: { requiresLogin: boolean }) {
-  return (
-    <div className="inline-flex items-center gap-2 border border-line bg-[#30333d] px-3 py-2 text-sm font-semibold">
-      {requiresLogin ? <LockIcon /> : <PublicIcon />}
-      {requiresLogin ? "Login" : "Public"}
-    </div>
-  );
-}
-
-function SurveyAction({ href, label }: { href: string; label: string }) {
-  return (
-    <Link
-      className={controlButtonClassName}
-      href={href as Route}
-    >
-      {label}
-    </Link>
-  );
-}
-
-function RecentSurveySkeleton() {
-  return (
-    <div className="grid gap-2" aria-label="Loading recent surveys">
-      {[0, 1, 2].map((index) => (
-        <div className="grid gap-4 border border-line bg-panel p-4" key={index}>
-          <Skeleton className="h-6 w-2/5" />
-          <Skeleton className="h-4 w-1/4" />
-          <div className="flex flex-wrap gap-2">
-            <Skeleton className="h-12 w-24" />
-            <Skeleton className="h-12 w-24" />
-            <Skeleton className="h-12 w-28" />
-            <Skeleton className="h-12 w-28" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function LockIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="size-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-    >
-      <path d="M7 11V8a5 5 0 0 1 10 0v3" />
-      <path d="M5 11h14v10H5z" />
-    </svg>
-  );
-}
-
-function PublicIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="size-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      viewBox="0 0 24 24"
-    >
-      <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z" />
-      <path d="M3 12h18" />
-      <path d="M12 3a14 14 0 0 1 0 18" />
-      <path d="M12 3a14 14 0 0 0 0 18" />
-    </svg>
   );
 }
