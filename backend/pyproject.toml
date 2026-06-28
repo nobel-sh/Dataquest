@@ -8,6 +8,7 @@ dependencies = [
   "fastapi",
   "httpx",
   "pydantic",
+  "psycopg[binary]",
   "pytest",
   "sqlalchemy",
   "uvicorn",

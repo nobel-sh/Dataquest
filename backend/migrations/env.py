@@ -16,16 +16,20 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 target_metadata = Base.metadata
+DEFAULT_ALEMBIC_URL = "sqlite:///./dataquest.db"
 
 
 def get_database_url() -> str:
     configured_url = config.get_main_option("sqlalchemy.url")
-    if configured_url:
+    if configured_url and configured_url != DEFAULT_ALEMBIC_URL:
         return configured_url
 
     environment_url = os.getenv("DATABASE_URL")
     if environment_url:
         return environment_url
+
+    if configured_url:
+        return configured_url
 
     return get_settings().database_url
 

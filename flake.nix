@@ -35,6 +35,7 @@
               fastapi
               httpx
               pydantic
+              psycopg
               pytest
               ruff
               sqlalchemy
@@ -45,8 +46,10 @@
         {
           default = pkgs.mkShell {
             packages = with pkgs; [
+              docker-compose
               nodejs_22
               pnpm
+              postgresql_16
               python
               sqlite
             ];
