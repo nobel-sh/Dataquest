@@ -1,5 +1,6 @@
 import { authenticatedFetch } from "@/lib/auth";
 import { getApiBaseUrl } from "@/lib/config";
+import { responseError, statusError } from "@/lib/http-error";
 import type {
   Answers,
   FormRecord,
@@ -26,7 +27,7 @@ export async function getFormBySlug(slug: string): Promise<FormRecord | null> {
   }
 
   if (!response.ok) {
-    throw new Error(`Failed to load form: ${response.status}`);
+    throw statusError(response, `Failed to load form: ${response.status}`);
   }
 
   return response.json();
@@ -42,9 +43,7 @@ export async function createForm(slug: string, formSchema: FormSchema): Promise<
   }));
 
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    const detail = body?.detail ?? `Failed to create form: ${response.status}`;
-    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+    throw await responseError(response, `Failed to create form: ${response.status}`);
   }
 
   return response.json();
@@ -64,7 +63,7 @@ export async function listForms(includeArchived = false): Promise<FormRecord[]> 
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to load forms: ${response.status}`);
+    throw statusError(response, `Failed to load forms: ${response.status}`);
   }
 
   return response.json();
@@ -90,9 +89,7 @@ export async function updateFormSettings(
   );
 
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    const detail = body?.detail ?? `Failed to update form settings: ${response.status}`;
-    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+    throw await responseError(response, `Failed to update form settings: ${response.status}`);
   }
 
   return response.json();
@@ -108,9 +105,7 @@ export async function generateForm(prompt: string): Promise<GenerateFormResult> 
   }));
 
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    const detail = body?.detail ?? `Failed to generate form: ${response.status}`;
-    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+    throw await responseError(response, `Failed to generate form: ${response.status}`);
   }
 
   return response.json();
@@ -129,9 +124,7 @@ export async function submitFormResponse(formId: string, answers: Answers): Prom
   );
 
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    const detail = body?.detail ?? `Failed to submit response: ${response.status}`;
-    throw new Error(typeof detail === "string" ? detail : "Failed to submit response");
+    throw await responseError(response, `Failed to submit response: ${response.status}`);
   }
 
   return response.json();
@@ -146,7 +139,7 @@ export async function listFormResponses(formId: string): Promise<FormResponse[]>
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to load responses: ${response.status}`);
+    throw statusError(response, `Failed to load responses: ${response.status}`);
   }
 
   return response.json();
@@ -161,7 +154,7 @@ export async function listFormVersions(formId: string): Promise<FormVersion[]> {
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to load form versions: ${response.status}`);
+    throw statusError(response, `Failed to load form versions: ${response.status}`);
   }
 
   return response.json();
@@ -183,9 +176,7 @@ export async function createFormVersion(
   );
 
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    const detail = body?.detail ?? `Failed to save form version: ${response.status}`;
-    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+    throw await responseError(response, `Failed to save form version: ${response.status}`);
   }
 
   return response.json();

@@ -1,5 +1,6 @@
 import type { AuthToken, User } from "@/lib/types";
 import { getApiBaseUrl } from "@/lib/config";
+import { responseError, statusError } from "@/lib/http-error";
 
 let refreshSessionPromise: Promise<AuthToken | null> | null = null;
 const CSRF_COOKIE_NAME = "dataquest_csrf_token";
@@ -114,9 +115,7 @@ async function authRequest(path: string, email: string, password: string): Promi
   });
 
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    const detail = body?.detail ?? `Authentication failed: ${response.status}`;
-    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+    throw await responseError(response, `Authentication failed: ${response.status}`);
   }
 
   return response.json();
@@ -135,9 +134,7 @@ async function updateAccount(
   }));
 
   if (!response.ok) {
-    const body = await response.json().catch(() => null);
-    const detail = body?.detail ?? `Failed to update account: ${response.status}`;
-    throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail));
+    throw await responseError(response, `Failed to update account: ${response.status}`);
   }
 
   return response.json();
@@ -205,7 +202,7 @@ async function fetchCurrentUser(): Promise<User | null> {
   }
 
   if (!response.ok) {
-    throw new Error(`Failed to load current user: ${response.status}`);
+    throw statusError(response, `Failed to load current user: ${response.status}`);
   }
 
   return response.json();

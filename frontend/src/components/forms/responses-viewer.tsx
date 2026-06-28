@@ -8,6 +8,7 @@ import {
   listFormVersions,
 } from "@/lib/api";
 import { authenticatedFetch } from "@/lib/auth";
+import { statusError } from "@/lib/http-error";
 import type { AnswerValue, FieldOption, FormField, FormRecord, FormResponse } from "@/lib/types";
 
 type ResponsesViewerProps = {
@@ -64,7 +65,7 @@ export function ResponsesViewer({ form }: ResponsesViewerProps) {
     try {
       const response = await authenticatedFetch(formResponsesExportUrl(form.id), () => ({}));
       if (!response.ok) {
-        throw new Error(`Failed to export responses: ${response.status}`);
+        throw statusError(response, `Failed to export responses: ${response.status}`);
       }
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
