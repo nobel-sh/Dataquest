@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import re
+import logging
+import time
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -11,6 +13,9 @@ from pydantic import ValidationError
 from app.core.config import Settings, get_settings
 from app.schemas.agent import GenerateFormResult
 from app.schemas.form import FormSchema
+
+logger = logging.getLogger("app.ai")
+RETRYABLE_GEMINI_STATUSES = {429, 500, 502, 503, 504}
 
 
 class FormGenerator(ABC):
@@ -63,35 +68,24 @@ class MockFormGenerator(FormGenerator):
 
 
 class GeminiFormGenerator(FormGenerator):
-    def __init__(self, api_key: str, model: str) -> None:
+    def __init__(
+        self,
+        api_key: str,
+        model: str,
+        timeout_seconds: float,
+        max_retries: int,
+        retry_base_delay_seconds: float,
+        retry_max_delay_seconds: float,
+    ) -> None:
         self.api_key = api_key
         self.model = model
+        self.timeout_seconds = timeout_seconds
+        self.max_retries = max_retries
+        self.retry_base_delay_seconds = retry_base_delay_seconds
+        self.retry_max_delay_seconds = retry_max_delay_seconds
 
     def generate(self, prompt: str) -> GenerateFormResult:
-        try:
-            response = httpx.post(
-                (
-                    "https://generativelanguage.googleapis.com/v1beta/models/"
-                    f"{self.model}:generateContent"
-                ),
-                headers={
-                    "Content-Type": "application/json",
-                    "x-goog-api-key": self.api_key,
-                },
-                json=gemini_payload(prompt),
-                timeout=30.0,
-            )
-        except httpx.HTTPError as error:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=f"Gemini generation request failed: {error.__class__.__name__}",
-            ) from error
-
-        if response.status_code >= 400:
-            raise HTTPException(
-                status_code=status.HTTP_502_BAD_GATEWAY,
-                detail=gemini_error_detail(response),
-            )
+        response = self.request_generation(prompt)
 
         try:
             text = extract_gemini_text(response.json())
@@ -103,6 +97,83 @@ class GeminiFormGenerator(FormGenerator):
             ) from error
 
         return GenerateFormResult.model_validate({"schema": schema})
+
+    def request_generation(self, prompt: str) -> httpx.Response:
+        last_error: httpx.HTTPError | None = None
+        last_response: httpx.Response | None = None
+
+        for attempt in range(self.max_retries + 1):
+            if attempt > 0:
+                time.sleep(self.retry_delay(attempt))
+
+            try:
+                response = self.post_generation_request(prompt)
+            except httpx.HTTPError as error:
+                last_error = error
+                logger.warning(
+                    "gemini request failed",
+                    extra={
+                        "event": "gemini_request_failed",
+                        "model": self.model,
+                        "attempt": attempt + 1,
+                        "max_attempts": self.max_retries + 1,
+                        "error_type": error.__class__.__name__,
+                    },
+                )
+                continue
+
+            if response.status_code < 400:
+                return response
+
+            last_response = response
+            logger.warning(
+                "gemini returned error",
+                extra={
+                    "event": "gemini_response_error",
+                    "model": self.model,
+                    "attempt": attempt + 1,
+                    "max_attempts": self.max_retries + 1,
+                    "status_code": response.status_code,
+                    "retryable": response.status_code in RETRYABLE_GEMINI_STATUSES,
+                },
+            )
+            if response.status_code not in RETRYABLE_GEMINI_STATUSES:
+                break
+
+        if last_response is not None:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=gemini_error_detail(last_response),
+            )
+
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=(
+                "Gemini generation request failed: "
+                f"{last_error.__class__.__name__ if last_error else 'unknown error'}"
+            ),
+        )
+
+    def post_generation_request(self, prompt: str) -> httpx.Response:
+        try:
+            return httpx.post(
+                (
+                    "https://generativelanguage.googleapis.com/v1beta/models/"
+                    f"{self.model}:generateContent"
+                ),
+                headers={
+                    "Content-Type": "application/json",
+                    "x-goog-api-key": self.api_key,
+                },
+                json=gemini_payload(prompt),
+                timeout=self.timeout_seconds,
+            )
+        except httpx.HTTPError:
+            raise
+
+    def retry_delay(self, attempt: int) -> float:
+        delay = self.retry_base_delay_seconds * (2 ** (attempt - 1))
+        return min(delay, self.retry_max_delay_seconds)
 
 
 def get_form_generator(settings: Settings | None = None) -> FormGenerator:
@@ -120,6 +191,10 @@ def get_form_generator(settings: Settings | None = None) -> FormGenerator:
             return GeminiFormGenerator(
                 api_key=resolved_settings.gemini_api_key,
                 model=resolved_settings.gemini_model,
+                timeout_seconds=resolved_settings.gemini_timeout_seconds,
+                max_retries=resolved_settings.gemini_max_retries,
+                retry_base_delay_seconds=resolved_settings.gemini_retry_base_delay_seconds,
+                retry_max_delay_seconds=resolved_settings.gemini_retry_max_delay_seconds,
             )
         case unknown_provider:
             raise HTTPException(

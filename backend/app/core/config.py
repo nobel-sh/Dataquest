@@ -33,6 +33,10 @@ class Settings(BaseModel):
     ai_provider: str = "mock"
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-flash-latest"
+    gemini_timeout_seconds: float = 15.0
+    gemini_max_retries: int = 1
+    gemini_retry_base_delay_seconds: float = 0.5
+    gemini_retry_max_delay_seconds: float = 4.0
 
 
 @lru_cache
@@ -99,6 +103,22 @@ def get_settings() -> Settings:
         ai_provider=os.getenv("AI_PROVIDER", defaults.ai_provider),
         gemini_api_key=os.getenv("GEMINI_API_KEY", defaults.gemini_api_key),
         gemini_model=os.getenv("GEMINI_MODEL", defaults.gemini_model),
+        gemini_timeout_seconds=float(
+            os.getenv("GEMINI_TIMEOUT_SECONDS", defaults.gemini_timeout_seconds)
+        ),
+        gemini_max_retries=int(os.getenv("GEMINI_MAX_RETRIES", defaults.gemini_max_retries)),
+        gemini_retry_base_delay_seconds=float(
+            os.getenv(
+                "GEMINI_RETRY_BASE_DELAY_SECONDS",
+                defaults.gemini_retry_base_delay_seconds,
+            )
+        ),
+        gemini_retry_max_delay_seconds=float(
+            os.getenv(
+                "GEMINI_RETRY_MAX_DELAY_SECONDS",
+                defaults.gemini_retry_max_delay_seconds,
+            )
+        ),
         cors_origins=(
             [origin.strip() for origin in cors_origins.split(",") if origin.strip()]
             if cors_origins
