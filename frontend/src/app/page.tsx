@@ -1,20 +1,22 @@
 "use client";
 
-import { Dispatch, FormEvent, SetStateAction, useEffect, useState } from "react";
+import { FormEvent, ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { AppBrand } from "@/components/app-brand";
 import { SessionMenu } from "@/components/session-menu";
+import { LinkButton, Skeleton } from "@/components/ui/primitives";
+import {
+  controlButtonClassName,
+  formSlugButtonClassName,
+  formSlugInputClassName,
+  pageShellClassName,
+} from "@/components/ui/styles";
 import { listForms } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
+import { formatShortDate } from "@/lib/format";
 import type { FormRecord, User } from "@/lib/types";
-
-const linkButtonClassName =
-  "inline-flex min-h-control items-center justify-center border border-line bg-panel px-4 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:text-ink-onDark";
-
-const primaryLinkClassName =
-  "inline-flex min-h-control items-center justify-center border border-accent bg-accent px-5 py-2 text-sm font-bold tracking-wide text-ink-button shadow-[0_8px_18px_rgba(161,66,244,0.22)] transition hover:border-accent-hover hover:bg-accent-hover";
 
 export default function HomePage() {
   const router = useRouter();
@@ -80,67 +82,56 @@ export default function HomePage() {
   }
 
   if (!isLoadingRecentForms && !currentUser && !recentFormsError) {
-    return <LoggedOutHome openForm={openForm} setSlug={setSlug} slug={slug} />;
+    return (
+      <main className={pageShellClassName}>
+        <HomeHeader />
+        <HomeHero
+          eyebrow="Dataquest Forms"
+          title="Sign in to build and manage surveys."
+          description="Create validated form schemas, edit questions manually, publish public links, and review responses from one workspace."
+          slug={slug}
+          slugAriaLabel="Public form slug"
+          submitLabel="Open public form"
+          actions={
+            <>
+              <LinkButton variant="primary" href="/auth">
+                Sign in
+              </LinkButton>
+              <LinkButton variant="panel" href="/auth">
+                Create account
+              </LinkButton>
+            </>
+          }
+          onSlugChange={setSlug}
+          onSubmit={openForm}
+        />
+      </main>
+    );
   }
 
   return (
-    <main className="mx-auto w-[calc(100%-32px)] max-w-page py-8 pb-14 max-sm:w-[calc(100%-24px)] max-sm:pt-5">
-      <header className="mb-8 flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
-        <div>
-          <AppBrand />
-        </div>
-        <div className="flex items-center gap-2 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
-          <SessionMenu />
-        </div>
-      </header>
-
-      <section className="relative grid min-h-[560px] overflow-hidden border border-line bg-[radial-gradient(circle_at_18%_0%,rgba(138,180,248,0.12),transparent_30rem),linear-gradient(145deg,#181a20_0%,#1b1d23_58%,#202126_100%)] p-8 shadow-panel max-sm:p-5">
-        <div className="relative grid max-w-[760px] content-between gap-10">
-          <div>
-            <div className="mb-5 inline-flex border border-line bg-panel px-3 py-2 text-xs uppercase text-ink-muted">
-              AI-assisted form builder
-            </div>
-            <h1 className="m-0 font-display text-5xl leading-tight max-sm:text-4xl">
-              Turn prompts into validated form schemas.
-            </h1>
-            <p className="mt-5 text-lg leading-8 text-ink-muted max-sm:text-base max-sm:leading-7">
-              Dataquest keeps generation constrained to structured output, then gives you manual
-              editing, versioning, and response collection without letting AI write arbitrary
-              interface code.
-            </p>
-          </div>
-
-          <div className="grid gap-5">
-            <div className="flex gap-3 max-sm:flex-col">
-              <Link className={primaryLinkClassName} href="/forms/new">
+    <main className={pageShellClassName}>
+      <HomeHeader />
+      <HomeHero
+        eyebrow="AI-assisted form builder"
+        title="Turn prompts into validated form schemas."
+        description="Dataquest keeps generation constrained to structured output, then gives you manual editing, versioning, and response collection without letting AI write arbitrary interface code."
+        slug={slug}
+        slugAriaLabel="Form slug"
+        submitLabel="Open slug"
+        actions={
+          <>
+              <LinkButton variant="primary" href="/forms/new">
                 New form
-              </Link>
-              <Link className={linkButtonClassName} href="/forms">
+              </LinkButton>
+              <LinkButton variant="panel" href="/forms">
                 Open workspace
-              </Link>
-            </div>
-
-            <form
-              className="grid max-w-[640px] grid-cols-[1fr_auto] border border-line bg-panel max-sm:grid-cols-1"
-              onSubmit={openForm}
-            >
-              <input
-                className="min-h-control min-w-0 border-0 border-r border-line bg-[#30333d] px-4 py-3 text-ink outline-none transition placeholder:text-ink-muted/70 focus:bg-[#333642] focus:shadow-focus max-sm:border-b max-sm:border-r-0"
-                value={slug}
-                onChange={(event) => setSlug(event.target.value)}
-                placeholder="student-feedback"
-                aria-label="Form slug"
-              />
-              <button
-                className="min-h-control border-0 bg-[#30333d] px-5 py-3 font-semibold text-ink transition hover:bg-[#333642] hover:text-ink-onDark focus:shadow-focus"
-                type="submit"
-              >
-                Open slug
-              </button>
-            </form>
-          </div>
-        </div>
-      </section>
+              </LinkButton>
+          </>
+        }
+        onSlugChange={setSlug}
+        onSubmit={openForm}
+      />
 
       <section className="mt-5 border border-line bg-panel shadow-panel">
         <header className="flex items-center justify-between gap-4 border-b border-line p-5 max-sm:flex-col max-sm:items-start">
@@ -148,9 +139,9 @@ export default function HomePage() {
             <h2 className="m-0 font-display text-2xl leading-tight">Recent surveys</h2>
             <div className="mt-1 text-sm text-ink-muted">The latest forms in your workspace.</div>
           </div>
-          <Link className={linkButtonClassName} href="/forms">
+          <LinkButton variant="panel" className="max-sm:w-full" href="/forms">
             View all
-          </Link>
+          </LinkButton>
         </header>
 
         <div className="bg-[#181a20] p-5">
@@ -168,9 +159,9 @@ export default function HomePage() {
                   Your workspace forms and response counts will appear here.
                 </div>
               </div>
-              <Link className={primaryLinkClassName} href="/auth">
+              <LinkButton variant="primary" href="/auth">
                 Sign in
-              </Link>
+              </LinkButton>
             </div>
           ) : recentForms.length === 0 ? (
             <div className="border border-line bg-panel p-4 text-ink-muted">
@@ -180,7 +171,7 @@ export default function HomePage() {
             <div className="grid gap-2">
               {recentForms.map((form) => (
                 <article
-                  className="grid grid-cols-[1fr_auto] gap-4 border border-line bg-panel p-4 transition hover:border-accent hover:bg-[#262932] max-lg:grid-cols-1"
+                  className="grid min-w-0 grid-cols-[1fr_auto] gap-4 border border-line bg-panel p-4 transition hover:border-accent hover:bg-[#262932] max-lg:grid-cols-1"
                   key={form.id}
                 >
                   <div className="grid min-w-0 gap-3">
@@ -192,7 +183,7 @@ export default function HomePage() {
                         {form.title}
                       </div>
                     </Link>
-                    <div className="truncate text-sm text-ink-muted">/{form.slug}</div>
+                    <div className="break-all text-sm text-ink-muted">/{form.slug}</div>
                     <div className="flex flex-wrap gap-2 max-sm:gap-1.5">
                       <StatusChip isOpen={form.accepting_responses} />
                       <AccessChip requiresLogin={form.requires_login} />
@@ -200,14 +191,14 @@ export default function HomePage() {
                         count={form.response_count}
                         href={`/forms/${form.slug}/responses`}
                       />
-                      <RecentSurveyMeta label="Updated" value={formatDate(form.updated_at)} />
+                      <RecentSurveyMeta label="Updated" value={formatShortDate(form.updated_at)} />
                     </div>
                   </div>
-                  <div className="flex items-center justify-end gap-2 max-lg:justify-start max-sm:grid max-sm:grid-cols-2">
+                  <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-end max-lg:justify-start">
                     <SurveyAction href={`/forms/${form.slug}`} label="Open" />
                     <SurveyAction href={`/forms/${form.slug}/edit`} label="Edit" />
                     <button
-                      className="inline-flex min-h-control items-center justify-center border border-line bg-[#30333d] px-3 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:text-ink-onDark"
+                      className={controlButtonClassName}
                       type="button"
                       onClick={() => void copyPublicLink(form)}
                     >
@@ -224,80 +215,78 @@ export default function HomePage() {
   );
 }
 
-function LoggedOutHome({
-  openForm,
-  setSlug,
+function HomeHeader() {
+  return (
+    <header className="mb-8 flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
+      <AppBrand />
+      <div className="flex items-center gap-2 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
+        <SessionMenu />
+      </div>
+    </header>
+  );
+}
+
+function HomeHero({
+  actions,
+  description,
+  eyebrow,
   slug,
+  slugAriaLabel,
+  submitLabel,
+  title,
+  onSlugChange,
+  onSubmit,
 }: {
-  openForm: (event: FormEvent<HTMLFormElement>) => void;
-  setSlug: Dispatch<SetStateAction<string>>;
+  actions: ReactNode;
+  description: string;
+  eyebrow: string;
   slug: string;
+  slugAriaLabel: string;
+  submitLabel: string;
+  title: string;
+  onSlugChange: (value: string) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }) {
   return (
-    <main className="mx-auto w-[calc(100%-32px)] max-w-page py-8 pb-14 max-sm:w-[calc(100%-24px)] max-sm:pt-5">
-      <header className="mb-8 flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
+    <section className="relative grid min-h-[560px] overflow-hidden border border-line bg-[radial-gradient(circle_at_18%_0%,rgba(138,180,248,0.12),transparent_30rem),linear-gradient(145deg,#181a20_0%,#1b1d23_58%,#202126_100%)] p-8 shadow-panel max-sm:min-h-[520px] max-sm:p-5">
+      <div className="relative grid max-w-[760px] content-between gap-10">
         <div>
-          <AppBrand />
-        </div>
-        <div className="flex items-center gap-2 max-sm:w-full max-sm:flex-col max-sm:items-stretch">
-          <SessionMenu />
-        </div>
-      </header>
-
-      <section className="relative grid min-h-[560px] overflow-hidden border border-line bg-[radial-gradient(circle_at_18%_0%,rgba(138,180,248,0.12),transparent_30rem),linear-gradient(145deg,#181a20_0%,#1b1d23_58%,#202126_100%)] p-8 shadow-panel max-sm:p-5">
-        <div className="relative grid max-w-[760px] content-between gap-10">
-          <div>
-            <div className="mb-5 inline-flex border border-line bg-panel px-3 py-2 text-xs uppercase text-ink-muted">
-              Dataquest Forms
-            </div>
-            <h1 className="m-0 font-display text-5xl leading-tight max-sm:text-4xl">
-              Sign in to build and manage surveys.
-            </h1>
-            <p className="mt-5 text-lg leading-8 text-ink-muted max-sm:text-base max-sm:leading-7">
-              Create validated form schemas, edit questions manually, publish public links, and
-              review responses from one workspace.
-            </p>
+          <div className="mb-5 inline-flex border border-line bg-panel px-3 py-2 text-xs uppercase text-ink-muted">
+            {eyebrow}
           </div>
-
-          <div className="grid gap-5">
-            <div className="flex gap-3 max-sm:flex-col">
-              <Link className={primaryLinkClassName} href="/auth">
-                Sign in
-              </Link>
-              <Link className={linkButtonClassName} href="/auth">
-                Create account
-              </Link>
-            </div>
-
-            <form
-              className="grid max-w-[640px] grid-cols-[1fr_auto] border border-line bg-panel max-sm:grid-cols-1"
-              onSubmit={openForm}
-            >
-              <input
-                className="min-h-control min-w-0 border-0 border-r border-line bg-[#30333d] px-4 py-3 text-ink outline-none transition placeholder:text-ink-muted/70 focus:bg-[#333642] focus:shadow-focus max-sm:border-b max-sm:border-r-0"
-                value={slug}
-                onChange={(event) => setSlug(event.target.value)}
-                placeholder="student-feedback"
-                aria-label="Public form slug"
-              />
-              <button
-                className="min-h-control border-0 bg-[#30333d] px-5 py-3 font-semibold text-ink transition hover:bg-[#333642] hover:text-ink-onDark focus:shadow-focus"
-                type="submit"
-              >
-                Open public form
-              </button>
-            </form>
-          </div>
+          <h1 className="m-0 font-display text-5xl leading-tight max-sm:text-4xl">{title}</h1>
+          <p className="mt-5 text-lg leading-8 text-ink-muted max-sm:text-base max-sm:leading-7">
+            {description}
+          </p>
         </div>
-      </section>
-    </main>
+
+        <div className="grid gap-5">
+          <div className="grid gap-3 sm:flex">{actions}</div>
+          <form
+            className="grid max-w-[640px] grid-cols-[1fr_auto] border border-line bg-panel max-sm:grid-cols-1"
+            onSubmit={onSubmit}
+          >
+            <input
+              className={formSlugInputClassName}
+              value={slug}
+              onChange={(event) => onSlugChange(event.target.value)}
+              placeholder="student-feedback"
+              aria-label={slugAriaLabel}
+            />
+            <button className={formSlugButtonClassName} type="submit">
+              {submitLabel}
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
   );
 }
 
 function RecentSurveyMeta({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-line bg-[#30333d] px-3 py-2 text-sm max-sm:px-2.5 max-sm:py-2">
-      <div className="font-semibold text-ink">{value}</div>
+    <div className="min-w-0 border border-line bg-[#30333d] px-3 py-2 text-sm max-sm:px-2.5 max-sm:py-2">
+      <div className="break-words font-semibold text-ink">{value}</div>
       <div className="mt-1 text-xs uppercase text-ink-muted">{label}</div>
     </div>
   );
@@ -306,7 +295,7 @@ function RecentSurveyMeta({ label, value }: { label: string; value: string }) {
 function ResponsesLink({ count, href }: { count: number; href: string }) {
   return (
     <Link
-      className="inline-flex items-center gap-2 border border-line bg-[#30333d] px-3 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:text-ink-onDark max-sm:px-2.5 max-sm:py-2"
+      className={`${controlButtonClassName} min-w-0 gap-2 max-sm:px-2.5 max-sm:py-2`}
       href={href as Route}
     >
       <span>{count}</span>
@@ -341,7 +330,7 @@ function AccessChip({ requiresLogin }: { requiresLogin: boolean }) {
 function SurveyAction({ href, label }: { href: string; label: string }) {
   return (
     <Link
-      className="inline-flex min-h-control items-center justify-center border border-line bg-[#30333d] px-3 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:text-ink-onDark"
+      className={controlButtonClassName}
       href={href as Route}
     >
       {label}
@@ -354,13 +343,13 @@ function RecentSurveySkeleton() {
     <div className="grid gap-2" aria-label="Loading recent surveys">
       {[0, 1, 2].map((index) => (
         <div className="grid gap-4 border border-line bg-panel p-4" key={index}>
-          <div className="h-6 w-2/5 animate-pulse bg-[#30333d]" />
-          <div className="h-4 w-1/4 animate-pulse bg-[#30333d]" />
+          <Skeleton className="h-6 w-2/5" />
+          <Skeleton className="h-4 w-1/4" />
           <div className="flex flex-wrap gap-2">
-            <div className="h-12 w-24 animate-pulse bg-[#30333d]" />
-            <div className="h-12 w-24 animate-pulse bg-[#30333d]" />
-            <div className="h-12 w-28 animate-pulse bg-[#30333d]" />
-            <div className="h-12 w-28 animate-pulse bg-[#30333d]" />
+            <Skeleton className="h-12 w-24" />
+            <Skeleton className="h-12 w-24" />
+            <Skeleton className="h-12 w-28" />
+            <Skeleton className="h-12 w-28" />
           </div>
         </div>
       ))}
@@ -400,11 +389,4 @@ function PublicIcon() {
       <path d="M12 3a14 14 0 0 0 0 18" />
     </svg>
   );
-}
-
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-  }).format(new Date(value));
 }

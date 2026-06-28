@@ -47,6 +47,7 @@ const config: Config = {
         rating: "42px",
       },
       height: {
+        control: "42px",
         rating: "42px",
       },
     },

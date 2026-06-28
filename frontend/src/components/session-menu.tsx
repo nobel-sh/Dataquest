@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { skeletonBlockClassName } from "@/components/ui/styles";
 import { getCurrentUser, logoutSession } from "@/lib/auth";
 import type { User } from "@/lib/types";
 
@@ -72,8 +73,8 @@ export function SessionMenu() {
 
   if (isLoading) {
     return (
-      <div className="inline-flex min-h-control items-center border border-line bg-panel px-4 py-2 text-sm text-ink-muted">
-        Loading session
+      <div className="inline-flex min-h-control w-full items-center border border-line bg-panel px-4 py-2 text-sm text-ink-muted sm:w-auto">
+        <span className={`h-4 w-28 ${skeletonBlockClassName}`} />
       </div>
     );
   }
@@ -81,7 +82,7 @@ export function SessionMenu() {
   if (!currentUser) {
     return (
       <Link
-        className="inline-flex min-h-control items-center justify-center border border-line bg-panel px-4 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:text-ink-onDark"
+        className="inline-flex min-h-control w-full items-center justify-center border border-line bg-panel px-4 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:text-ink-onDark sm:w-auto"
         href="/auth"
       >
         Sign in
@@ -90,11 +91,11 @@ export function SessionMenu() {
   }
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative w-full sm:w-auto" ref={menuRef}>
       <button
         aria-expanded={isOpen}
         aria-haspopup="menu"
-        className="inline-flex min-h-control max-w-[260px] items-center gap-3 border border-line bg-panel px-4 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:text-ink-onDark"
+        className="inline-flex min-h-control w-full items-center justify-between gap-3 border border-line bg-panel px-4 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:text-ink-onDark sm:max-w-[260px]"
         type="button"
         onClick={() => setIsOpen((currentValue) => !currentValue)}
       >
@@ -103,7 +104,7 @@ export function SessionMenu() {
       </button>
 
       {isOpen ? (
-        <div className="absolute right-0 top-full z-20 mt-2 w-52 border border-line bg-panel shadow-panel">
+        <div className="absolute right-0 top-full z-20 mt-2 w-full min-w-52 border border-line bg-panel shadow-panel sm:w-52">
           <Link
             className="block border-b border-line px-4 py-3 text-sm text-ink transition hover:bg-[#262932] hover:text-ink-onDark"
             href="/account"

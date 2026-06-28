@@ -5,10 +5,7 @@ import { useRouter } from "next/navigation";
 import { createForm, generateForm } from "@/lib/api";
 import type { FormSchema } from "@/lib/types";
 import { FormSchemaBuilder } from "@/components/forms/form-schema-editor/schema-builder";
-import {
-  inputClassName,
-  secondaryButtonClassName,
-} from "@/components/forms/form-schema-editor/styles";
+import { Button, Card, TextArea, TextInput } from "@/components/ui/primitives";
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -102,13 +99,13 @@ export function NewFormCreator() {
         { label: "Slug", value: normalizedSlug || "unset" },
       ]}
       metadataSlot={
-        <section className="grid gap-4 border border-line bg-panel p-5">
+        <Card asSection className="grid gap-4 p-5">
           <div>
             <label className="text-base font-semibold" htmlFor="form-prompt">
               AI prompt
             </label>
-            <textarea
-              className={`${inputClassName} mt-2 min-h-[110px] resize-y`}
+            <TextArea
+              className="mt-2 min-h-[110px] resize-y"
               id="form-prompt"
               maxLength={8000}
               placeholder="Create a student feedback survey for a university course."
@@ -119,14 +116,14 @@ export function NewFormCreator() {
               <p className="m-0 text-sm text-ink-muted">
                 Generated schemas are drafts. Review and edit before creating.
               </p>
-              <button
-                className={secondaryButtonClassName}
+              <Button
+                variant="secondary"
                 disabled={isGenerating}
                 type="button"
                 onClick={generateDraft}
               >
                 {isGenerating ? "Generating" : "Generate draft"}
-              </button>
+              </Button>
             </div>
             {generationWarnings.length > 0 ? (
               <div className="mt-3 border border-line bg-[#181a20] px-4 py-3 text-sm text-ink-muted">
@@ -141,8 +138,8 @@ export function NewFormCreator() {
             <label className="text-base font-semibold" htmlFor="form-slug">
               Slug
             </label>
-            <input
-              className={`${inputClassName} mt-2`}
+            <TextInput
+              className="mt-2"
               id="form-slug"
               maxLength={120}
               placeholder="student-feedback"
@@ -152,7 +149,7 @@ export function NewFormCreator() {
             />
             {slugError ? <p className="m-0 mt-2 text-sm text-danger">{slugError}</p> : null}
           </div>
-        </section>
+        </Card>
       }
       saveLabel="Create form"
       savingLabel="Creating"

@@ -3,8 +3,22 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useMemo, useState } from "react";
+import {
+  iconButtonClassName,
+  surfaceClassName,
+} from "@/components/ui/styles";
+import {
+  Alert,
+  Button,
+  Card,
+  LinkButton,
+  MetricTile,
+  Panel,
+  Skeleton,
+} from "@/components/ui/primitives";
 import { listForms, updateFormSettings } from "@/lib/api";
 import { getCurrentUser, logoutSession } from "@/lib/auth";
+import { formatMediumDate } from "@/lib/format";
 import type { FormRecord, User } from "@/lib/types";
 
 export function FormsDashboard() {
@@ -140,7 +154,7 @@ export function FormsDashboard() {
   );
 
   return (
-    <section className="border border-line bg-panel shadow-panel">
+    <Panel>
       <header className="border-b border-line p-7 max-sm:p-5">
         <div className="flex items-start justify-between gap-4 max-sm:flex-col">
           <div>
@@ -152,38 +166,32 @@ export function FormsDashboard() {
               {currentUser ? currentUser.email : "Login required"}
             </div>
           </div>
-          <div className="flex gap-2 max-sm:w-full max-sm:flex-col">
+          <div className="grid gap-2 max-sm:w-full sm:flex">
             {currentUser ? (
-              <button
-                className="border border-line bg-[#30333d] px-4 py-2 font-semibold text-ink transition hover:border-accent hover:bg-[#333642]"
+              <Button
+                variant="secondary"
                 type="button"
                 onClick={logout}
               >
                 Logout
-              </button>
+              </Button>
             ) : (
-              <Link
-                className="border border-line bg-[#30333d] px-4 py-2 font-semibold text-ink transition hover:border-accent hover:bg-[#333642]"
-                href="/auth"
-              >
+              <LinkButton variant="secondary" href="/auth">
                 Login
-              </Link>
+              </LinkButton>
             )}
-            <Link
-              className="border border-accent bg-accent px-4 py-2 font-bold tracking-wide text-ink-button shadow-[0_8px_18px_rgba(161,66,244,0.22)] transition hover:border-accent-hover hover:bg-accent-hover"
-              href="/forms/new"
-            >
+            <LinkButton variant="primary" href="/forms/new">
               New form
-            </Link>
+            </LinkButton>
           </div>
         </div>
 
         <div className="mt-4 grid grid-cols-3 border border-line text-sm max-sm:grid-cols-1">
-          <Metric label="Forms" value={isLoading ? "..." : forms.length.toString()} />
-          <Metric label="Fields" value={isLoading ? "..." : totalFields.toString()} />
-          <Metric label="Latest version" value={latestVersionLabel(forms)} />
+          <MetricTile label="Forms" value={isLoading ? "..." : forms.length.toString()} />
+          <MetricTile label="Fields" value={isLoading ? "..." : totalFields.toString()} />
+          <MetricTile label="Latest version" value={latestVersionLabel(forms)} />
         </div>
-        <div className="mt-4 inline-grid grid-cols-2 border border-line text-sm">
+        <div className="mt-4 grid grid-cols-2 border border-line text-sm sm:inline-grid">
           <button
             className={`px-4 py-2 transition ${
               view === "active" ? "bg-accent text-ink-button" : "bg-[#30333d] text-ink"
@@ -206,21 +214,21 @@ export function FormsDashboard() {
       </header>
 
       {error ? (
-        <div className="bg-[#181a20] p-7 max-sm:p-5">
-          <div className="border border-line-error bg-error p-5">
+        <div className={`${surfaceClassName} p-7 max-sm:p-5`}>
+          <Alert>
             <div>{error}</div>
             <Link className="mt-3 inline-block underline" href="/auth">
               Login or register
             </Link>
-          </div>
+          </Alert>
         </div>
       ) : null}
 
       {isLoading ? (
-        <div className="bg-[#181a20] p-7 max-sm:p-5">Loading forms...</div>
+        <DashboardSkeleton />
       ) : forms.length === 0 ? (
-        <div className="bg-[#181a20] p-7 max-sm:p-5">
-          <div className="border border-line bg-panel p-5">
+        <div className={`${surfaceClassName} p-7 max-sm:p-5`}>
+          <Card className="p-5">
             <strong>No forms yet.</strong>
             <p className="m-0 mt-2 text-ink-muted">
               {view === "active"
@@ -228,47 +236,53 @@ export function FormsDashboard() {
                 : "Archived forms will appear here."}
             </p>
             {view === "active" ? (
-              <Link
-                className="mt-4 inline-block border border-accent bg-accent px-4 py-2 font-bold tracking-wide text-ink-button transition hover:border-accent-hover hover:bg-accent-hover"
-                href="/forms/new"
-              >
+              <LinkButton variant="primary" className="mt-4" href="/forms/new">
                 Create form
-              </Link>
+              </LinkButton>
             ) : null}
-          </div>
+          </Card>
         </div>
       ) : (
-        <div className="grid gap-4 bg-[#181a20] p-7 max-sm:p-5">
+        <div className={`grid gap-4 ${surfaceClassName} p-7 max-sm:p-5`}>
           {forms.map((form) => (
-            <article className="border border-line bg-panel" key={form.id}>
+            <article className="min-w-0 border border-line bg-panel" key={form.id}>
               <div className="grid grid-cols-[1fr_auto] gap-4 border-b border-line p-5 max-md:grid-cols-1">
-                <div>
-                  <h2 className="m-0 font-display text-2xl leading-tight">{form.title}</h2>
+                <div className="min-w-0">
+                  <h2 className="m-0 break-words font-display text-2xl leading-tight">
+                    {form.title}
+                  </h2>
                   {form.description ? (
-                    <p className="m-0 mt-2 max-w-[760px] text-ink-muted">{form.description}</p>
+                    <p className="m-0 mt-2 max-w-[760px] break-words text-ink-muted">
+                      {form.description}
+                    </p>
                   ) : null}
                 </div>
-                <div className="text-sm text-ink-muted md:text-right">
-                  <div>/{form.slug}</div>
-                  <time dateTime={form.updated_at}>Updated {formatDate(form.updated_at)}</time>
+                <div className="min-w-0 text-sm text-ink-muted md:text-right">
+                  <div className="break-all">/{form.slug}</div>
+                  <time dateTime={form.updated_at}>
+                    Updated {formatMediumDate(form.updated_at)}
+                  </time>
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 items-stretch border-b border-line text-sm max-lg:grid-cols-2 max-sm:grid-cols-1">
-                <Metric
+              <div className="grid grid-cols-4 items-stretch border-b border-line text-sm max-lg:grid-cols-2 max-[520px]:grid-cols-1">
+                <MetricTile
                   label="Version"
                   value={`v${form.latest_version.version_number.toString()}`}
                 />
-                <Metric label="Fields" value={form.latest_version.schema.fields.length.toString()} />
-                <Metric
+                <MetricTile
+                  label="Fields"
+                  value={form.latest_version.schema.fields.length.toString()}
+                />
+                <MetricTile
                   label="Responses"
                   value={form.accepting_responses ? "Open" : "Closed"}
                 />
-                <Metric label="Access" value={form.requires_login ? "Login" : "Public"} />
+                <MetricTile label="Access" value={form.requires_login ? "Login" : "Public"} />
               </div>
 
               <div className="flex items-center justify-between gap-3 p-4 max-lg:flex-col max-lg:items-stretch">
-                <div className="flex flex-wrap gap-2 max-sm:grid max-sm:grid-cols-3">
+                <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
                   {view === "active" ? (
                     <>
                       <DashboardLink
@@ -290,7 +304,7 @@ export function FormsDashboard() {
                   ) : null}
                 </div>
 
-                <div className="flex flex-wrap justify-end gap-2 max-lg:justify-start max-sm:grid max-sm:grid-cols-2">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-end max-lg:justify-start">
                   {view === "active" ? (
                     <>
                       <ActionButton
@@ -329,16 +343,7 @@ export function FormsDashboard() {
           ))}
         </div>
       )}
-    </section>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border-r border-line p-4 last:border-r-0 max-sm:border-b max-sm:border-r-0 max-sm:last:border-b-0">
-      <div className="font-display text-2xl leading-none">{value}</div>
-      <div className="mt-1 text-ink-muted">{label}</div>
-    </div>
+    </Panel>
   );
 }
 
@@ -346,7 +351,7 @@ function DashboardLink({ href, icon, label }: { href: string; icon: React.ReactN
   return (
     <Link
       aria-label={label}
-      className="grid min-h-control min-w-control place-items-center border border-line bg-[#30333d] px-3 py-2 text-ink transition hover:border-accent hover:text-ink-onDark max-sm:min-w-0"
+      className={`${iconButtonClassName} min-h-control min-w-control px-3 py-2 max-sm:min-w-0`}
       href={href as Route}
       title={label}
     >
@@ -387,6 +392,34 @@ function ActionButton({
       {icon}
       <span className="max-sm:sr-only">{label}</span>
     </button>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className={`grid gap-4 ${surfaceClassName} p-7 max-sm:p-5`} aria-label="Loading forms">
+      {[0, 1, 2].map((index) => (
+        <Card key={index}>
+          <div className="grid gap-3 border-b border-line p-5">
+            <Skeleton className="h-7 w-2/5 max-sm:w-3/4" />
+            <Skeleton className="h-4 w-3/5 max-sm:w-full" />
+          </div>
+          <div className="grid grid-cols-4 border-b border-line max-lg:grid-cols-2 max-[520px]:grid-cols-1">
+            {[0, 1, 2, 3].map((metric) => (
+              <div className="border-r border-line p-4 last:border-r-0 max-lg:border-b max-lg:[&:nth-child(2n)]:border-r-0 max-[520px]:border-r-0" key={metric}>
+                <Skeleton className="h-6 w-12" />
+                <Skeleton className="mt-2 h-4 w-20" />
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 p-4">
+            <Skeleton className="h-control w-12" />
+            <Skeleton className="h-control w-12" />
+            <Skeleton className="h-control w-12" />
+          </div>
+        </Card>
+      ))}
+    </div>
   );
 }
 
@@ -476,10 +509,4 @@ function latestVersionLabel(forms: FormRecord[]): string {
 
 function filterFormsForView(forms: FormRecord[], view: "active" | "archived"): FormRecord[] {
   return forms.filter((form) => form.archived === (view === "archived"));
-}
-
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-  }).format(new Date(value));
 }

@@ -1,20 +1,14 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppBrand } from "@/components/app-brand";
 import { getCurrentUser, logoutSession, updateEmail, updatePassword } from "@/lib/auth";
+import {
+  surfaceClassName,
+} from "@/components/ui/styles";
+import { Button, Card, LinkButton, Panel, Skeleton, TextInput } from "@/components/ui/primitives";
 import type { User } from "@/lib/types";
-
-const inputClassName =
-  "min-h-control w-full border border-line bg-[#30333d] px-4 py-3 text-ink outline-none transition placeholder:text-ink-muted/70 hover:border-[#5f6368] focus:border-accent focus:bg-[#333642] focus:shadow-focus";
-
-const buttonClassName =
-  "inline-flex min-h-control items-center justify-center border border-accent bg-accent px-5 py-2 text-sm font-bold tracking-wide text-ink-button shadow-[0_8px_18px_rgba(161,66,244,0.22)] transition hover:border-accent-hover hover:bg-accent-hover";
-
-const secondaryButtonClassName =
-  "inline-flex min-h-control items-center justify-center border border-line bg-panel px-4 py-2 text-sm font-semibold text-ink transition hover:border-accent hover:text-ink-onDark";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -108,41 +102,41 @@ export default function AccountPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-[calc(100%-32px)] max-w-page items-center py-8 max-sm:w-[calc(100%-24px)] max-sm:py-5">
-      <section className="w-full border border-line bg-panel shadow-panel">
+    <main className="mx-auto flex min-h-screen w-[calc(100%-32px)] max-w-[760px] items-center py-8 max-sm:w-[calc(100%-24px)] max-sm:py-5">
+      <Panel className="w-full">
         <header className="flex items-start justify-between gap-4 border-b border-line p-7 max-sm:flex-col max-sm:p-5">
           <div>
             <AppBrand />
             <div className="text-ink-onDark/75">Account settings</div>
           </div>
           <div className="flex gap-2 max-sm:w-full max-sm:flex-col">
-            <Link className={secondaryButtonClassName} href="/">
+            <LinkButton href="/">
               Close
-            </Link>
-            <button className={secondaryButtonClassName} type="button" onClick={() => void logout()}>
+            </LinkButton>
+            <Button variant="panel" type="button" onClick={() => void logout()}>
               Logout
-            </button>
+            </Button>
           </div>
         </header>
 
-        <div className="grid gap-6 bg-[#181a20] p-7 max-sm:p-5">
+        <div className={`grid gap-6 ${surfaceClassName} p-7 max-sm:p-5`}>
           {isLoading ? (
-            <div className="border border-line bg-panel p-5 text-ink-muted">Loading account...</div>
+            <AccountSkeleton />
           ) : !currentUser ? (
-            <div className="grid gap-4 border border-line bg-panel p-5 sm:grid-cols-[1fr_auto] sm:items-center">
+            <Card className="grid gap-4 p-5 sm:grid-cols-[1fr_auto] sm:items-center">
               <div>
                 <div className="font-display text-xl">Sign in to manage your account.</div>
                 <div className="mt-1 text-sm text-ink-muted">
                   Email and password updates are available after login.
                 </div>
               </div>
-              <Link className={buttonClassName} href="/auth">
+              <LinkButton variant="primary" href="/auth">
                 Sign in
-              </Link>
-            </div>
+              </LinkButton>
+            </Card>
           ) : (
             <>
-              {message ? <div className="border border-line bg-panel p-4">{message}</div> : null}
+              {message ? <Card className="p-4">{message}</Card> : null}
 
               <form className="grid gap-4 border border-line bg-panel p-5" onSubmit={submitEmail}>
                 <div>
@@ -156,8 +150,8 @@ export default function AccountPage() {
                   <label className="text-sm font-semibold" htmlFor="current-email-password">
                     Current password
                   </label>
-                  <input
-                    className={`${inputClassName} mt-2`}
+                  <TextInput
+                    className="mt-2"
                     id="current-email-password"
                     minLength={8}
                     type="password"
@@ -170,8 +164,8 @@ export default function AccountPage() {
                   <label className="text-sm font-semibold" htmlFor="new-email">
                     New email
                   </label>
-                  <input
-                    className={`${inputClassName} mt-2`}
+                  <TextInput
+                    className="mt-2"
                     id="new-email"
                     type="email"
                     value={newEmail}
@@ -180,10 +174,10 @@ export default function AccountPage() {
                 </div>
 
                 <div className="flex items-center justify-between gap-3 max-sm:flex-col max-sm:items-stretch">
-                  <div className="text-sm text-ink-muted">Current email: {email}</div>
-                  <button className={buttonClassName} disabled={isSavingEmail} type="submit">
+                  <div className="min-w-0 break-all text-sm text-ink-muted">Current email: {email}</div>
+                  <Button variant="primary" disabled={isSavingEmail} type="submit">
                     {isSavingEmail ? "Saving" : "Update email"}
-                  </button>
+                  </Button>
                 </div>
               </form>
 
@@ -199,8 +193,8 @@ export default function AccountPage() {
                   <label className="text-sm font-semibold" htmlFor="current-password">
                     Current password
                   </label>
-                  <input
-                    className={`${inputClassName} mt-2`}
+                  <TextInput
+                    className="mt-2"
                     id="current-password"
                     minLength={8}
                     type="password"
@@ -213,8 +207,8 @@ export default function AccountPage() {
                   <label className="text-sm font-semibold" htmlFor="new-password">
                     New password
                   </label>
-                  <input
-                    className={`${inputClassName} mt-2`}
+                  <TextInput
+                    className="mt-2"
                     id="new-password"
                     minLength={8}
                     type="password"
@@ -227,8 +221,8 @@ export default function AccountPage() {
                   <label className="text-sm font-semibold" htmlFor="confirm-password">
                     Confirm password
                   </label>
-                  <input
-                    className={`${inputClassName} mt-2`}
+                  <TextInput
+                    className="mt-2"
                     id="confirm-password"
                     minLength={8}
                     type="password"
@@ -238,15 +232,25 @@ export default function AccountPage() {
                 </div>
 
                 <div className="flex justify-end">
-                  <button className={buttonClassName} disabled={isSavingPassword} type="submit">
+                  <Button variant="primary" disabled={isSavingPassword} type="submit">
                     {isSavingPassword ? "Saving" : "Update password"}
-                  </button>
+                  </Button>
                 </div>
               </form>
             </>
           )}
         </div>
-      </section>
+      </Panel>
     </main>
+  );
+}
+
+function AccountSkeleton() {
+  return (
+    <Card className="grid gap-4 p-5" aria-label="Loading account">
+      <Skeleton className="h-6 w-44" />
+      <Skeleton className="h-control" />
+      <Skeleton className="h-control" />
+    </Card>
   );
 }

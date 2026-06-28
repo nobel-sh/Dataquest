@@ -8,10 +8,11 @@ import { PlusIcon, ResetIcon } from "@/components/forms/form-schema-editor/icons
 import { ErrorList, Metric } from "@/components/forms/form-schema-editor/shared";
 import {
   addFieldButtonClassName,
-  inputClassName,
   iconButtonClassName,
-  primaryButtonClassName,
-} from "@/components/forms/form-schema-editor/styles";
+  primaryButtonLargeClassName,
+  surfaceClassName,
+} from "@/components/ui/styles";
+import { Alert, Card, Panel, TextArea, TextInput } from "@/components/ui/primitives";
 import { normalizeSchema } from "@/components/forms/form-schema-editor/schema";
 import { hasErrors, validateSchema } from "@/components/forms/form-schema-editor/validation";
 
@@ -130,10 +131,10 @@ export function FormSchemaBuilder({
   }
 
   return (
-    <section className="border border-line bg-panel shadow-panel">
+    <Panel>
       <header className="border-b border-line p-7 max-sm:p-5">
         <p className="m-0 text-sm uppercase text-ink-muted">{eyebrow}</p>
-        <h1 className="m-0 mt-2 font-display text-[clamp(30px,4vw,46px)] leading-tight">
+        <h1 className="m-0 mt-2 break-words font-display text-[clamp(30px,4vw,46px)] leading-tight">
           {schema.title || initialSchema.title}
         </h1>
         <div className="mt-4 grid grid-cols-3 border border-line text-sm max-sm:grid-cols-1">
@@ -144,30 +145,24 @@ export function FormSchemaBuilder({
       </header>
 
       <form onSubmit={save}>
-        <div className="grid gap-5 bg-[#181a20] p-7 max-sm:p-5">
+        <div className={`grid gap-5 ${surfaceClassName} p-7 max-sm:p-5`}>
           {message ? (
-            <div
-              className={
-                messageKind === "success"
-                  ? "border border-line-success bg-success px-4 py-4"
-                  : "border border-line-error bg-error px-4 py-4"
-              }
-            >
+            <Alert tone={messageKind === "success" ? "success" : "error"}>
               {message}
-            </div>
+            </Alert>
           ) : null}
 
           {validation.formErrors.length > 0 ? <ErrorList errors={validation.formErrors} /> : null}
 
           {metadataSlot}
 
-          <section className="grid gap-4 border border-line bg-panel p-5">
-            <div>
+          <Card asSection className="grid min-w-0 gap-4 p-5 max-sm:p-4">
+            <div className="min-w-0">
               <label className="text-base font-semibold" htmlFor="form-title">
                 Title
               </label>
-              <input
-                className={`${inputClassName} mt-2`}
+              <TextInput
+                className="mt-2"
                 id="form-title"
                 maxLength={200}
                 required
@@ -185,8 +180,8 @@ export function FormSchemaBuilder({
               <label className="text-base font-semibold" htmlFor="form-description">
                 Description
               </label>
-              <textarea
-                className={`${inputClassName} mt-2 min-h-[96px] resize-y`}
+              <TextArea
+                className="mt-2 min-h-[96px] resize-y"
                 id="form-description"
                 maxLength={1000}
                 value={schema.description ?? ""}
@@ -198,7 +193,7 @@ export function FormSchemaBuilder({
                 }
               />
             </div>
-          </section>
+          </Card>
 
           <section className="grid gap-4">
             <div>
@@ -239,16 +234,16 @@ export function FormSchemaBuilder({
 
           <details className="min-w-0 max-w-full border border-line bg-panel">
             <summary className="cursor-pointer px-5 py-4 font-semibold">Schema preview</summary>
-            <pre className="m-0 max-w-full overflow-x-auto whitespace-pre border-t border-line bg-[#181a20] p-5 text-sm leading-6 text-ink-muted">
+            <pre className="m-0 max-w-full overflow-x-auto whitespace-pre border-t border-line bg-[#181a20] p-5 text-sm leading-6 text-ink-muted max-sm:p-4">
               {JSON.stringify(normalizedSchema, null, 2)}
             </pre>
           </details>
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-line bg-panel px-7 py-5 max-sm:flex-col max-sm:items-stretch max-sm:p-5">
+        <div className="grid gap-3 border-t border-line bg-panel px-7 py-5 sm:grid-cols-[auto_1fr] sm:items-center max-sm:p-5">
           <button
             aria-label="Reset form editor"
-            className={iconButtonClassName}
+            className={`${iconButtonClassName} max-sm:w-full`}
             title="Reset form editor"
             type="button"
             onClick={resetBuilder}
@@ -256,7 +251,7 @@ export function FormSchemaBuilder({
             <ResetIcon />
           </button>
           <button
-            className={primaryButtonClassName}
+            className={`${primaryButtonLargeClassName} sm:justify-self-end`}
             disabled={isSaving || hasValidationErrors || submitBlocked}
             type="submit"
           >
@@ -264,7 +259,7 @@ export function FormSchemaBuilder({
           </button>
         </div>
       </form>
-    </section>
+    </Panel>
   );
 }
 

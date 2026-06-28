@@ -2,10 +2,10 @@ import type { FieldOption, FormField } from "@/lib/types";
 import { PlusIcon, TrashIcon } from "@/components/forms/form-schema-editor/icons";
 import { ErrorList } from "@/components/forms/form-schema-editor/shared";
 import {
-  compactInputClassName,
   dangerIconButtonClassName,
   iconButtonClassName,
 } from "@/components/forms/form-schema-editor/styles";
+import { TextInput } from "@/components/ui/primitives";
 
 type OptionsEditorProps = {
   field: FormField;
@@ -69,16 +69,16 @@ export function OptionsEditor({
 
       {options.map((option, index) => (
         <div className="grid grid-cols-[1fr_1fr_auto] gap-3 max-sm:grid-cols-1" key={index}>
-          <input
+          <TextInput
             aria-label={`Option ${index + 1} label`}
-            className={compactInputClassName}
+            compact
             placeholder="Label"
             value={option.label}
             onChange={(event) => updateOption(index, { ...option, label: event.target.value })}
           />
-          <input
+          <TextInput
             aria-label={`Option ${index + 1} value`}
-            className={compactInputClassName}
+            compact
             placeholder="value"
             value={option.value}
             onChange={(event) => updateOption(index, { ...option, value: event.target.value })}

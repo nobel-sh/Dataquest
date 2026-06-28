@@ -1,6 +1,6 @@
 import type { FormField } from "@/lib/types";
 import { ErrorList } from "@/components/forms/form-schema-editor/shared";
-import { compactInputClassName } from "@/components/forms/form-schema-editor/styles";
+import { TextInput } from "@/components/ui/primitives";
 
 type RangeEditorProps = {
   field: FormField;
@@ -42,8 +42,9 @@ function NumberInput({
       <label className="text-sm font-semibold" htmlFor={`range-${label.toLowerCase()}`}>
         {label}
       </label>
-      <input
-        className={`${compactInputClassName} mt-2`}
+      <TextInput
+        compact
+        className="mt-2"
         id={`range-${label.toLowerCase()}`}
         type="number"
         value={value ?? ""}

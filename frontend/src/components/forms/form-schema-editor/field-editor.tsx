@@ -11,10 +11,10 @@ import { normalizeFieldForType } from "@/components/forms/form-schema-editor/sch
 import { ErrorList } from "@/components/forms/form-schema-editor/shared";
 import { ArrowDownIcon, ArrowUpIcon, TrashIcon } from "@/components/forms/form-schema-editor/icons";
 import {
-  compactInputClassName,
   dangerIconButtonClassName,
   iconButtonClassName,
 } from "@/components/forms/form-schema-editor/styles";
+import { SelectInput } from "@/components/ui/primitives";
 
 type FieldEditorProps = {
   errors: string[];
@@ -49,13 +49,13 @@ export function FieldEditor({
   }
 
   return (
-    <article className="grid gap-4 border border-line bg-panel p-5">
+    <article className="grid min-w-0 gap-4 border border-line bg-panel p-5 max-sm:p-4">
       <div className="flex items-center justify-between gap-4 border-b border-line pb-4 max-sm:flex-col max-sm:items-stretch">
-        <div>
+        <div className="min-w-0">
           <div className="font-display text-xl">Field {index + 1}</div>
-          <div className="mt-1 text-sm text-ink-muted">{field.id || "unnamed_field"}</div>
+          <div className="mt-1 break-all text-sm text-ink-muted">{field.id || "unnamed_field"}</div>
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-3 gap-2 sm:flex">
           <button
             aria-label="Move field up"
             className={iconButtonClassName}
@@ -100,8 +100,9 @@ export function FieldEditor({
           <label className="text-sm font-semibold" htmlFor={`${field.id}-type`}>
             Type
           </label>
-          <select
-            className={`${compactInputClassName} mt-2`}
+          <SelectInput
+            compact
+            className="mt-2"
             id={`${field.id}-type`}
             value={field.type}
             onChange={(event) => updateType(event.target.value as FieldType)}
@@ -111,7 +112,7 @@ export function FieldEditor({
                 {type}
               </option>
             ))}
-          </select>
+          </SelectInput>
         </div>
       </div>
 

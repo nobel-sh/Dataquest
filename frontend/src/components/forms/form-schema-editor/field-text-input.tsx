@@ -1,4 +1,4 @@
-import { compactInputClassName } from "@/components/forms/form-schema-editor/styles";
+import { TextInput } from "@/components/ui/primitives";
 
 type FieldTextInputProps = {
   disabled?: boolean;
@@ -24,8 +24,9 @@ export function FieldTextInput({
       <label className="text-sm font-semibold" htmlFor={id}>
         {label}
       </label>
-      <input
-        className={`${compactInputClassName} mt-2 disabled:cursor-not-allowed disabled:opacity-55`}
+      <TextInput
+        compact
+        className="mt-2 disabled:cursor-not-allowed disabled:opacity-55"
         disabled={disabled}
         id={id}
         maxLength={maxLength}

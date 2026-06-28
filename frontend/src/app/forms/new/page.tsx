@@ -1,32 +1,24 @@
-import Link from "next/link";
-import { AppBrand } from "@/components/app-brand";
+import { AppHeader } from "@/components/app-header";
 import { NewFormCreator } from "@/components/forms/new-form-creator";
-import { SessionMenu } from "@/components/session-menu";
+import { LinkButton } from "@/components/ui/primitives";
+import { pageShellClassName } from "@/components/ui/styles";
 
 export default function NewFormPage() {
   return (
-    <main className="mx-auto w-[calc(100%-32px)] max-w-page py-8 pb-14 max-sm:w-[calc(100%-24px)] max-sm:pt-5">
-      <div className="mb-7 flex items-center justify-between gap-4 max-sm:flex-col max-sm:items-start">
-        <div>
-          <AppBrand />
-          <div className="text-ink-onDark/75">/forms/new</div>
-        </div>
-        <div className="flex gap-2 max-sm:w-full max-sm:flex-col">
-          <Link
-            className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
-            href="/forms"
-          >
-            My forms
-          </Link>
-          <Link
-            className="border border-line bg-panel px-3 py-2 text-sm text-ink transition hover:border-accent hover:text-ink-onDark"
-            href="/"
-          >
-            Home
-          </Link>
-          <SessionMenu />
-        </div>
-      </div>
+    <main className={pageShellClassName}>
+      <AppHeader
+        path="/forms/new"
+        actions={
+          <>
+            <LinkButton variant="nav" href="/forms">
+              My forms
+            </LinkButton>
+            <LinkButton variant="nav" href="/">
+              Home
+            </LinkButton>
+          </>
+        }
+      />
 
       <NewFormCreator />
     </main>
