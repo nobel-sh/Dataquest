@@ -9,6 +9,7 @@ class Settings(BaseModel):
     app_env: str = "development"
     database_url: str = "sqlite:///./dataquest.db"
     log_level: str = "INFO"
+    log_format: str = "json"
     auth_secret_key: str = "change-me-in-development"
     access_token_ttl_seconds: int = 60 * 15
     access_token_cookie_name: str = "dataquest_access_token"
@@ -44,6 +45,7 @@ def get_settings() -> Settings:
         app_env=os.getenv("APP_ENV", defaults.app_env).lower(),
         database_url=os.getenv("DATABASE_URL", defaults.database_url),
         log_level=os.getenv("LOG_LEVEL", defaults.log_level).upper(),
+        log_format=os.getenv("LOG_FORMAT", defaults.log_format).lower(),
         auth_secret_key=os.getenv("AUTH_SECRET_KEY", defaults.auth_secret_key),
         access_token_ttl_seconds=int(
             os.getenv("ACCESS_TOKEN_TTL_SECONDS", defaults.access_token_ttl_seconds)

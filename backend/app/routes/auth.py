@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.request_context import get_request_id
 from app.core.security import (
     create_access_token,
     create_csrf_token,
@@ -51,7 +52,14 @@ def register_user(
     db.refresh(user)
     revoke_refresh_token_from_request(request, db)
     auth_token = issue_session(user, db, response)
-    logger.info("user registered user_id=%s", user.id)
+    logger.info(
+        "user registered",
+        extra={
+            "event": "user_registered",
+            "request_id": get_request_id(request),
+            "user_id": user.id,
+        },
+    )
     return auth_token
 
 
@@ -71,7 +79,14 @@ def login_user(
 
     revoke_refresh_token_from_request(request, db)
     auth_token = issue_session(user, db, response)
-    logger.info("user logged in user_id=%s", user.id)
+    logger.info(
+        "user logged in",
+        extra={
+            "event": "user_logged_in",
+            "request_id": get_request_id(request),
+            "user_id": user.id,
+        },
+    )
     return auth_token
 
 
@@ -92,7 +107,15 @@ def refresh_session(request: Request, response: Response, db: DbSession) -> Auth
     set_access_cookie(response, access_token.access_token)
     set_refresh_cookie(response, response_token)
     set_csrf_cookie(response)
-    logger.info("session refreshed user_id=%s session_id=%s", user.id, refresh_token.session_id)
+    logger.info(
+        "session refreshed",
+        extra={
+            "event": "session_refreshed",
+            "request_id": get_request_id(request),
+            "user_id": user.id,
+            "session_id": refresh_token.session_id,
+        },
+    )
     return access_token
 
 
@@ -104,9 +127,13 @@ def logout_session(request: Request, response: Response, db: DbSession) -> None:
             refresh_token.revoked_at = utc_now()
             db.commit()
             logger.info(
-                "session logged out user_id=%s session_id=%s",
-                refresh_token.user_id,
-                refresh_token.session_id,
+                "session logged out",
+                extra={
+                    "event": "session_logged_out",
+                    "request_id": get_request_id(request),
+                    "user_id": refresh_token.user_id,
+                    "session_id": refresh_token.session_id,
+                },
             )
     finally:
         clear_access_cookie(response)
@@ -143,7 +170,14 @@ def update_email(
         ) from error
 
     db.refresh(current_user)
-    logger.info("user email updated user_id=%s", current_user.id)
+    logger.info(
+        "user email updated",
+        extra={
+            "event": "user_email_updated",
+            "request_id": get_request_id(request),
+            "user_id": current_user.id,
+        },
+    )
     return UserRead(id=current_user.id, email=current_user.email)
 
 
@@ -167,7 +201,14 @@ def update_password(
     else:
         revoke_user_refresh_tokens(current_user.id, db)
     db.commit()
-    logger.info("user password updated user_id=%s", current_user.id)
+    logger.info(
+        "user password updated",
+        extra={
+            "event": "user_password_updated",
+            "request_id": get_request_id(request),
+            "user_id": current_user.id,
+        },
+    )
     return UserRead(id=current_user.id, email=current_user.email)
 
 
@@ -213,9 +254,13 @@ def get_refresh_token_from_request(
     if refresh_token.revoked_at is not None:
         if detect_reuse:
             logger.warning(
-                "refresh token reuse detected user_id=%s session_id=%s",
-                refresh_token.user_id,
-                refresh_token.session_id,
+                "refresh token reuse detected",
+                extra={
+                    "event": "refresh_token_reuse_detected",
+                    "request_id": get_request_id(request),
+                    "user_id": refresh_token.user_id,
+                    "session_id": refresh_token.session_id,
+                },
             )
             revoke_refresh_token_family(refresh_token, db)
             db.commit()
@@ -225,9 +270,13 @@ def get_refresh_token_from_request(
         refresh_token.revoked_at = utc_now()
         db.commit()
         logger.info(
-            "expired refresh token revoked user_id=%s session_id=%s",
-            refresh_token.user_id,
-            refresh_token.session_id,
+            "expired refresh token revoked",
+            extra={
+                "event": "expired_refresh_token_revoked",
+                "request_id": get_request_id(request),
+                "user_id": refresh_token.user_id,
+                "session_id": refresh_token.session_id,
+            },
         )
         return None
 

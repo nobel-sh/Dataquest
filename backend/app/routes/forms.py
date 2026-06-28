@@ -4,12 +4,13 @@ from io import StringIO
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.ai.form_generation import get_form_generator
+from app.core.request_context import get_request_id
 from app.db.session import get_db
 from app.models.form import Form, FormResponse, FormVersion
 from app.models.user import User
@@ -32,7 +33,12 @@ logger = logging.getLogger("app.forms")
 
 
 @router.post("", response_model=FormRead, status_code=status.HTTP_201_CREATED)
-def create_form(payload: FormCreate, db: DbSession, current_user: CurrentUser) -> FormRead:
+def create_form(
+    payload: FormCreate,
+    request: Request,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> FormRead:
     form = Form(
         owner=current_user,
         title=payload.form_schema.title,
@@ -60,24 +66,36 @@ def create_form(payload: FormCreate, db: DbSession, current_user: CurrentUser) -
     db.refresh(version)
 
     logger.info(
-        "form created form_id=%s owner_id=%s version=%s field_count=%s",
-        form.id,
-        current_user.id,
-        version.version_number,
-        len(payload.form_schema.fields),
+        "form created",
+        extra={
+            "event": "form_created",
+            "request_id": get_request_id(request),
+            "form_id": form.id,
+            "owner_id": current_user.id,
+            "version": version.version_number,
+            "field_count": len(payload.form_schema.fields),
+        },
     )
     return build_form_read(form, version, db, current_user)
 
 
 @router.post("/generate", response_model=GenerateFormResult)
-def generate_form(payload: GenerateFormRequest, _current_user: CurrentUser) -> GenerateFormResult:
+def generate_form(
+    payload: GenerateFormRequest,
+    request: Request,
+    _current_user: CurrentUser,
+) -> GenerateFormResult:
     generator = get_form_generator()
     result = generator.generate(payload.prompt)
     logger.info(
-        "form schema generated user_id=%s field_count=%s warning_count=%s",
-        _current_user.id,
-        len(result.form_schema.fields),
-        len(result.warnings),
+        "form schema generated",
+        extra={
+            "event": "form_schema_generated",
+            "request_id": get_request_id(request),
+            "user_id": _current_user.id,
+            "field_count": len(result.form_schema.fields),
+            "warning_count": len(result.warnings),
+        },
     )
     return result
 
@@ -104,6 +122,7 @@ def list_forms(
 def update_form_settings(
     form_id: UUID,
     payload: FormSettingsUpdate,
+    request: Request,
     db: DbSession,
     current_user: CurrentUser,
 ) -> FormRead:
@@ -121,13 +140,16 @@ def update_form_settings(
     db.refresh(form)
 
     logger.info(
-        "form settings updated form_id=%s owner_id=%s accepting_responses=%s "
-        "requires_login=%s archived=%s",
-        form.id,
-        current_user.id,
-        form.accepting_responses,
-        form.requires_login,
-        form.archived,
+        "form settings updated",
+        extra={
+            "event": "form_settings_updated",
+            "request_id": get_request_id(request),
+            "form_id": form.id,
+            "owner_id": current_user.id,
+            "accepting_responses": form.accepting_responses,
+            "requires_login": form.requires_login,
+            "archived": form.archived,
+        },
     )
     return build_form_read(form, latest_version, db, current_user)
 
@@ -161,6 +183,7 @@ def get_form_by_slug(slug: str, db: DbSession, current_user: OptionalCurrentUser
 def create_form_version(
     form_id: UUID,
     payload: FormVersionCreate,
+    request: Request,
     db: DbSession,
     current_user: CurrentUser,
 ) -> FormRead:
@@ -182,11 +205,15 @@ def create_form_version(
     db.refresh(version)
 
     logger.info(
-        "form version created form_id=%s owner_id=%s version=%s field_count=%s",
-        form.id,
-        current_user.id,
-        version.version_number,
-        len(payload.form_schema.fields),
+        "form version created",
+        extra={
+            "event": "form_version_created",
+            "request_id": get_request_id(request),
+            "form_id": form.id,
+            "owner_id": current_user.id,
+            "version": version.version_number,
+            "field_count": len(payload.form_schema.fields),
+        },
     )
     return build_form_read(form, version, db, current_user)
 
@@ -217,6 +244,7 @@ def list_form_versions(
 def submit_form_response(
     form_id: UUID,
     payload: FormResponseSubmit,
+    request: Request,
     db: DbSession,
     current_user: OptionalCurrentUser,
 ) -> FormResponseRead:
@@ -271,11 +299,15 @@ def submit_form_response(
     db.refresh(response)
 
     logger.info(
-        "form response submitted form_id=%s version=%s response_id=%s authenticated=%s",
-        form.id,
-        latest_version.version_number,
-        response.id,
-        current_user is not None,
+        "form response submitted",
+        extra={
+            "event": "form_response_submitted",
+            "request_id": get_request_id(request),
+            "form_id": form.id,
+            "version": latest_version.version_number,
+            "response_id": response.id,
+            "authenticated": current_user is not None,
+        },
     )
     return build_response_read(response)
 
@@ -283,6 +315,7 @@ def submit_form_response(
 @router.get("/{form_id}/responses/export")
 def export_form_responses(
     form_id: UUID,
+    request: Request,
     db: DbSession,
     current_user: CurrentUser,
     format: str = "csv",
@@ -308,11 +341,15 @@ def export_form_responses(
 
     csv_body = build_responses_csv(form_schema, responses, version_numbers_by_id)
     logger.info(
-        "form responses exported form_id=%s owner_id=%s format=%s response_count=%s",
-        form.id,
-        current_user.id,
-        format,
-        len(responses),
+        "form responses exported",
+        extra={
+            "event": "form_responses_exported",
+            "request_id": get_request_id(request),
+            "form_id": form.id,
+            "owner_id": current_user.id,
+            "format": format,
+            "response_count": len(responses),
+        },
     )
     return Response(
         content=csv_body,

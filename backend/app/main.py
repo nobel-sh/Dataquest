@@ -12,6 +12,7 @@ from starlette.responses import JSONResponse
 import app.models  # noqa: F401
 from app.core.config import get_settings
 from app.core.logging import configure_logging
+from app.core.request_context import get_request_id
 from app.routes.auth import router as auth_router
 from app.routes.forms import router as forms_router
 from app.schemas.agent import FormReviewResult
@@ -19,7 +20,7 @@ from app.schemas.form import FormSchema
 from app.schemas.form_response import FormResponseSubmission
 
 settings = get_settings()
-configure_logging(settings.log_level)
+configure_logging(settings.log_level, settings.log_format)
 logger = logging.getLogger("app.request")
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 CSRF_EXEMPT_PATHS = {"/auth/login", "/auth/register"}
@@ -50,10 +51,13 @@ async def enforce_csrf(request: Request, call_next):
             csrf_header,
         ):
             logger.warning(
-                "csrf validation failed request_id=%s method=%s path=%s",
-                get_request_id(request),
-                request.method,
-                request.url.path,
+                "csrf validation failed",
+                extra={
+                    "event": "csrf_validation_failed",
+                    "request_id": get_request_id(request),
+                    "method": request.method,
+                    "path": request.url.path,
+                },
             )
             response = JSONResponse(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -73,11 +77,14 @@ async def log_requests(request: Request, call_next):
     except Exception:
         elapsed_ms = (time.perf_counter() - start_time) * 1000
         logger.exception(
-            "request failed request_id=%s method=%s path=%s elapsed_ms=%.2f",
-            get_request_id(request),
-            request.method,
-            request.url.path,
-            elapsed_ms,
+            "request failed",
+            extra={
+                "event": "request_failed",
+                "request_id": get_request_id(request),
+                "method": request.method,
+                "path": request.url.path,
+                "elapsed_ms": round(elapsed_ms, 2),
+            },
         )
         raise
 
@@ -86,12 +93,15 @@ async def log_requests(request: Request, call_next):
 
     elapsed_ms = (time.perf_counter() - start_time) * 1000
     logger.info(
-        "request complete request_id=%s method=%s path=%s status_code=%s elapsed_ms=%.2f",
-        get_request_id(request),
-        request.method,
-        request.url.path,
-        response.status_code,
-        elapsed_ms,
+        "request complete",
+        extra={
+            "event": "request_complete",
+            "request_id": get_request_id(request),
+            "method": request.method,
+            "path": request.url.path,
+            "status_code": response.status_code,
+            "elapsed_ms": round(elapsed_ms, 2),
+        },
     )
     return response
 
@@ -110,10 +120,6 @@ def resolve_request_id(value: str | None) -> str:
         return value
 
     return f"req_{uuid4().hex}"
-
-
-def get_request_id(request: Request) -> str:
-    return getattr(request.state, "request_id", "unknown")
 
 
 def should_check_csrf(request: Request) -> bool:
