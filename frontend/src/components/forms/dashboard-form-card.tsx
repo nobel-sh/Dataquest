@@ -3,6 +3,7 @@ import type { Route } from "next";
 import type { ReactNode } from "react";
 import { MetricTile } from "@/components/ui/primitives";
 import { iconButtonClassName } from "@/components/ui/styles";
+import { CopyPublicLinkButton } from "@/components/forms/copy-public-link-button";
 import {
   ArchiveIcon,
   CloseIcon,
@@ -69,6 +70,11 @@ export function DashboardFormCard({
                 href={`/forms/${form.slug}/responses`}
                 icon={<RowsIcon />}
                 label="Responses"
+              />
+              <CopyPublicLinkButton
+                className="min-h-control min-w-control px-3 py-2 max-sm:min-w-0"
+                compact
+                slug={form.slug}
               />
             </>
           ) : null}

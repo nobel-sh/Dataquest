@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
+import { CopyPublicLinkButton } from "@/components/forms/copy-public-link-button";
 import { PublicForm } from "@/components/public-form";
 import { LinkButton } from "@/components/ui/primitives";
 import { pageShellClassName } from "@/components/ui/styles";
@@ -25,6 +26,7 @@ export default async function FormPage({ params }: FormPageProps) {
         path={`/${form.slug}`}
         actions={
           <>
+            <CopyPublicLinkButton slug={form.slug} />
             <LinkButton variant="nav" href={`/forms/${form.slug}/edit`}>
               Edit
             </LinkButton>
