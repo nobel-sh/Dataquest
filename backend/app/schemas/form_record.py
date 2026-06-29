@@ -28,6 +28,7 @@ class FormRead(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     id: UUID
+    owner_id: UUID | None
     title: str
     description: str | None
     slug: str

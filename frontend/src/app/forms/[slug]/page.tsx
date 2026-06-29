@@ -1,8 +1,7 @@
 import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
-import { CopyPublicLinkButton } from "@/components/forms/copy-public-link-button";
+import { FormPageActions } from "@/components/forms/form-page-actions";
 import { PublicForm } from "@/components/public-form";
-import { LinkButton } from "@/components/ui/primitives";
 import { pageShellClassName } from "@/components/ui/styles";
 import { getFormBySlug } from "@/lib/api";
 
@@ -24,17 +23,7 @@ export default async function FormPage({ params }: FormPageProps) {
     <main className={pageShellClassName}>
       <AppHeader
         path={`/${form.slug}`}
-        actions={
-          <>
-            <CopyPublicLinkButton slug={form.slug} />
-            <LinkButton variant="nav" href={`/forms/${form.slug}/edit`}>
-              Edit
-            </LinkButton>
-            <LinkButton variant="nav" href={`/forms/${form.slug}/responses`}>
-              Responses
-            </LinkButton>
-          </>
-        }
+        actions={<FormPageActions ownerId={form.owner_id} slug={form.slug} />}
       />
       <PublicForm form={form} />
     </main>

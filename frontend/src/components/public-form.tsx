@@ -13,6 +13,7 @@ import {
   validateRequiredAnswers,
 } from "@/components/public-form/answer-utils";
 import { PublicFormField } from "@/components/public-form/field-control";
+import { formatDateTime } from "@/lib/format";
 import type { Answers, AnswerValue, FormRecord, User } from "@/lib/types";
 
 type PublicFormProps = {
@@ -31,6 +32,7 @@ export function PublicForm({ form }: PublicFormProps) {
     "idle",
   );
   const [submitMessage, setSubmitMessage] = useState<string | null>(null);
+  const [submittedAt, setSubmittedAt] = useState<string | null>(null);
 
   const requiredFields = useMemo(
     () => schema.fields.filter((field) => field.required).map((field) => field.id),
@@ -109,10 +111,11 @@ export function PublicForm({ form }: PublicFormProps) {
     showStatus({ kind: "loading", title: "Submitting response", detail: "Saving your answers." });
 
     try {
-      await submitFormResponse(form.id, compactAnswers(answers));
+      const response = await submitFormResponse(form.id, compactAnswers(answers));
       setHasResponded(true);
       setSubmitState("success");
       setSubmitMessage("Response submitted.");
+      setSubmittedAt(response.submitted_at);
       showStatus(
         { kind: "success", title: "Response submitted", detail: "Your answers were saved." },
         { autoDismissMs: 2800 },
@@ -172,49 +175,77 @@ export function PublicForm({ form }: PublicFormProps) {
         </div>
       ) : null}
 
-      {duplicateBlocked ? (
-        <div className={`border-b border-line ${surfaceClassName} p-7 max-sm:p-5`}>
-          <Alert>
-            You have already submitted a response to this form.
-          </Alert>
-        </div>
-      ) : null}
+      {submitState === "success" || duplicateBlocked ? (
+        <SubmissionConfirmation
+          formTitle={schema.title}
+          submittedAt={submittedAt}
+          alreadySubmitted={submitState !== "success"}
+        />
+      ) : (
+        <form onSubmit={submit}>
+          <div className={`grid gap-4 ${surfaceClassName} p-7 max-sm:p-5`}>
+            {submitMessage ? <Alert>{submitMessage}</Alert> : null}
 
-      <form onSubmit={submit}>
-        <div className={`grid gap-4 ${surfaceClassName} p-7 max-sm:p-5`}>
-          {submitMessage ? (
-            <Alert tone={submitState === "success" ? "success" : "error"}>
-              {submitMessage}
-            </Alert>
-          ) : null}
+            {schema.fields.map((field) => (
+              <PublicFormField
+                key={field.id}
+                field={field}
+                value={answers[field.id]}
+                error={errors[field.id]}
+                onChange={(value) => setAnswer(field.id, value)}
+              />
+            ))}
+          </div>
 
-          {schema.fields.map((field) => (
-            <PublicFormField
-              key={field.id}
-              field={field}
-              value={answers[field.id]}
-              error={errors[field.id]}
-              onChange={(value) => setAnswer(field.id, value)}
-            />
-          ))}
-        </div>
-
-        <div className="flex items-center justify-end gap-3 border-t border-line bg-panel px-7 py-5 max-sm:flex-col max-sm:items-stretch max-sm:p-5">
-          <Button
-            variant="primaryLarge"
-            disabled={
-              submitState === "submitting" ||
-              !form.accepting_responses ||
-              isCheckingSession ||
-              loginRequired ||
-              duplicateBlocked
-            }
-            type="submit"
-          >
-            {submitState === "submitting" ? "Submitting" : "Submit response"}
-          </Button>
-        </div>
-      </form>
+          <div className="flex items-center justify-end gap-3 border-t border-line bg-panel px-7 py-5 max-sm:flex-col max-sm:items-stretch max-sm:p-5">
+            <Button
+              variant="primaryLarge"
+              disabled={
+                submitState === "submitting" ||
+                !form.accepting_responses ||
+                isCheckingSession ||
+                loginRequired
+              }
+              type="submit"
+            >
+              {submitState === "submitting" ? "Submitting" : "Submit response"}
+            </Button>
+          </div>
+        </form>
+      )}
     </Panel>
+  );
+}
+
+function SubmissionConfirmation({
+  alreadySubmitted,
+  formTitle,
+  submittedAt,
+}: {
+  alreadySubmitted: boolean;
+  formTitle: string;
+  submittedAt: string | null;
+}) {
+  return (
+    <section className={`grid gap-4 ${surfaceClassName} p-7 max-sm:p-5`}>
+      <div className="border border-line-success bg-success px-5 py-5">
+        <p className="m-0 text-sm uppercase text-line-success">
+          {alreadySubmitted ? "Already submitted" : "Response submitted"}
+        </p>
+        <h2 className="m-0 mt-2 break-words font-display text-3xl leading-tight">
+          {formTitle}
+        </h2>
+        <p className="m-0 mt-3 max-w-[720px] leading-6 text-ink-muted">
+          {alreadySubmitted
+            ? "A response for this account has already been recorded. The form cannot be submitted again."
+            : "Your response has been recorded. You can close this page now."}
+        </p>
+        {submittedAt ? (
+          <time className="mt-4 block text-sm text-ink-muted" dateTime={submittedAt}>
+            Submitted {formatDateTime(submittedAt)}
+          </time>
+        ) : null}
+      </div>
+    </section>
   );
 }

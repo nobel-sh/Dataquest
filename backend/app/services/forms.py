@@ -159,6 +159,7 @@ def build_form_read(
 ) -> FormRead:
     return FormRead(
         id=form.id,
+        owner_id=form.owner_id,
         title=form.title,
         description=form.description,
         slug=form.slug,

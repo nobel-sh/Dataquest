@@ -61,6 +61,7 @@ export type FormVersion = {
 
 export type FormRecord = {
   id: string;
+  owner_id?: string | null;
   title: string;
   description?: string | null;
   slug: string;
