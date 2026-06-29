@@ -50,7 +50,10 @@ def review_duplicate_labels(form_schema: FormSchema) -> list[FormReviewSuggestio
                 FormReviewSuggestion(
                     field_id=field.id,
                     severity=ReviewSeverity.WARNING,
-                    message="This question repeats another label. Combine or reword duplicate questions.",
+                    message=(
+                        "This question repeats another label. Combine or reword duplicate "
+                        "questions."
+                    ),
                 )
             )
     return suggestions
@@ -112,7 +115,10 @@ def review_feedback_shape(form_schema: FormSchema) -> list[FormReviewSuggestion]
     return [
         FormReviewSuggestion(
             severity=ReviewSeverity.INFO,
-            message="Feedback forms often benefit from a rating field for quick quantitative analysis.",
+            message=(
+                "Feedback forms often benefit from a rating field for quick quantitative "
+                "analysis."
+            ),
         )
     ]
 
@@ -146,7 +152,10 @@ def review_field_quality(form_schema: FormSchema) -> list[FormReviewSuggestion]:
                 FormReviewSuggestion(
                     field_id=field.id,
                     severity=ReviewSeverity.WARNING,
-                    message="This looks like a rating question. Use the rating field type for consistency.",
+                    message=(
+                        "This looks like a rating question. Use the rating field type for "
+                        "consistency."
+                    ),
                 )
             )
 
@@ -157,7 +166,10 @@ def review_field_quality(form_schema: FormSchema) -> list[FormReviewSuggestion]:
                     FormReviewSuggestion(
                         field_id=field.id,
                         severity=ReviewSeverity.INFO,
-                        message="This field has many options. Consider grouping choices or using fewer options.",
+                        message=(
+                            "This field has many options. Consider grouping choices or using "
+                            "fewer options."
+                        ),
                     )
                 )
 
@@ -170,7 +182,11 @@ def first_field_of_type(form_schema: FormSchema, field_type: FieldType) -> FormF
 
 def looks_like_rating_prompt(field: FormField) -> bool:
     text = normalize_text(" ".join([field.label, field.description or "", field.placeholder or ""]))
-    return "rate" in text or "rating" in text or re.search(r"\b1\s*(to|-)\s*(5|10)\b", text) is not None
+    return (
+        "rate" in text
+        or "rating" in text
+        or re.search(r"\b1\s*(to|-)\s*(5|10)\b", text) is not None
+    )
 
 
 def form_text(form_schema: FormSchema) -> str:

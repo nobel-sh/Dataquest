@@ -1,40 +1,39 @@
-import csv
 import logging
-from io import StringIO
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from sqlalchemy import func, select
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.ai.form_generation import get_form_generator
 from app.ai.form_review import RuleBasedFormReviewer
 from app.core.request_context import get_request_id
 from app.db.session import get_db
-from app.models.form import Form, FormResponse, FormVersion
 from app.models.user import User
 from app.routes.dependencies import get_current_user, get_optional_current_user
-from app.services.forms_access import (
-    require_form_owner,
-    require_public_form,
-    require_submittable_form,
-)
 from app.schemas.agent import (
     FormReviewResult,
     GenerateFormRequest,
     GenerateFormResult,
     ReviewFormRequest,
 )
-from app.schemas.form import FieldOption, FormSchema
 from app.schemas.form_record import FormCreate, FormRead, FormSettingsUpdate
-from app.schemas.form_response import (
-    FormResponseRead,
-    FormResponseSubmit,
-    validate_response_answers,
-)
+from app.schemas.form_response import FormResponseRead, FormResponseSubmit
 from app.schemas.form_version import FormVersionCreate, FormVersionRead
+from app.services.form_responses import (
+    export_form_response_records,
+    list_form_response_records,
+    submit_form_response_record,
+)
+from app.services.forms import (
+    create_form_record,
+    create_form_version_record,
+    get_owned_form_record,
+    get_public_form_record,
+    list_form_records,
+    list_form_version_records,
+    update_form_settings_record,
+)
 
 router = APIRouter(prefix="/forms", tags=["forms"])
 DbSession = Annotated[Session, Depends(get_db)]
@@ -50,32 +49,7 @@ def create_form(
     db: DbSession,
     current_user: CurrentUser,
 ) -> FormRead:
-    form = Form(
-        owner=current_user,
-        title=payload.form_schema.title,
-        description=payload.form_schema.description,
-        slug=payload.slug,
-    )
-    version = FormVersion(
-        form=form,
-        version_number=1,
-        schema_json=payload.form_schema.model_dump(mode="json"),
-    )
-
-    db.add(version)
-
-    try:
-        db.commit()
-    except IntegrityError as error:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="form slug already exists",
-        ) from error
-
-    db.refresh(form)
-    db.refresh(version)
-
+    form = create_form_record(payload, current_user, db)
     logger.info(
         "form created",
         extra={
@@ -83,11 +57,11 @@ def create_form(
             "request_id": get_request_id(request),
             "form_id": form.id,
             "owner_id": current_user.id,
-            "version": version.version_number,
+            "version": form.latest_version.version_number,
             "field_count": len(payload.form_schema.fields),
         },
     )
-    return build_form_read(form, version, db, current_user)
+    return form
 
 
 @router.post("/generate", response_model=GenerateFormResult)
@@ -137,16 +111,7 @@ def list_forms(
     current_user: CurrentUser,
     include_archived: bool = False,
 ) -> list[FormRead]:
-    statement = select(Form).where(Form.owner_id == current_user.id)
-    if not include_archived:
-        statement = statement.where(Form.archived.is_(False))
-
-    forms = db.scalars(statement.order_by(Form.updated_at.desc())).all()
-
-    return [
-        build_form_read(form, get_latest_version(form.id, db), db, current_user)
-        for form in forms
-    ]
+    return list_form_records(current_user, db, include_archived)
 
 
 @router.patch("/{form_id}/settings", response_model=FormRead)
@@ -157,19 +122,7 @@ def update_form_settings(
     db: DbSession,
     current_user: CurrentUser,
 ) -> FormRead:
-    form = db.get(Form, form_id)
-    form = require_form_owner(form, current_user)
-    if payload.accepting_responses is not None:
-        form.accepting_responses = payload.accepting_responses
-    if payload.requires_login is not None:
-        form.requires_login = payload.requires_login
-    if payload.archived is not None:
-        form.archived = payload.archived
-    latest_version = get_latest_version(form.id, db)
-
-    db.commit()
-    db.refresh(form)
-
+    form = update_form_settings_record(form_id, payload, current_user, db)
     logger.info(
         "form settings updated",
         extra={
@@ -182,27 +135,17 @@ def update_form_settings(
             "archived": form.archived,
         },
     )
-    return build_form_read(form, latest_version, db, current_user)
+    return form
 
 
 @router.get("/{form_id}", response_model=FormRead)
 def get_form(form_id: UUID, db: DbSession, current_user: CurrentUser) -> FormRead:
-    form = db.get(Form, form_id)
-    form = require_form_owner(form, current_user)
-
-    latest_version = get_latest_version(form.id, db)
-
-    return build_form_read(form, latest_version, db, current_user)
+    return get_owned_form_record(form_id, current_user, db)
 
 
 @router.get("/slug/{slug}", response_model=FormRead)
 def get_form_by_slug(slug: str, db: DbSession, current_user: OptionalCurrentUser) -> FormRead:
-    form = db.scalar(select(Form).where(Form.slug == slug))
-    form = require_public_form(form)
-
-    latest_version = get_latest_version(form.id, db)
-
-    return build_form_read(form, latest_version, db, current_user)
+    return get_public_form_record(slug, current_user, db)
 
 
 @router.post(
@@ -217,23 +160,7 @@ def create_form_version(
     db: DbSession,
     current_user: CurrentUser,
 ) -> FormRead:
-    form = db.get(Form, form_id)
-    form = require_form_owner(form, current_user)
-
-    latest_version = get_latest_version(form.id, db)
-    form.title = payload.form_schema.title
-    form.description = payload.form_schema.description
-
-    version = FormVersion(
-        form=form,
-        version_number=latest_version.version_number + 1,
-        schema_json=payload.form_schema.model_dump(mode="json"),
-    )
-    db.add(version)
-    db.commit()
-    db.refresh(form)
-    db.refresh(version)
-
+    form = create_form_version_record(form_id, payload, current_user, db)
     logger.info(
         "form version created",
         extra={
@@ -241,11 +168,11 @@ def create_form_version(
             "request_id": get_request_id(request),
             "form_id": form.id,
             "owner_id": current_user.id,
-            "version": version.version_number,
+            "version": form.latest_version.version_number,
             "field_count": len(payload.form_schema.fields),
         },
     )
-    return build_form_read(form, version, db, current_user)
+    return form
 
 
 @router.get("/{form_id}/versions", response_model=list[FormVersionRead])
@@ -254,16 +181,7 @@ def list_form_versions(
     db: DbSession,
     current_user: CurrentUser,
 ) -> list[FormVersionRead]:
-    form = db.get(Form, form_id)
-    form = require_form_owner(form, current_user)
-
-    versions = db.scalars(
-        select(FormVersion)
-        .where(FormVersion.form_id == form.id)
-        .order_by(FormVersion.version_number.asc())
-    ).all()
-
-    return [build_version_read(version) for version in versions]
+    return list_form_version_records(form_id, current_user, db)
 
 
 @router.post(
@@ -278,41 +196,19 @@ def submit_form_response(
     db: DbSession,
     current_user: OptionalCurrentUser,
 ) -> FormResponseRead:
-    form = require_submittable_form(db.get(Form, form_id), current_user, db)
-
-    latest_version = get_latest_version(form.id, db)
-    form_schema = FormSchema.model_validate(latest_version.schema_json)
-
-    try:
-        normalized_answers = validate_response_answers(form_schema, payload.answers)
-    except ValueError as error:
-        raise HTTPException(
-            status_code=422,
-            detail=str(error),
-        ) from error
-
-    response = FormResponse(
-        form=form,
-        form_version=latest_version,
-        respondent_user_id=current_user.id if current_user is not None else None,
-        answers_json=normalized_answers,
-    )
-    db.add(response)
-    db.commit()
-    db.refresh(response)
-
+    result = submit_form_response_record(form_id, payload, current_user, db)
     logger.info(
         "form response submitted",
         extra={
             "event": "form_response_submitted",
             "request_id": get_request_id(request),
-            "form_id": form.id,
-            "version": latest_version.version_number,
-            "response_id": response.id,
+            "form_id": form_id,
+            "version": result.version_number,
+            "response_id": result.response.id,
             "authenticated": current_user is not None,
         },
     )
-    return build_response_read(response)
+    return result.response
 
 
 @router.get("/{form_id}/responses/export")
@@ -328,37 +224,23 @@ def export_form_responses(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="only csv export is supported",
         )
-
-    form = db.get(Form, form_id)
-    form = require_form_owner(form, current_user)
-
-    latest_version = get_latest_version(form.id, db)
-    form_schema = FormSchema.model_validate(latest_version.schema_json)
-    versions = db.scalars(select(FormVersion).where(FormVersion.form_id == form.id)).all()
-    version_numbers_by_id = {version.id: version.version_number for version in versions}
-    responses = db.scalars(
-        select(FormResponse)
-        .where(FormResponse.form_id == form.id)
-        .order_by(FormResponse.submitted_at.asc(), FormResponse.id.asc())
-    ).all()
-
-    csv_body = build_responses_csv(form_schema, responses, version_numbers_by_id)
+    export = export_form_response_records(form_id, current_user, db)
     logger.info(
         "form responses exported",
         extra={
             "event": "form_responses_exported",
             "request_id": get_request_id(request),
-            "form_id": form.id,
+            "form_id": form_id,
             "owner_id": current_user.id,
             "format": format,
-            "response_count": len(responses),
+            "response_count": export.response_count,
         },
     )
     return Response(
-        content=csv_body,
+        content=export.body,
         media_type="text/csv",
         headers={
-            "Content-Disposition": f'attachment; filename="{form.slug}-responses.csv"',
+            "Content-Disposition": f'attachment; filename="{export.filename}"',
         },
     )
 
@@ -369,138 +251,4 @@ def list_form_responses(
     db: DbSession,
     current_user: CurrentUser,
 ) -> list[FormResponseRead]:
-    form = db.get(Form, form_id)
-    form = require_form_owner(form, current_user)
-
-    responses = db.scalars(
-        select(FormResponse)
-        .where(FormResponse.form_id == form.id)
-        .order_by(FormResponse.submitted_at.asc(), FormResponse.id.asc())
-    ).all()
-
-    return [build_response_read(response) for response in responses]
-
-
-def build_responses_csv(
-    form_schema: FormSchema,
-    responses: list[FormResponse],
-    version_numbers_by_id: dict[UUID, int],
-) -> str:
-    buffer = StringIO()
-    writer = csv.writer(buffer)
-    fields = form_schema.fields
-
-    writer.writerow(["submitted_at", "version", *[field.label for field in fields]])
-
-    for response in responses:
-        writer.writerow(
-            [
-                response.submitted_at.isoformat(),
-                f"v{version_numbers_by_id.get(response.form_version_id, 'unknown')}",
-                *[
-                    format_export_answer(response.answers_json.get(field.id), field.options)
-                    for field in fields
-                ],
-            ]
-        )
-
-    return buffer.getvalue()
-
-
-def format_export_answer(value: object, options: list[FieldOption] | None) -> str:
-    if value is None or value == "":
-        return ""
-
-    option_labels_by_value = (
-        {option.value: option.label for option in options} if options is not None else {}
-    )
-
-    if isinstance(value, list):
-        return "; ".join(option_labels_by_value.get(str(item), str(item)) for item in value)
-
-    if isinstance(value, bool):
-        return "true" if value else "false"
-
-    return option_labels_by_value.get(str(value), str(value))
-
-
-def get_latest_version(form_id: UUID, db: Session) -> FormVersion:
-    latest_version = db.scalar(
-        select(FormVersion)
-        .where(FormVersion.form_id == form_id)
-        .order_by(FormVersion.version_number.desc())
-        .limit(1)
-    )
-    if latest_version is None:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="form has no versions",
-        )
-    return latest_version
-
-
-def build_form_read(
-    form: Form,
-    version: FormVersion,
-    db: Session,
-    current_user: User | None,
-) -> FormRead:
-    return FormRead(
-        id=form.id,
-        title=form.title,
-        description=form.description,
-        slug=form.slug,
-        accepting_responses=form.accepting_responses,
-        requires_login=form.requires_login,
-        has_responded=has_user_responded(form.id, current_user, db),
-        response_count=get_response_count(form.id, db),
-        archived=form.archived,
-        created_at=form.created_at,
-        updated_at=form.updated_at,
-        latest_version=build_version_read(version),
-    )
-
-
-def has_user_responded(form_id: UUID, current_user: User | None, db: Session) -> bool:
-    if current_user is None:
-        return False
-
-    response_id = db.scalar(
-        select(FormResponse.id)
-        .where(
-            FormResponse.form_id == form_id,
-            FormResponse.respondent_user_id == current_user.id,
-        )
-        .limit(1)
-    )
-    return response_id is not None
-
-
-def get_response_count(form_id: UUID, db: Session) -> int:
-    return (
-        db.scalar(
-            select(func.count()).select_from(FormResponse).where(FormResponse.form_id == form_id)
-        )
-        or 0
-    )
-
-
-def build_version_read(version: FormVersion) -> FormVersionRead:
-    return FormVersionRead(
-        id=version.id,
-        form_id=version.form_id,
-        version_number=version.version_number,
-        form_schema=version.schema_json,
-        created_at=version.created_at,
-    )
-
-
-def build_response_read(response: FormResponse) -> FormResponseRead:
-    return FormResponseRead(
-        id=response.id,
-        form_id=response.form_id,
-        form_version_id=response.form_version_id,
-        respondent_user_id=response.respondent_user_id,
-        answers=response.answers_json,
-        submitted_at=response.submitted_at,
-    )
+    return list_form_response_records(form_id, current_user, db)
