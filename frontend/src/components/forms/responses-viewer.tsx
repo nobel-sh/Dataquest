@@ -11,11 +11,13 @@ import { surfaceClassName } from "@/components/ui/styles";
 import { Alert, Panel } from "@/components/ui/primitives";
 import { useStatusBubble } from "@/components/status-bubble";
 import {
+  ResponsesAnalytics,
   ResponsesEmptyState,
   ResponsesHeader,
   ResponsesList,
   ResponsesSkeleton,
 } from "@/components/forms/responses-sections";
+import { buildResponsesAnalytics } from "@/components/forms/responses-analytics";
 import { authenticatedFetch } from "@/lib/auth";
 import { statusError } from "@/lib/http-error";
 import type { FormRecord, FormResponse } from "@/lib/types";
@@ -31,6 +33,7 @@ export function ResponsesViewer({ form }: ResponsesViewerProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const fields = form.latest_version.schema.fields;
+  const analytics = buildResponsesAnalytics(fields, responses);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,6 +105,7 @@ export function ResponsesViewer({ form }: ResponsesViewerProps) {
       <ResponsesHeader
         fields={fields}
         form={form}
+        latestSubmittedAt={analytics.latestSubmittedAt}
         responseCount={responses.length}
         onExportCsv={() => void exportCsv()}
       />
@@ -122,11 +126,14 @@ export function ResponsesViewer({ form }: ResponsesViewerProps) {
       ) : responses.length === 0 ? (
         <ResponsesEmptyState />
       ) : (
-        <ResponsesList
-          fields={fields}
-          responses={responses}
-          versionNumbersById={versionNumbersById}
-        />
+        <>
+          <ResponsesAnalytics analytics={analytics} />
+          <ResponsesList
+            fields={fields}
+            responses={responses}
+            versionNumbersById={versionNumbersById}
+          />
+        </>
       )}
     </Panel>
   );

@@ -3,10 +3,15 @@ import { surfaceClassName } from "@/components/ui/styles";
 import { formatAnswer, formatVersion } from "@/components/forms/responses-format";
 import { formatDateTime } from "@/lib/format";
 import type { FormField, FormRecord, FormResponse } from "@/lib/types";
+import type {
+  FieldAnalytics,
+  ResponsesAnalytics as ResponsesAnalyticsData,
+} from "./responses-analytics";
 
 type ResponsesHeaderProps = {
   fields: FormField[];
   form: FormRecord;
+  latestSubmittedAt: string | null;
   responseCount: number;
   onExportCsv: () => void;
 };
@@ -14,6 +19,7 @@ type ResponsesHeaderProps = {
 export function ResponsesHeader({
   fields,
   form,
+  latestSubmittedAt,
   responseCount,
   onExportCsv,
 }: ResponsesHeaderProps) {
@@ -30,8 +36,12 @@ export function ResponsesHeader({
           Export CSV
         </Button>
       </div>
-      <div className="mt-4 grid grid-cols-3 border border-line text-sm max-sm:grid-cols-1">
+      <div className="mt-4 grid grid-cols-4 border border-line text-sm max-lg:grid-cols-2 max-sm:grid-cols-1">
         <MetricTile label="Total responses" value={responseCount.toString()} />
+        <MetricTile
+          label="Latest response"
+          value={latestSubmittedAt ? formatDateTime(latestSubmittedAt) : "None"}
+        />
         <MetricTile
           label="Current version"
           value={`v${form.latest_version.version_number.toString()}`}
@@ -40,6 +50,130 @@ export function ResponsesHeader({
       </div>
     </header>
   );
+}
+
+export function ResponsesAnalytics({ analytics }: { analytics: ResponsesAnalyticsData }) {
+  return (
+    <section className={`${surfaceClassName} border-b border-line p-7 max-sm:p-5`}>
+      <div className="mb-4">
+        <h2 className="m-0 font-display text-2xl">Analytics</h2>
+        <p className="m-0 mt-1 text-sm text-ink-muted">
+          Quick summaries from submitted response values.
+        </p>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {analytics.fieldAnalytics.map((fieldAnalytics) => (
+          <FieldAnalyticsCard
+            analytics={fieldAnalytics}
+            key={fieldAnalytics.field.id}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FieldAnalyticsCard({ analytics }: { analytics: FieldAnalytics }) {
+  return (
+    <Card className="grid min-w-0 gap-4 p-5">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="m-0 break-words font-display text-xl">{analytics.field.label}</h3>
+          <span className="border border-line bg-[#30333d] px-2 py-1 text-xs uppercase text-ink-muted">
+            {analytics.field.type}
+          </span>
+        </div>
+        <p className="m-0 mt-1 text-sm text-ink-muted">
+          {analytics.answeredCount.toString()} answered
+        </p>
+      </div>
+      {analytics.kind === "numeric" ? <NumericAnalytics analytics={analytics} /> : null}
+      {analytics.kind === "options" ? <OptionsAnalytics analytics={analytics} /> : null}
+      {analytics.kind === "text" ? <TextAnalytics analytics={analytics} /> : null}
+    </Card>
+  );
+}
+
+function NumericAnalytics({
+  analytics,
+}: {
+  analytics: Extract<FieldAnalytics, { kind: "numeric" }>;
+}) {
+  return (
+    <div className="grid grid-cols-3 border border-line text-sm">
+      <MetricTile label="Average" value={formatNumber(analytics.average)} />
+      <MetricTile label="Min" value={formatNumber(analytics.min)} />
+      <MetricTile label="Max" value={formatNumber(analytics.max)} />
+    </div>
+  );
+}
+
+function OptionsAnalytics({
+  analytics,
+}: {
+  analytics: Extract<FieldAnalytics, { kind: "options" }>;
+}) {
+  const visibleCounts = analytics.counts.slice(0, 5);
+
+  if (visibleCounts.length === 0) {
+    return <p className="m-0 text-sm text-ink-muted">No options selected yet.</p>;
+  }
+
+  return (
+    <div className="grid gap-2">
+      {visibleCounts.map((option) => (
+        <div className="grid gap-1" key={option.value}>
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="min-w-0 break-words">{option.label}</span>
+            <span className="text-ink-muted">{option.count.toString()}</span>
+          </div>
+          <div className="h-2 border border-line bg-[#181a20]">
+            <div
+              className="h-full bg-accent"
+              style={{
+                width: `${optionPercent(option.count, analytics.answeredCount).toString()}%`,
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TextAnalytics({
+  analytics,
+}: {
+  analytics: Extract<FieldAnalytics, { kind: "text" }>;
+}) {
+  if (analytics.samples.length === 0) {
+    return <p className="m-0 text-sm text-ink-muted">No text answers yet.</p>;
+  }
+
+  return (
+    <div className="grid gap-2">
+      {analytics.samples.map((sample) => (
+        <blockquote
+          className="m-0 border-l-2 border-accent bg-[#181a20] px-3 py-2 text-sm text-ink-muted"
+          key={sample}
+        >
+          {sample}
+        </blockquote>
+      ))}
+    </div>
+  );
+}
+
+function formatNumber(value: number): string {
+  return Number.isInteger(value) ? value.toString() : value.toFixed(1);
+}
+
+function optionPercent(count: number, total: number): number {
+  if (total === 0) {
+    return 0;
+  }
+
+  return Math.round((count / total) * 100);
 }
 
 type ResponsesListProps = {
