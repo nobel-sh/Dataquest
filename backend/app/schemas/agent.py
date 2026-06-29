@@ -31,6 +31,12 @@ class GenerateFormResult(BaseModel):
     warnings: list[str] = Field(default_factory=list, max_length=MAX_AGENT_WARNINGS)
 
 
+class ReviewFormRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    form_schema: FormSchema = Field(validation_alias="schema", serialization_alias="schema")
+
+
 class FormReviewSuggestion(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 

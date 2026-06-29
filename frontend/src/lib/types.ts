@@ -38,6 +38,19 @@ export type GenerateFormResult = {
   warnings: string[];
 };
 
+export type ReviewSeverity = "info" | "warning" | "error";
+
+export type FormReviewSuggestion = {
+  field_id?: string | null;
+  severity: ReviewSeverity;
+  message: string;
+};
+
+export type FormReviewResult = {
+  schema: FormSchema;
+  suggestions: FormReviewSuggestion[];
+};
+
 export type FormVersion = {
   id: string;
   form_id: string;

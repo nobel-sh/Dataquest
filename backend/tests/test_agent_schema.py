@@ -5,6 +5,7 @@ from app.schemas.agent import (
     FormReviewResult,
     GenerateFormRequest,
     GenerateFormResult,
+    ReviewFormRequest,
     ReviewSeverity,
 )
 from app.schemas.form import FormSchema
@@ -55,6 +56,12 @@ def test_rejects_generate_form_result_with_invalid_schema() -> None:
                 "warnings": [],
             }
         )
+
+
+def test_accepts_review_form_request() -> None:
+    request = ReviewFormRequest.model_validate({"schema": valid_schema().model_dump()})
+
+    assert request.form_schema.title == "Student Feedback"
 
 
 def test_accepts_form_review_result() -> None:

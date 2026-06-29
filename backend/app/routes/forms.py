@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.ai.form_generation import get_form_generator
+from app.ai.form_review import RuleBasedFormReviewer
 from app.core.request_context import get_request_id
 from app.db.session import get_db
 from app.models.form import Form, FormResponse, FormVersion
@@ -20,7 +21,12 @@ from app.services.forms_access import (
     require_public_form,
     require_submittable_form,
 )
-from app.schemas.agent import GenerateFormRequest, GenerateFormResult
+from app.schemas.agent import (
+    FormReviewResult,
+    GenerateFormRequest,
+    GenerateFormResult,
+    ReviewFormRequest,
+)
 from app.schemas.form import FieldOption, FormSchema
 from app.schemas.form_record import FormCreate, FormRead, FormSettingsUpdate
 from app.schemas.form_response import (
@@ -100,6 +106,26 @@ def generate_form(
             "user_id": _current_user.id,
             "field_count": len(result.form_schema.fields),
             "warning_count": len(result.warnings),
+        },
+    )
+    return result
+
+
+@router.post("/review", response_model=FormReviewResult)
+def review_form(
+    payload: ReviewFormRequest,
+    request: Request,
+    _current_user: CurrentUser,
+) -> FormReviewResult:
+    result = RuleBasedFormReviewer().review(payload.form_schema)
+    logger.info(
+        "form schema reviewed",
+        extra={
+            "event": "form_schema_reviewed",
+            "request_id": get_request_id(request),
+            "user_id": _current_user.id,
+            "field_count": len(result.form_schema.fields),
+            "suggestion_count": len(result.suggestions),
         },
     )
     return result

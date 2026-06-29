@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createForm, generateForm } from "@/lib/api";
-import type { FormSchema } from "@/lib/types";
+import { createForm, generateForm, reviewForm } from "@/lib/api";
+import type { FormReviewSuggestion, FormSchema } from "@/lib/types";
 import { FormSchemaBuilder } from "@/components/forms/form-schema-editor/schema-builder";
 import { Button, Card, TextArea, TextInput } from "@/components/ui/primitives";
 
@@ -29,7 +29,9 @@ export function NewFormCreator() {
   const [draftSchema, setDraftSchema] = useState<FormSchema>(initialSchema);
   const [draftRevision, setDraftRevision] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
   const [generationWarnings, setGenerationWarnings] = useState<string[]>([]);
+  const [reviewSuggestions, setReviewSuggestions] = useState<FormReviewSuggestion[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [messageKind, setMessageKind] = useState<"error" | "success">("success");
   const normalizedSlug = slug.trim();
@@ -52,6 +54,7 @@ export function NewFormCreator() {
       setDraftSchema(result.schema);
       setDraftRevision((current) => current + 1);
       setGenerationWarnings(result.warnings);
+      void reviewDraft(result.schema, { quiet: true });
       if (!normalizedSlug) {
         setSlug(slugFromTitle(result.schema.title));
       }
@@ -62,6 +65,33 @@ export function NewFormCreator() {
       setMessage(error instanceof Error ? error.message : "Failed to generate form.");
     } finally {
       setIsGenerating(false);
+    }
+  }
+
+  async function reviewDraft(formSchema: FormSchema, options: { quiet?: boolean } = {}) {
+    setIsReviewing(true);
+    if (!options.quiet) {
+      setMessage(null);
+    }
+
+    try {
+      const result = await reviewForm(formSchema);
+      setReviewSuggestions(result.suggestions);
+      if (!options.quiet) {
+        setMessageKind("success");
+        setMessage(
+          result.suggestions.length > 0
+            ? "Reviewed the current draft."
+            : "Reviewed the current draft. No suggestions found.",
+        );
+      }
+    } catch (error) {
+      if (!options.quiet) {
+        setMessageKind("error");
+        setMessage(error instanceof Error ? error.message : "Failed to review form.");
+      }
+    } finally {
+      setIsReviewing(false);
     }
   }
 
@@ -98,6 +128,7 @@ export function NewFormCreator() {
         { label: "Draft fields", value: draftSchema.fields.length.toString() },
         { label: "Slug", value: normalizedSlug || "unset" },
       ]}
+      isReviewing={isReviewing}
       metadataSlot={
         <Card asSection className="grid gap-4 p-5">
           <div>
@@ -134,6 +165,8 @@ export function NewFormCreator() {
             ) : null}
           </div>
 
+          <ReviewSuggestions suggestions={reviewSuggestions} />
+
           <div>
             <label className="text-base font-semibold" htmlFor="form-slug">
               Slug
@@ -153,10 +186,60 @@ export function NewFormCreator() {
       }
       saveLabel="Create form"
       savingLabel="Creating"
+      reviewLabel="Review draft"
+      reviewingLabel="Reviewing"
       submitBlocked={Boolean(slugError)}
+      onReview={reviewDraft}
       onSave={save}
     />
   );
+}
+
+function ReviewSuggestions({ suggestions }: { suggestions: FormReviewSuggestion[] }) {
+  if (suggestions.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="border border-line bg-[#181a20] px-4 py-4">
+      <div className="flex items-center justify-between gap-3 max-sm:flex-col max-sm:items-start">
+        <h2 className="m-0 font-display text-xl">Review suggestions</h2>
+        <span className="text-sm uppercase text-ink-muted">{suggestions.length} found</span>
+      </div>
+      <ul className="m-0 mt-3 grid list-none gap-2 p-0 text-sm">
+        {suggestions.map((suggestion, index) => (
+          <li
+            className="grid gap-1 border border-line bg-panel px-3 py-3"
+            key={`${suggestion.field_id ?? "form"}-${suggestion.severity}-${index.toString()}`}
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={reviewBadgeClassName(suggestion.severity)}>
+                {suggestion.severity}
+              </span>
+              {suggestion.field_id ? (
+                <code className="text-xs text-ink-muted">{suggestion.field_id}</code>
+              ) : null}
+            </div>
+            <p className="m-0 text-ink-muted">{suggestion.message}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function reviewBadgeClassName(severity: FormReviewSuggestion["severity"]): string {
+  const baseClassName = "border px-2 py-1 text-xs uppercase";
+
+  if (severity === "error") {
+    return `${baseClassName} border-line-error bg-error text-danger`;
+  }
+
+  if (severity === "warning") {
+    return `${baseClassName} border-[#fdd663] bg-[#3a3420] text-[#fdd663]`;
+  }
+
+  return `${baseClassName} border-line-success bg-success text-line-success`;
 }
 
 function getSlugError(slug: string): string | null {

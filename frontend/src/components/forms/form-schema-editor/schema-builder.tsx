@@ -34,10 +34,14 @@ type FormSchemaBuilderProps = {
   message: string | null;
   messageKind: "error" | "success";
   metrics: BuilderMetric[];
+  isReviewing?: boolean;
+  reviewLabel?: string;
+  reviewingLabel?: string;
   saveLabel: string;
   savingLabel: string;
   submitBlocked?: boolean;
   metadataSlot?: ReactNode;
+  onReview?: (schema: FormSchema) => Promise<void>;
   onSave: (schema: FormSchema) => Promise<void>;
 };
 
@@ -47,10 +51,14 @@ export function FormSchemaBuilder({
   message,
   messageKind,
   metrics,
+  isReviewing = false,
+  reviewLabel,
+  reviewingLabel,
   saveLabel,
   savingLabel,
   submitBlocked = false,
   metadataSlot,
+  onReview,
   onSave,
 }: FormSchemaBuilderProps) {
   const [schema, setSchema] = useState<FormSchema>(initialSchema);
@@ -79,6 +87,14 @@ export function FormSchemaBuilder({
     } finally {
       setIsSaving(false);
     }
+  }
+
+  async function reviewDraft() {
+    if (hasValidationErrors || !onReview) {
+      return;
+    }
+
+    await onReview(normalizedSchema);
   }
 
   function updateField(index: number, nextField: FormField) {
@@ -180,10 +196,15 @@ export function FormSchemaBuilder({
         </div>
 
         <BuilderFooter
-          disabled={isSaving || hasValidationErrors || submitBlocked}
+          disabled={isSaving || isReviewing || hasValidationErrors || submitBlocked}
+          isReviewing={isReviewing}
           isSaving={isSaving}
+          reviewDisabled={isSaving || hasValidationErrors}
+          reviewLabel={reviewLabel}
+          reviewingLabel={reviewingLabel}
           saveLabel={saveLabel}
           savingLabel={savingLabel}
+          onReview={onReview ? reviewDraft : undefined}
           onReset={resetBuilder}
         />
       </form>

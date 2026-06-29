@@ -159,6 +159,57 @@ def test_generate_form_returns_valid_schema_without_persisting(
     assert list_response.json() == []
 
 
+def test_review_form_returns_suggestions_without_persisting(
+    test_client: TestClient,
+) -> None:
+    payload = {
+        "schema": {
+            "title": "Customer Feedback",
+            "fields": [
+                {
+                    "id": "email",
+                    "type": "email",
+                    "label": "Email",
+                    "required": True,
+                },
+                {
+                    "id": "phone",
+                    "type": "phone",
+                    "label": "Phone",
+                    "required": True,
+                },
+                {
+                    "id": "comments",
+                    "type": "textarea",
+                    "label": "Comments",
+                    "required": True,
+                },
+                {
+                    "id": "comments_follow_up",
+                    "type": "textarea",
+                    "label": "Comments",
+                    "required": True,
+                },
+            ],
+        }
+    }
+
+    response = test_client.post(
+        "/forms/review",
+        json=payload,
+        headers=csrf_header(test_client),
+    )
+    list_response = test_client.get("/forms")
+
+    assert response.status_code == 200
+    suggestions = response.json()["suggestions"]
+    assert response.json()["schema"]["title"] == "Customer Feedback"
+    assert list_response.json() == []
+    assert any(suggestion["field_id"] == "phone" for suggestion in suggestions)
+    assert any("required" in suggestion["message"] for suggestion in suggestions)
+    assert any("repeats" in suggestion["message"] for suggestion in suggestions)
+
+
 def test_list_forms_filters_by_owner_and_archive_status(
     test_client: TestClient,
 ) -> None:

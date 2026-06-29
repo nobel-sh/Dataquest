@@ -107,21 +107,37 @@ export function SchemaPreview({ schema }: { schema: FormSchema }) {
 
 type BuilderFooterProps = {
   disabled: boolean;
+  isReviewing?: boolean;
   isSaving: boolean;
+  reviewDisabled?: boolean;
+  reviewLabel?: string;
+  reviewingLabel?: string;
   saveLabel: string;
   savingLabel: string;
+  onReview?: () => void;
   onReset: () => void;
 };
 
 export function BuilderFooter({
   disabled,
+  isReviewing = false,
   isSaving,
+  reviewDisabled = false,
+  reviewLabel,
+  reviewingLabel = "Reviewing",
   saveLabel,
   savingLabel,
+  onReview,
   onReset,
 }: BuilderFooterProps) {
+  const hasReviewAction = Boolean(onReview && reviewLabel);
+
   return (
-    <div className="grid gap-3 border-t border-line bg-panel px-7 py-5 sm:grid-cols-[auto_1fr] sm:items-center max-sm:p-5">
+    <div
+      className={`grid gap-3 border-t border-line bg-panel px-7 py-5 sm:items-center max-sm:p-5 ${
+        hasReviewAction ? "sm:grid-cols-[auto_1fr_auto]" : "sm:grid-cols-[auto_1fr]"
+      }`}
+    >
       <button
         aria-label="Reset form editor"
         className={`${iconButtonClassName} max-sm:w-full`}
@@ -131,6 +147,16 @@ export function BuilderFooter({
       >
         <ResetIcon />
       </button>
+      {hasReviewAction ? (
+        <button
+          className={`${primaryButtonLargeClassName} bg-[#30333d] text-ink hover:bg-[#3b3e49] sm:justify-self-end`}
+          disabled={reviewDisabled || isReviewing}
+          type="button"
+          onClick={onReview}
+        >
+          {isReviewing ? reviewingLabel : reviewLabel}
+        </button>
+      ) : null}
       <button
         className={`${primaryButtonLargeClassName} sm:justify-self-end`}
         disabled={disabled}

@@ -4,6 +4,7 @@ import { responseError, statusError } from "@/lib/http-error";
 import type {
   Answers,
   FormRecord,
+  FormReviewResult,
   FormResponse,
   FormSchema,
   FormVersion,
@@ -106,6 +107,22 @@ export async function generateForm(prompt: string): Promise<GenerateFormResult> 
 
   if (!response.ok) {
     throw await responseError(response, `Failed to generate form: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function reviewForm(formSchema: FormSchema): Promise<FormReviewResult> {
+  const response = await authenticatedFetch(`${getApiBaseUrl()}/forms/review`, () => ({
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ schema: formSchema }),
+  }));
+
+  if (!response.ok) {
+    throw await responseError(response, `Failed to review form: ${response.status}`);
   }
 
   return response.json();
