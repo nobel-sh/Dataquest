@@ -1,4 +1,4 @@
-import type { FieldType, FormField } from "@/lib/types";
+import type { FieldType, FormField, FormReviewSuggestion } from "@/lib/types";
 import {
   fieldTypes,
   optionFieldTypes,
@@ -24,6 +24,7 @@ type FieldEditorProps = {
   isLast: boolean;
   optionErrors: Record<string, string[]>;
   rangeErrors: string[];
+  reviewSuggestions: FormReviewSuggestion[];
   onChange: (field: FormField) => void;
   onMove: (direction: -1 | 1) => void;
   onRemove: () => void;
@@ -37,6 +38,7 @@ export function FieldEditor({
   isLast,
   optionErrors,
   rangeErrors,
+  reviewSuggestions,
   onChange,
   onMove,
   onRemove,
@@ -49,10 +51,20 @@ export function FieldEditor({
   }
 
   return (
-    <article className="grid min-w-0 gap-4 border border-line bg-panel p-5 max-sm:p-4">
+    <article
+      className="grid min-w-0 scroll-mt-6 gap-4 border border-line bg-panel p-5 max-sm:p-4"
+      id={fieldTargetId(field.id)}
+    >
       <div className="flex items-center justify-between gap-4 border-b border-line pb-4 max-sm:flex-col max-sm:items-stretch">
         <div className="min-w-0">
-          <div className="font-display text-xl">Field {index + 1}</div>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="font-display text-xl">Field {index + 1}</div>
+            {reviewSuggestions.length > 0 ? (
+              <span className="border border-[#fdd663] bg-[#3a3420] px-2 py-1 text-xs uppercase text-[#fdd663]">
+                {reviewSuggestions.length} review{reviewSuggestions.length === 1 ? "" : "s"}
+              </span>
+            ) : null}
+          </div>
           <div className="mt-1 break-all text-sm text-ink-muted">{field.id || "unnamed_field"}</div>
         </div>
         <div className="grid grid-cols-3 gap-2 sm:flex">
@@ -160,4 +172,8 @@ export function FieldEditor({
       ) : null}
     </article>
   );
+}
+
+export function fieldTargetId(fieldId: string): string {
+  return `form-field-${fieldId}`;
 }

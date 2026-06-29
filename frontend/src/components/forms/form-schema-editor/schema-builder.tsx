@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { FormEvent, useState } from "react";
-import type { FormField, FormSchema } from "@/lib/types";
+import type { FormField, FormReviewSuggestion, FormSchema } from "@/lib/types";
 import {
   BuilderFooter,
   BuilderHeader,
@@ -36,6 +36,7 @@ type FormSchemaBuilderProps = {
   metrics: BuilderMetric[];
   isReviewing?: boolean;
   reviewLabel?: string;
+  reviewSuggestions?: FormReviewSuggestion[];
   reviewingLabel?: string;
   saveLabel: string;
   savingLabel: string;
@@ -53,6 +54,7 @@ export function FormSchemaBuilder({
   metrics,
   isReviewing = false,
   reviewLabel,
+  reviewSuggestions = [],
   reviewingLabel,
   saveLabel,
   savingLabel,
@@ -73,6 +75,7 @@ export function FormSchemaBuilder({
   const normalizedSchema = normalizeSchema(schemaToSave);
   const validation = validateSchema(normalizedSchema);
   const hasValidationErrors = hasErrors(validation);
+  const reviewSuggestionsByFieldId = groupReviewSuggestionsByFieldId(reviewSuggestions);
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -175,6 +178,7 @@ export function FormSchemaBuilder({
                 errors={validation.fieldErrors[index] ?? []}
                 optionErrors={validation.optionErrors}
                 rangeErrors={validation.rangeErrors[index] ?? []}
+                reviewSuggestions={reviewSuggestionsByFieldId[field.id] ?? []}
                 onChange={(nextField) => updateField(index, nextField)}
                 onMove={(direction) => moveField(index, direction)}
                 onRemove={() => removeField(index)}
@@ -223,4 +227,17 @@ function nextFieldId(fields: FormField[]): string {
   }
 
   return candidate;
+}
+
+function groupReviewSuggestionsByFieldId(
+  suggestions: FormReviewSuggestion[],
+): Record<string, FormReviewSuggestion[]> {
+  return suggestions.reduce<Record<string, FormReviewSuggestion[]>>((groups, suggestion) => {
+    if (!suggestion.field_id) {
+      return groups;
+    }
+
+    groups[suggestion.field_id] = [...(groups[suggestion.field_id] ?? []), suggestion];
+    return groups;
+  }, {});
 }
