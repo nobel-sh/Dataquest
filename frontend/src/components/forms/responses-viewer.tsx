@@ -9,6 +9,7 @@ import {
 } from "@/lib/api";
 import { surfaceClassName } from "@/components/ui/styles";
 import { Alert, Panel } from "@/components/ui/primitives";
+import { useStatusBubble } from "@/components/status-bubble";
 import {
   ResponsesEmptyState,
   ResponsesHeader,
@@ -24,6 +25,7 @@ type ResponsesViewerProps = {
 };
 
 export function ResponsesViewer({ form }: ResponsesViewerProps) {
+  const { showStatus } = useStatusBubble();
   const [responses, setResponses] = useState<FormResponse[]>([]);
   const [versionNumbersById, setVersionNumbersById] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +72,7 @@ export function ResponsesViewer({ form }: ResponsesViewerProps) {
 
   async function exportCsv() {
     setError(null);
+    showStatus({ kind: "loading", title: "Exporting CSV", detail: "Preparing response data." });
     try {
       const response = await authenticatedFetch(formResponsesExportUrl(form.id), () => ({}));
       if (!response.ok) {
@@ -82,8 +85,15 @@ export function ResponsesViewer({ form }: ResponsesViewerProps) {
       link.download = `${form.slug}-responses.csv`;
       link.click();
       window.URL.revokeObjectURL(url);
+      showStatus(
+        { kind: "success", title: "CSV exported", detail: `${form.slug}-responses.csv` },
+        { autoDismissMs: 2800 },
+      );
     } catch (exportError) {
-      setError(exportError instanceof Error ? exportError.message : "Failed to export responses.");
+      const detail =
+        exportError instanceof Error ? exportError.message : "Failed to export responses.";
+      setError(detail);
+      showStatus({ kind: "error", title: "Export failed", detail }, { autoDismissMs: 5000 });
     }
   }
 

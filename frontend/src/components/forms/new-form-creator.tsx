@@ -7,6 +7,7 @@ import type { FormReviewSuggestion, FormSchema } from "@/lib/types";
 import { fieldTargetId } from "@/components/forms/form-schema-editor/field-editor";
 import { FormSchemaBuilder } from "@/components/forms/form-schema-editor/schema-builder";
 import { ReviewSuggestions, reviewSuggestionKey } from "@/components/forms/review-suggestions";
+import { useStatusBubble } from "@/components/status-bubble";
 import { Button, Card, TextArea, TextInput } from "@/components/ui/primitives";
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -26,6 +27,7 @@ const initialSchema: FormSchema = {
 
 export function NewFormCreator() {
   const router = useRouter();
+  const { showStatus } = useStatusBubble();
   const [slug, setSlug] = useState("");
   const [prompt, setPrompt] = useState("");
   const [draftSchema, setDraftSchema] = useState<FormSchema>(initialSchema);
@@ -56,6 +58,7 @@ export function NewFormCreator() {
 
     setIsGenerating(true);
     setMessage(null);
+    showStatus({ kind: "loading", title: "Generating draft", detail: "Creating a validated schema." });
 
     try {
       const result = await generateForm(normalizedPrompt);
@@ -68,9 +71,19 @@ export function NewFormCreator() {
       }
       setMessageKind("success");
       setMessage("Generated a draft schema. Review it before creating the form.");
+      showStatus(
+        {
+          kind: "success",
+          title: "Draft generated",
+          detail: `${result.schema.fields.length.toString()} fields ready to review.`,
+        },
+        { autoDismissMs: 2800 },
+      );
     } catch (error) {
       setMessageKind("error");
-      setMessage(error instanceof Error ? error.message : "Failed to generate form.");
+      const detail = error instanceof Error ? error.message : "Failed to generate form.";
+      setMessage(detail);
+      showStatus({ kind: "error", title: "Generation failed", detail }, { autoDismissMs: 5000 });
     } finally {
       setIsGenerating(false);
     }
@@ -80,6 +93,7 @@ export function NewFormCreator() {
     setIsReviewing(true);
     if (!options.quiet) {
       setMessage(null);
+      showStatus({ kind: "loading", title: "Reviewing draft", detail: "Checking form quality." });
     }
 
     try {
@@ -93,11 +107,24 @@ export function NewFormCreator() {
             ? "Reviewed the current draft."
             : "Reviewed the current draft. No suggestions found.",
         );
+        showStatus(
+          {
+            kind: "success",
+            title: "Review complete",
+            detail:
+              result.suggestions.length > 0
+                ? `${result.suggestions.length.toString()} suggestions found.`
+                : "No suggestions found.",
+          },
+          { autoDismissMs: 2800 },
+        );
       }
     } catch (error) {
       if (!options.quiet) {
         setMessageKind("error");
-        setMessage(error instanceof Error ? error.message : "Failed to review form.");
+        const detail = error instanceof Error ? error.message : "Failed to review form.";
+        setMessage(detail);
+        showStatus({ kind: "error", title: "Review failed", detail }, { autoDismissMs: 5000 });
       }
     } finally {
       setIsReviewing(false);
@@ -129,14 +156,21 @@ export function NewFormCreator() {
     }
 
     try {
+      showStatus({ kind: "loading", title: "Creating form", detail: "Saving the first version." });
       const form = await createForm(normalizedSlug, formSchema);
       setMessageKind("success");
       setMessage("Form created.");
+      showStatus(
+        { kind: "success", title: "Form created", detail: `/${form.slug}` },
+        { autoDismissMs: 2800 },
+      );
       router.refresh();
       router.push(`/forms/${form.slug}/edit`);
     } catch (error) {
       setMessageKind("error");
-      setMessage(error instanceof Error ? error.message : "Failed to create form.");
+      const detail = error instanceof Error ? error.message : "Failed to create form.";
+      setMessage(detail);
+      showStatus({ kind: "error", title: "Create failed", detail }, { autoDismissMs: 5000 });
     }
   }
 

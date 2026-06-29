@@ -7,6 +7,7 @@ import type { FormRecord, FormReviewSuggestion, FormSchema } from "@/lib/types";
 import { fieldTargetId } from "@/components/forms/form-schema-editor/field-editor";
 import { FormSchemaBuilder } from "@/components/forms/form-schema-editor/schema-builder";
 import { ReviewSuggestions, reviewSuggestionKey } from "@/components/forms/review-suggestions";
+import { useStatusBubble } from "@/components/status-bubble";
 
 type FormSchemaEditorProps = {
   form: FormRecord;
@@ -14,6 +15,7 @@ type FormSchemaEditorProps = {
 
 export function FormSchemaEditor({ form }: FormSchemaEditorProps) {
   const router = useRouter();
+  const { showStatus } = useStatusBubble();
   const [message, setMessage] = useState<string | null>(null);
   const [messageKind, setMessageKind] = useState<"error" | "success">("success");
   const [isReviewing, setIsReviewing] = useState(false);
@@ -28,6 +30,7 @@ export function FormSchemaEditor({ form }: FormSchemaEditorProps) {
   async function reviewDraft(formSchema: FormSchema) {
     setIsReviewing(true);
     setMessage(null);
+    showStatus({ kind: "loading", title: "Reviewing draft", detail: "Checking form quality." });
 
     try {
       const result = await reviewForm(formSchema);
@@ -39,9 +42,22 @@ export function FormSchemaEditor({ form }: FormSchemaEditorProps) {
           ? "Reviewed the current draft."
           : "Reviewed the current draft. No suggestions found.",
       );
+      showStatus(
+        {
+          kind: "success",
+          title: "Review complete",
+          detail:
+            result.suggestions.length > 0
+              ? `${result.suggestions.length.toString()} suggestions found.`
+              : "No suggestions found.",
+        },
+        { autoDismissMs: 2800 },
+      );
     } catch (error) {
       setMessageKind("error");
-      setMessage(error instanceof Error ? error.message : "Failed to review form.");
+      const detail = error instanceof Error ? error.message : "Failed to review form.";
+      setMessage(detail);
+      showStatus({ kind: "error", title: "Review failed", detail }, { autoDismissMs: 5000 });
     } finally {
       setIsReviewing(false);
     }
@@ -65,14 +81,25 @@ export function FormSchemaEditor({ form }: FormSchemaEditorProps) {
   async function save(formSchema: FormSchema) {
     setMessage(null);
     try {
+      showStatus({ kind: "loading", title: "Saving version", detail: "Creating a new form version." });
       const updatedForm = await createFormVersion(form.id, formSchema);
       setMessageKind("success");
       setMessage(`Saved v${updatedForm.latest_version.version_number.toString()}.`);
+      showStatus(
+        {
+          kind: "success",
+          title: "Version saved",
+          detail: `v${updatedForm.latest_version.version_number.toString()} is now current.`,
+        },
+        { autoDismissMs: 2800 },
+      );
       router.refresh();
       router.push(`/forms/${updatedForm.slug}`);
     } catch (error) {
       setMessageKind("error");
-      setMessage(error instanceof Error ? error.message : "Failed to save form version.");
+      const detail = error instanceof Error ? error.message : "Failed to save form version.";
+      setMessage(detail);
+      showStatus({ kind: "error", title: "Save failed", detail }, { autoDismissMs: 5000 });
     }
   }
 

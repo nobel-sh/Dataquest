@@ -6,6 +6,7 @@ import { getFormBySlug, submitFormResponse } from "@/lib/api";
 import { getCurrentUser } from "@/lib/auth";
 import { surfaceClassName } from "@/components/ui/styles";
 import { Alert, Button, Panel } from "@/components/ui/primitives";
+import { useStatusBubble } from "@/components/status-bubble";
 import {
   compactAnswers,
   initialAnswers,
@@ -19,6 +20,7 @@ type PublicFormProps = {
 };
 
 export function PublicForm({ form }: PublicFormProps) {
+  const { showStatus } = useStatusBubble();
   const schema = form.latest_version.schema;
   const [answers, setAnswers] = useState<Answers>(() => initialAnswers(schema.fields));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -104,15 +106,22 @@ export function PublicForm({ form }: PublicFormProps) {
 
     setSubmitState("submitting");
     setSubmitMessage(null);
+    showStatus({ kind: "loading", title: "Submitting response", detail: "Saving your answers." });
 
     try {
       await submitFormResponse(form.id, compactAnswers(answers));
       setHasResponded(true);
       setSubmitState("success");
       setSubmitMessage("Response submitted.");
+      showStatus(
+        { kind: "success", title: "Response submitted", detail: "Your answers were saved." },
+        { autoDismissMs: 2800 },
+      );
     } catch (error) {
       setSubmitState("error");
-      setSubmitMessage(error instanceof Error ? error.message : "Submission failed.");
+      const detail = error instanceof Error ? error.message : "Submission failed.";
+      setSubmitMessage(detail);
+      showStatus({ kind: "error", title: "Submission failed", detail }, { autoDismissMs: 5000 });
     }
   }
 

@@ -3,13 +3,13 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { login, register } from "@/lib/auth";
-import {
-  surfaceClassName,
-} from "@/components/ui/styles";
+import { useStatusBubble } from "@/components/status-bubble";
+import { surfaceClassName } from "@/components/ui/styles";
 import { Alert, Button, Panel, TextInput } from "@/components/ui/primitives";
 
 export function AuthPanel() {
   const router = useRouter();
+  const { showStatus } = useStatusBubble();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,12 +20,27 @@ export function AuthPanel() {
     event.preventDefault();
     setMessage(null);
     setIsSubmitting(true);
+    showStatus({
+      kind: "loading",
+      title: mode === "login" ? "Logging in" : "Creating account",
+      detail: "Checking credentials.",
+    });
 
     try {
       await (mode === "login" ? login(email, password) : register(email, password));
+      showStatus(
+        {
+          kind: "success",
+          title: mode === "login" ? "Logged in" : "Account created",
+          detail: "Redirecting to your workspace.",
+        },
+        { autoDismissMs: 2800 },
+      );
       router.push("/");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Authentication failed.");
+      const detail = error instanceof Error ? error.message : "Authentication failed.";
+      setMessage(detail);
+      showStatus({ kind: "error", title: "Authentication failed", detail }, { autoDismissMs: 5000 });
     } finally {
       setIsSubmitting(false);
     }
