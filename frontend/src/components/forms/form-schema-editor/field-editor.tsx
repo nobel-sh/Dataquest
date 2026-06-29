@@ -9,7 +9,12 @@ import { OptionsEditor } from "@/components/forms/form-schema-editor/options-edi
 import { RangeEditor } from "@/components/forms/form-schema-editor/range-editor";
 import { normalizeFieldForType } from "@/components/forms/form-schema-editor/schema";
 import { ErrorList } from "@/components/forms/form-schema-editor/shared";
-import { ArrowDownIcon, ArrowUpIcon, TrashIcon } from "@/components/forms/form-schema-editor/icons";
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  DuplicateIcon,
+  TrashIcon,
+} from "@/components/forms/form-schema-editor/icons";
 import {
   dangerIconButtonClassName,
   iconButtonClassName,
@@ -26,6 +31,7 @@ type FieldEditorProps = {
   rangeErrors: string[];
   reviewSuggestions: FormReviewSuggestion[];
   onChange: (field: FormField) => void;
+  onDuplicate: () => void;
   onMove: (direction: -1 | 1) => void;
   onRemove: () => void;
 };
@@ -40,6 +46,7 @@ export function FieldEditor({
   rangeErrors,
   reviewSuggestions,
   onChange,
+  onDuplicate,
   onMove,
   onRemove,
 }: FieldEditorProps) {
@@ -87,6 +94,15 @@ export function FieldEditor({
             onClick={() => onMove(1)}
           >
             <ArrowDownIcon />
+          </button>
+          <button
+            aria-label="Duplicate field"
+            className={iconButtonClassName}
+            title="Duplicate field"
+            type="button"
+            onClick={onDuplicate}
+          >
+            <DuplicateIcon />
           </button>
           <button
             aria-label="Remove field"

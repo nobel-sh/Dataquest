@@ -198,3 +198,18 @@ export async function createFormVersion(
 
   return response.json();
 }
+
+export async function duplicateForm(formId: string): Promise<FormRecord> {
+  const response = await authenticatedFetch(
+    `${getApiBaseUrl()}/forms/${formId}/duplicate`,
+    () => ({
+      method: "POST",
+    }),
+  );
+
+  if (!response.ok) {
+    throw await responseError(response, `Failed to duplicate form: ${response.status}`);
+  }
+
+  return response.json();
+}

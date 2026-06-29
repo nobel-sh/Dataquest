@@ -95,3 +95,21 @@ export function TrashIcon({ className = "size-4" }: IconProps) {
     </svg>
   );
 }
+
+export function DuplicateIcon({ className = "size-4" }: IconProps) {
+  return (
+    <svg
+      aria-hidden="true"
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeLinecap="square"
+      strokeLinejoin="miter"
+      strokeWidth="2"
+      viewBox="0 0 24 24"
+    >
+      <path d="M9 9h11v11H9z" />
+      <path d="M4 4h11v11" />
+    </svg>
+  );
+}

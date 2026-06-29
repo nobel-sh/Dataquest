@@ -23,7 +23,7 @@ export default async function FormPage({ params }: FormPageProps) {
     <main className={pageShellClassName}>
       <AppHeader
         path={`/${form.slug}`}
-        actions={<FormPageActions ownerId={form.owner_id} slug={form.slug} />}
+        actions={<FormPageActions formId={form.id} ownerId={form.owner_id} slug={form.slug} />}
       />
       <PublicForm form={form} />
     </main>

@@ -1,16 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DuplicateFormButton } from "@/components/forms/duplicate-form-button";
 import { CopyPublicLinkButton } from "@/components/forms/copy-public-link-button";
 import { LinkButton } from "@/components/ui/primitives";
 import { getCurrentUser } from "@/lib/auth";
 
 type FormPageActionsProps = {
+  formId: string;
   ownerId?: string | null;
   slug: string;
 };
 
-export function FormPageActions({ ownerId, slug }: FormPageActionsProps) {
+export function FormPageActions({ formId, ownerId, slug }: FormPageActionsProps) {
   const [isOwner, setIsOwner] = useState(false);
 
   useEffect(() => {
@@ -47,6 +49,7 @@ export function FormPageActions({ ownerId, slug }: FormPageActionsProps) {
   return (
     <>
       <CopyPublicLinkButton slug={slug} />
+      <DuplicateFormButton compact formId={formId} formSlug={slug} />
       <LinkButton variant="nav" href={`/forms/${slug}/edit`}>
         Edit
       </LinkButton>

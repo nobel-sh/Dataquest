@@ -73,3 +73,12 @@ export function RowsIcon() {
     </svg>
   );
 }
+
+export function DuplicateIcon() {
+  return (
+    <svg aria-hidden="true" className="size-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+      <path d="M9 9h11v11H9z" />
+      <path d="M4 4h11v11" />
+    </svg>
+  );
+}

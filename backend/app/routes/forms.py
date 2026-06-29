@@ -28,6 +28,7 @@ from app.services.form_responses import (
 from app.services.forms import (
     create_form_record,
     create_form_version_record,
+    duplicate_form_record,
     get_owned_form_record,
     get_public_form_record,
     list_form_records,
@@ -170,6 +171,32 @@ def create_form_version(
             "owner_id": current_user.id,
             "version": form.latest_version.version_number,
             "field_count": len(payload.form_schema.fields),
+        },
+    )
+    return form
+
+
+@router.post(
+    "/{form_id}/duplicate",
+    response_model=FormRead,
+    status_code=status.HTTP_201_CREATED,
+)
+def duplicate_form(
+    form_id: UUID,
+    request: Request,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> FormRead:
+    form = duplicate_form_record(form_id, current_user, db)
+    logger.info(
+        "form duplicated",
+        extra={
+            "event": "form_duplicated",
+            "request_id": get_request_id(request),
+            "source_form_id": form_id,
+            "form_id": form.id,
+            "owner_id": current_user.id,
+            "version": form.latest_version.version_number,
         },
     )
     return form

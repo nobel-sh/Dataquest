@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -41,6 +42,38 @@ def create_form_record(payload: FormCreate, current_user: User, db: Session) -> 
     db.refresh(form)
     db.refresh(version)
     return build_form_read(form, version, db, current_user)
+
+
+def duplicate_form_record(
+    form_id: UUID,
+    current_user: User,
+    db: Session,
+) -> FormRead:
+    source_form = db.get(Form, form_id)
+    source_form = require_form_owner(source_form, current_user)
+    source_version = get_latest_version(source_form.id, db)
+    source_schema = source_version.schema_json
+    duplicate_slug = next_duplicate_slug(source_form.slug, db)
+    duplicate_form = Form(
+        owner=current_user,
+        title=f"Copy of {source_form.title}",
+        description=source_form.description,
+        slug=duplicate_slug,
+        accepting_responses=source_form.accepting_responses,
+        requires_login=source_form.requires_login,
+        archived=False,
+    )
+    duplicate_version = FormVersion(
+        form=duplicate_form,
+        version_number=1,
+        schema_json=source_schema,
+    )
+
+    db.add(duplicate_version)
+    db.commit()
+    db.refresh(duplicate_form)
+    db.refresh(duplicate_version)
+    return build_form_read(duplicate_form, duplicate_version, db, current_user)
 
 
 def list_form_records(
@@ -149,6 +182,22 @@ def get_latest_version(form_id: UUID, db: Session) -> FormVersion:
             detail="form has no versions",
         )
     return latest_version
+
+
+def next_duplicate_slug(source_slug: str, db: Session) -> str:
+    candidate_index = 1
+    while True:
+        candidate = duplicate_slug_for_index(source_slug, candidate_index)
+        exists = db.scalar(select(Form.id).where(Form.slug == candidate).limit(1))
+        if exists is None:
+            return candidate
+        candidate_index += 1
+
+
+def duplicate_slug_for_index(source_slug: str, index: int) -> str:
+    suffix = "copy" if index == 1 else f"copy-{index}"
+    base = re.sub(r"-copy(?:-\d+)?$", "", source_slug)
+    return f"{base}-{suffix}"
 
 
 def build_form_read(

@@ -135,6 +135,27 @@ def test_create_form_persists_form_and_initial_version(test_client: TestClient) 
     assert data["response_count"] == 0
 
 
+def test_duplicate_form_creates_new_copy_with_new_slug(test_client: TestClient) -> None:
+    source = test_client.post(
+        "/forms",
+        json=valid_form_create_payload("student-feedback"),
+        headers=csrf_header(test_client),
+    ).json()
+
+    response = test_client.post(
+        f"/forms/{source['id']}/duplicate",
+        headers=csrf_header(test_client),
+    )
+
+    assert response.status_code == 201
+    duplicate = response.json()
+    assert duplicate["id"] != source["id"]
+    assert duplicate["slug"] == "student-feedback-copy"
+    assert duplicate["latest_version"]["version_number"] == 1
+    assert duplicate["response_count"] == 0
+    assert duplicate["archived"] is False
+
+
 def test_cookie_auth_requires_csrf_for_mutations(test_client: TestClient) -> None:
     test_client.headers.pop("Authorization")
     test_client.headers.pop("X-CSRF-Token", None)

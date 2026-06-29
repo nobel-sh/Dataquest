@@ -123,6 +123,27 @@ export function FormSchemaBuilder({
     ]);
   }
 
+  function duplicateField(index: number) {
+    setEditableFields((current) => {
+      const source = current[index];
+      if (!source) {
+        return current;
+      }
+
+      const duplicate = {
+        editorKey: `copy-${Date.now().toString(36)}-${index.toString()}`,
+        field: {
+          ...source.field,
+          id: nextFieldId(current.map((item) => item.field)),
+        },
+      };
+
+      const nextFields = [...current];
+      nextFields.splice(index + 1, 0, duplicate);
+      return nextFields;
+    });
+  }
+
   function removeField(index: number) {
     setEditableFields((current) => current.filter((_, fieldIndex) => fieldIndex !== index));
   }
@@ -180,6 +201,7 @@ export function FormSchemaBuilder({
                 rangeErrors={validation.rangeErrors[index] ?? []}
                 reviewSuggestions={reviewSuggestionsByFieldId[field.id] ?? []}
                 onChange={(nextField) => updateField(index, nextField)}
+                onDuplicate={() => duplicateField(index)}
                 onMove={(direction) => moveField(index, direction)}
                 onRemove={() => removeField(index)}
               />
