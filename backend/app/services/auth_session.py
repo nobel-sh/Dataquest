@@ -16,6 +16,7 @@ from app.core.security import (
     create_refresh_token,
     hash_refresh_token,
 )
+from app.core.time import utc_now
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
 from app.schemas.auth import AuthToken, UserRead
@@ -245,10 +246,6 @@ def build_auth_token(user: User) -> AuthToken:
         access_token=create_access_token(user.id),
         user=UserRead(id=user.id, email=user.email),
     )
-
-
-def utc_now() -> datetime:
-    return datetime.now(UTC)
 
 
 def to_utc_datetime(value: datetime) -> datetime:

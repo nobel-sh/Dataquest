@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-from dataclasses import dataclass
 from io import StringIO
 from uuid import UUID
 
@@ -21,25 +20,12 @@ from app.services.forms import get_latest_version
 from app.services.forms_access import require_form_owner, require_submittable_form
 
 
-@dataclass(frozen=True)
-class FormResponseSubmissionResult:
-    response: FormResponseRead
-    version_number: int
-
-
-@dataclass(frozen=True)
-class FormResponsesExport:
-    body: str
-    filename: str
-    response_count: int
-
-
 def submit_form_response_record(
     form_id: UUID,
     payload: FormResponseSubmit,
     current_user: User | None,
     db: Session,
-) -> FormResponseSubmissionResult:
+) -> tuple[FormResponseRead, int]:
     form = require_submittable_form(db.get(Form, form_id), current_user, db)
     latest_version = get_latest_version(form.id, db)
     form_schema = FormSchema.model_validate(latest_version.schema_json)
@@ -59,10 +45,7 @@ def submit_form_response_record(
     db.commit()
     db.refresh(response)
 
-    return FormResponseSubmissionResult(
-        response=build_response_read(response),
-        version_number=latest_version.version_number,
-    )
+    return build_response_read(response), latest_version.version_number
 
 
 def list_form_response_records(
@@ -86,7 +69,7 @@ def export_form_response_records(
     form_id: UUID,
     current_user: User,
     db: Session,
-) -> FormResponsesExport:
+) -> tuple[str, str, int]:
     form = db.get(Form, form_id)
     form = require_form_owner(form, current_user)
 
@@ -100,10 +83,10 @@ def export_form_response_records(
         .order_by(FormResponse.submitted_at.asc(), FormResponse.id.asc())
     ).all()
 
-    return FormResponsesExport(
-        body=build_responses_csv(form_schema, responses, version_numbers_by_id),
-        filename=f"{form.slug}-responses.csv",
-        response_count=len(responses),
+    return (
+        build_responses_csv(form_schema, responses, version_numbers_by_id),
+        f"{form.slug}-responses.csv",
+        len(responses),
     )
 
 

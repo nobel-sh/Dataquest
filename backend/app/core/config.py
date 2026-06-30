@@ -63,7 +63,7 @@ class Settings(BaseSettings):
         @classmethod
         def parse_env_var(cls, field_name: str, raw_value: str):  # type: ignore[override]
             if field_name == "cors_origins":
-                return [origin.strip() for origin in raw_value.split(",") if origin.strip()]
+                return split_cors_origins(raw_value)
             return super().parse_env_var(field_name, raw_value)
 
     @validator("app_env", "log_format", pre=True)
@@ -86,7 +86,7 @@ class Settings(BaseSettings):
     @validator("cors_origins", pre=True)
     def parse_cors_origins(cls, value: object) -> list[str] | object:
         if isinstance(value, str):
-            return [origin.strip() for origin in value.split(",") if origin.strip()]
+            return split_cors_origins(value)
         return value
 
 
@@ -124,6 +124,10 @@ def is_local_origin(origin: str) -> bool:
         or "127.0.0.1" in normalized
         or "0.0.0.0" in normalized
     )
+
+
+def split_cors_origins(value: str) -> list[str]:
+    return [origin.strip() for origin in value.split(",") if origin.strip()]
 
 
 def load_env_file() -> dict[str, str]:

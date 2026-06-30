@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import re
 import logging
+import re
 import time
-from abc import ABC, abstractmethod
 from typing import Any
 
 import httpx
@@ -18,13 +17,7 @@ logger = logging.getLogger("app.ai")
 RETRYABLE_GEMINI_STATUSES = {429, 500, 502, 503, 504}
 
 
-class FormGenerator(ABC):
-    @abstractmethod
-    def generate(self, prompt: str) -> GenerateFormResult:
-        """Generate a validated form schema without persisting it."""
-
-
-class MockFormGenerator(FormGenerator):
+class MockFormGenerator:
     def generate(self, prompt: str) -> GenerateFormResult:
         title = title_from_prompt(prompt)
         schema = FormSchema(
@@ -67,7 +60,7 @@ class MockFormGenerator(FormGenerator):
         )
 
 
-class GeminiFormGenerator(FormGenerator):
+class GeminiFormGenerator:
     def __init__(
         self,
         api_key: str,
@@ -155,28 +148,25 @@ class GeminiFormGenerator(FormGenerator):
         )
 
     def post_generation_request(self, prompt: str) -> httpx.Response:
-        try:
-            return httpx.post(
-                (
-                    "https://generativelanguage.googleapis.com/v1beta/models/"
-                    f"{self.model}:generateContent"
-                ),
-                headers={
-                    "Content-Type": "application/json",
-                    "x-goog-api-key": self.api_key,
-                },
-                json=gemini_payload(prompt),
-                timeout=self.timeout_seconds,
-            )
-        except httpx.HTTPError:
-            raise
+        return httpx.post(
+            (
+                "https://generativelanguage.googleapis.com/v1beta/models/"
+                f"{self.model}:generateContent"
+            ),
+            headers={
+                "Content-Type": "application/json",
+                "x-goog-api-key": self.api_key,
+            },
+            json=gemini_payload(prompt),
+            timeout=self.timeout_seconds,
+        )
 
     def retry_delay(self, attempt: int) -> float:
         delay = self.retry_base_delay_seconds * (2 ** (attempt - 1))
         return min(delay, self.retry_max_delay_seconds)
 
 
-def get_form_generator(settings: Settings | None = None) -> FormGenerator:
+def get_form_generator(settings: Settings | None = None) -> MockFormGenerator | GeminiFormGenerator:
     resolved_settings = settings or get_settings()
 
     match resolved_settings.ai_provider:

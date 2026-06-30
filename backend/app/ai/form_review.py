@@ -18,22 +18,20 @@ CONTACT_TERMS = {"contact", "lead", "inquiry", "signup", "registration"}
 FEEDBACK_TERMS = {"feedback", "survey", "satisfaction", "evaluation", "review"}
 
 
-class RuleBasedFormReviewer:
-    def review(self, form_schema: FormSchema) -> FormReviewResult:
-        suggestions: list[FormReviewSuggestion] = []
+def review_form_schema(form_schema: FormSchema) -> FormReviewResult:
+    suggestions: list[FormReviewSuggestion] = []
+    suggestions.extend(review_duplicate_labels(form_schema))
+    suggestions.extend(review_required_load(form_schema))
+    suggestions.extend(review_contact_fields(form_schema))
+    suggestions.extend(review_feedback_shape(form_schema))
+    suggestions.extend(review_field_quality(form_schema))
 
-        suggestions.extend(review_duplicate_labels(form_schema))
-        suggestions.extend(review_required_load(form_schema))
-        suggestions.extend(review_contact_fields(form_schema))
-        suggestions.extend(review_feedback_shape(form_schema))
-        suggestions.extend(review_field_quality(form_schema))
-
-        return FormReviewResult.model_validate(
-            {
-                "schema": form_schema,
-                "suggestions": dedupe_suggestions(suggestions),
-            }
-        )
+    return FormReviewResult.model_validate(
+        {
+            "schema": form_schema,
+            "suggestions": dedupe_suggestions(suggestions),
+        }
+    )
 
 
 def review_duplicate_labels(form_schema: FormSchema) -> list[FormReviewSuggestion]:

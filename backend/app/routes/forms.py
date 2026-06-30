@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.ai.form_generation import get_form_generator
-from app.ai.form_review import RuleBasedFormReviewer
+from app.ai.form_review import review_form_schema
 from app.core.request_context import get_request_id
 from app.db.session import get_db
 from app.models.user import User
@@ -92,7 +92,7 @@ def review_form(
     request: Request,
     _current_user: CurrentUser,
 ) -> FormReviewResult:
-    result = RuleBasedFormReviewer().review(payload.form_schema)
+    result = review_form_schema(payload.form_schema)
     logger.info(
         "form schema reviewed",
         extra={
@@ -223,19 +223,24 @@ def submit_form_response(
     db: DbSession,
     current_user: OptionalCurrentUser,
 ) -> FormResponseRead:
-    result = submit_form_response_record(form_id, payload, current_user, db)
+    response_record, version_number = submit_form_response_record(
+        form_id,
+        payload,
+        current_user,
+        db,
+    )
     logger.info(
         "form response submitted",
         extra={
             "event": "form_response_submitted",
             "request_id": get_request_id(request),
             "form_id": form_id,
-            "version": result.version_number,
-            "response_id": result.response.id,
+            "version": version_number,
+            "response_id": response_record.id,
             "authenticated": current_user is not None,
         },
     )
-    return result.response
+    return response_record
 
 
 @router.get("/{form_id}/responses/export")
@@ -251,7 +256,7 @@ def export_form_responses(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="only csv export is supported",
         )
-    export = export_form_response_records(form_id, current_user, db)
+    body, filename, response_count = export_form_response_records(form_id, current_user, db)
     logger.info(
         "form responses exported",
         extra={
@@ -260,14 +265,14 @@ def export_form_responses(
             "form_id": form_id,
             "owner_id": current_user.id,
             "format": format,
-            "response_count": export.response_count,
+            "response_count": response_count,
         },
     )
     return Response(
-        content=export.body,
+        content=body,
         media_type="text/csv",
         headers={
-            "Content-Disposition": f'attachment; filename="{export.filename}"',
+            "Content-Disposition": f'attachment; filename="{filename}"',
         },
     )
 

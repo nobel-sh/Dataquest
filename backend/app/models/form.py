@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
@@ -8,14 +8,11 @@ from sqlalchemy import ForeignKey, Index, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import JSON, Boolean, DateTime, Integer, String
 
+from app.core.time import utc_now
 from app.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.user import User
-
-
-def utc_now() -> datetime:
-    return datetime.now(UTC)
 
 
 class Form(Base):
