@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createForm, generateForm, reviewForm } from "@/lib/api";
-import type { FormReviewSuggestion, FormSchema } from "@/lib/types";
-import { fieldTargetId } from "@/components/forms/form-schema-editor/field-editor";
+import { createForm, generateForm } from "@/lib/api";
+import type { FormSchema } from "@/lib/types";
 import { FormSchemaBuilder } from "@/components/forms/form-schema-editor/schema-builder";
-import { ReviewSuggestions, reviewSuggestionKey } from "@/components/forms/review-suggestions";
+import { ReviewSuggestions } from "@/components/forms/review-suggestions";
+import { useReviewSuggestions } from "@/components/forms/use-review-suggestions";
 import { useStatusBubble } from "@/components/status-bubble";
 import { Button, Card, TextArea, TextInput } from "@/components/ui/primitives";
 
@@ -33,19 +33,19 @@ export function NewFormCreator() {
   const [draftSchema, setDraftSchema] = useState<FormSchema>(initialSchema);
   const [draftRevision, setDraftRevision] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isReviewing, setIsReviewing] = useState(false);
   const [generationWarnings, setGenerationWarnings] = useState<string[]>([]);
-  const [reviewSuggestions, setReviewSuggestions] = useState<FormReviewSuggestion[]>([]);
-  const [dismissedSuggestionKeys, setDismissedSuggestionKeys] = useState<Set<string>>(
-    () => new Set(),
-  );
   const [message, setMessage] = useState<string | null>(null);
   const [messageKind, setMessageKind] = useState<"error" | "success">("success");
+  const {
+    dismissReviewSuggestion,
+    isReviewing,
+    jumpToReviewField,
+    reviewDraft,
+    reviewSuggestions,
+    visibleReviewSuggestions,
+  } = useReviewSuggestions(setMessage, setMessageKind);
   const normalizedSlug = slug.trim();
   const slugError = getSlugError(normalizedSlug);
-  const visibleReviewSuggestions = reviewSuggestions.filter(
-    (suggestion) => !dismissedSuggestionKeys.has(reviewSuggestionKey(suggestion)),
-  );
 
   async function generateDraft() {
     const normalizedPrompt = prompt.trim();
@@ -87,63 +87,6 @@ export function NewFormCreator() {
     } finally {
       setIsGenerating(false);
     }
-  }
-
-  async function reviewDraft(formSchema: FormSchema, options: { quiet?: boolean } = {}) {
-    setIsReviewing(true);
-    if (!options.quiet) {
-      setMessage(null);
-      showStatus({ kind: "loading", title: "Reviewing draft", detail: "Checking form quality." });
-    }
-
-    try {
-      const result = await reviewForm(formSchema);
-      setReviewSuggestions(result.suggestions);
-      setDismissedSuggestionKeys(new Set());
-      if (!options.quiet) {
-        setMessageKind("success");
-        setMessage(
-          result.suggestions.length > 0
-            ? "Reviewed the current draft."
-            : "Reviewed the current draft. No suggestions found.",
-        );
-        showStatus(
-          {
-            kind: "success",
-            title: "Review complete",
-            detail:
-              result.suggestions.length > 0
-                ? `${result.suggestions.length.toString()} suggestions found.`
-                : "No suggestions found.",
-          },
-          { autoDismissMs: 2800 },
-        );
-      }
-    } catch (error) {
-      if (!options.quiet) {
-        setMessageKind("error");
-        const detail = error instanceof Error ? error.message : "Failed to review form.";
-        setMessage(detail);
-        showStatus({ kind: "error", title: "Review failed", detail }, { autoDismissMs: 5000 });
-      }
-    } finally {
-      setIsReviewing(false);
-    }
-  }
-
-  function dismissReviewSuggestion(suggestion: FormReviewSuggestion) {
-    setDismissedSuggestionKeys((current) => {
-      const next = new Set(current);
-      next.add(reviewSuggestionKey(suggestion));
-      return next;
-    });
-  }
-
-  function jumpToReviewField(fieldId: string) {
-    document.getElementById(fieldTargetId(fieldId))?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
   }
 
   async function save(formSchema: FormSchema) {

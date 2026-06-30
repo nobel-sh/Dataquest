@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { surfaceClassName } from "@/components/ui/styles";
 import {
   Alert,
@@ -72,87 +72,47 @@ export function FormsDashboard() {
   }
 
   async function toggleAcceptingResponses(form: FormRecord) {
-    setUpdatingFormId(form.id);
-    setError(null);
-
-    try {
-      const updatedForm = await updateFormSettings(form.id, {
-        accepting_responses: !form.accepting_responses,
-      });
-      setForms((currentForms) =>
-        currentForms.map((currentForm) =>
-          currentForm.id === updatedForm.id ? updatedForm : currentForm,
-        ),
-      );
-    } catch (updateError) {
-      setError(
-        updateError instanceof Error ? updateError.message : "Failed to update form settings.",
-      );
-    } finally {
-      setUpdatingFormId(null);
-    }
+    await updateSettings(form, { accepting_responses: !form.accepting_responses });
   }
 
   async function toggleRequiresLogin(form: FormRecord) {
-    setUpdatingFormId(form.id);
-    setError(null);
-
-    try {
-      const updatedForm = await updateFormSettings(form.id, {
-        requires_login: !form.requires_login,
-      });
-      setForms((currentForms) =>
-        currentForms.map((currentForm) =>
-          currentForm.id === updatedForm.id ? updatedForm : currentForm,
-        ),
-      );
-    } catch (updateError) {
-      setError(
-        updateError instanceof Error ? updateError.message : "Failed to update form settings.",
-      );
-    } finally {
-      setUpdatingFormId(null);
-    }
+    await updateSettings(form, { requires_login: !form.requires_login });
   }
 
   async function archiveForm(form: FormRecord) {
-    setUpdatingFormId(form.id);
-    setError(null);
-
-    try {
-      const updatedForm = await updateFormSettings(form.id, { archived: true });
-      setForms((currentForms) =>
-        currentForms.filter((currentForm) => currentForm.id !== updatedForm.id),
-      );
-    } catch (archiveError) {
-      setError(archiveError instanceof Error ? archiveError.message : "Failed to archive form.");
-    } finally {
-      setUpdatingFormId(null);
-    }
+    await updateSettings(form, { archived: true }, "Failed to archive form.", true);
   }
 
   async function unarchiveForm(form: FormRecord) {
+    await updateSettings(form, { archived: false }, "Failed to unarchive form.", true);
+  }
+
+  async function updateSettings(
+    form: FormRecord,
+    settings: Parameters<typeof updateFormSettings>[1],
+    fallback = "Failed to update form settings.",
+    removeFromView = false,
+  ) {
     setUpdatingFormId(form.id);
     setError(null);
 
     try {
-      const updatedForm = await updateFormSettings(form.id, { archived: false });
+      const updatedForm = await updateFormSettings(form.id, settings);
       setForms((currentForms) =>
-        currentForms.filter((currentForm) => currentForm.id !== updatedForm.id),
+        removeFromView
+          ? currentForms.filter((currentForm) => currentForm.id !== updatedForm.id)
+          : currentForms.map((currentForm) =>
+              currentForm.id === updatedForm.id ? updatedForm : currentForm,
+            ),
       );
-    } catch (unarchiveError) {
-      setError(
-        unarchiveError instanceof Error ? unarchiveError.message : "Failed to unarchive form.",
-      );
+    } catch (error) {
+      setError(error instanceof Error ? error.message : fallback);
     } finally {
       setUpdatingFormId(null);
     }
   }
 
-  const totalFields = useMemo(
-    () => forms.reduce((sum, form) => sum + form.latest_version.schema.fields.length, 0),
-    [forms],
-  );
+  const totalFields = forms.reduce((sum, form) => sum + form.latest_version.schema.fields.length, 0);
 
   return (
     <Panel>

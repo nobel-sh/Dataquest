@@ -20,7 +20,7 @@ export function CopyPublicLinkButton({
     const url = publicFormUrl(slug);
 
     try {
-      await writeClipboardText(url);
+      await navigator.clipboard.writeText(url);
       showStatus(
         {
           kind: "success",
@@ -59,26 +59,4 @@ function publicFormUrl(slug: string): string {
   }
 
   return `${window.location.origin}/forms/${slug}`;
-}
-
-async function writeClipboardText(value: string): Promise<void> {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(value);
-    return;
-  }
-
-  const textArea = document.createElement("textarea");
-  textArea.value = value;
-  textArea.setAttribute("readonly", "true");
-  textArea.style.position = "fixed";
-  textArea.style.top = "-1000px";
-  document.body.appendChild(textArea);
-  textArea.select();
-
-  const copied = document.execCommand("copy");
-  document.body.removeChild(textArea);
-
-  if (!copied) {
-    throw new Error("copy command failed");
-  }
 }

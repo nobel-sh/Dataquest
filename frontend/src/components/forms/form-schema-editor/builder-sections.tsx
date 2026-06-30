@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { ResetIcon } from "@/components/forms/form-schema-editor/icons";
-import { ErrorList, Metric } from "@/components/forms/form-schema-editor/shared";
+import { ErrorList } from "@/components/forms/form-schema-editor/shared";
 import type { BuilderMetric } from "@/components/forms/form-schema-editor/schema-builder";
 import { iconButtonClassName, primaryButtonLargeClassName } from "@/components/ui/styles";
-import { Alert, Card, TextArea, TextInput } from "@/components/ui/primitives";
+import { Alert, Card, MetricTile, TextArea, TextInput } from "@/components/ui/primitives";
 import type { FormSchema } from "@/lib/types";
 
 type BuilderHeaderProps = {
@@ -21,7 +21,7 @@ export function BuilderHeader({ eyebrow, metrics, title }: BuilderHeaderProps) {
       </h1>
       <div className="mt-4 grid grid-cols-3 border border-line text-sm max-sm:grid-cols-1">
         {metrics.map((metric) => (
-          <Metric key={metric.label} label={metric.label} value={metric.value} />
+          <MetricTile key={metric.label} label={metric.label} value={metric.value} />
         ))}
       </div>
     </header>
@@ -172,12 +172,10 @@ export function FieldsSection({ children }: { children: ReactNode }) {
   return (
     <section className="grid gap-4">
       <div>
-        <div>
-          <h2 className="m-0 font-display text-2xl">Fields</h2>
-          <p className="m-0 mt-1 text-sm text-ink-muted">
-            Save creates a version. Existing responses stay linked to their original version.
-          </p>
-        </div>
+        <h2 className="m-0 font-display text-2xl">Fields</h2>
+        <p className="m-0 mt-1 text-sm text-ink-muted">
+          Save creates a version. Existing responses stay linked to their original version.
+        </p>
       </div>
       {children}
     </section>

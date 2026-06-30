@@ -16,38 +16,24 @@ export function formResponsesExportUrl(formId: string): string {
 }
 
 export async function getFormBySlug(slug: string): Promise<FormRecord | null> {
-  const response = await authenticatedFetch(
-    `${getApiBaseUrl()}/forms/slug/${encodeURIComponent(slug)}`,
-    () => ({
-      cache: "no-store",
-    }),
+  return apiJson<FormRecord | null>(
+    `/forms/slug/${encodeURIComponent(slug)}`,
+    () => ({ cache: "no-store" }),
+    "Failed to load form",
+    null,
   );
-
-  if (response.status === 404) {
-    return null;
-  }
-
-  if (!response.ok) {
-    throw statusError(response, `Failed to load form: ${response.status}`);
-  }
-
-  return response.json();
 }
 
 export async function createForm(slug: string, formSchema: FormSchema): Promise<FormRecord> {
-  const response = await authenticatedFetch(`${getApiBaseUrl()}/forms`, () => ({
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ slug, schema: formSchema }),
-  }));
-
-  if (!response.ok) {
-    throw await responseError(response, `Failed to create form: ${response.status}`);
-  }
-
-  return response.json();
+  return apiJson(
+    "/forms",
+    () => ({
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({ slug, schema: formSchema }),
+    }),
+    "Failed to create form",
+  );
 }
 
 export async function listForms(includeArchived = false): Promise<FormRecord[]> {
@@ -55,19 +41,13 @@ export async function listForms(includeArchived = false): Promise<FormRecord[]> 
   if (includeArchived) {
     searchParams.set("include_archived", "true");
   }
+
   const query = searchParams.toString();
-  const response = await authenticatedFetch(
-    `${getApiBaseUrl()}/forms${query ? `?${query}` : ""}`,
-    () => ({
-      cache: "no-store",
-    }),
+  return apiJson(
+    `/forms${query ? `?${query}` : ""}`,
+    () => ({ cache: "no-store" }),
+    "Failed to load forms",
   );
-
-  if (!response.ok) {
-    throw statusError(response, `Failed to load forms: ${response.status}`);
-  }
-
-  return response.json();
 }
 
 export async function updateFormSettings(
@@ -78,137 +58,115 @@ export async function updateFormSettings(
     archived?: boolean;
   },
 ): Promise<FormRecord> {
-  const response = await authenticatedFetch(
-    `${getApiBaseUrl()}/forms/${formId}/settings`,
+  return apiJson(
+    `/forms/${formId}/settings`,
     () => ({
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: jsonHeaders,
       body: JSON.stringify(settings),
     }),
+    "Failed to update form settings",
   );
-
-  if (!response.ok) {
-    throw await responseError(response, `Failed to update form settings: ${response.status}`);
-  }
-
-  return response.json();
 }
 
 export async function generateForm(prompt: string): Promise<GenerateFormResult> {
-  const response = await authenticatedFetch(`${getApiBaseUrl()}/forms/generate`, () => ({
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ prompt }),
-  }));
-
-  if (!response.ok) {
-    throw await responseError(response, `Failed to generate form: ${response.status}`);
-  }
-
-  return response.json();
+  return apiJson(
+    "/forms/generate",
+    () => ({
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({ prompt }),
+    }),
+    "Failed to generate form",
+  );
 }
 
 export async function reviewForm(formSchema: FormSchema): Promise<FormReviewResult> {
-  const response = await authenticatedFetch(`${getApiBaseUrl()}/forms/review`, () => ({
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ schema: formSchema }),
-  }));
-
-  if (!response.ok) {
-    throw await responseError(response, `Failed to review form: ${response.status}`);
-  }
-
-  return response.json();
+  return apiJson(
+    "/forms/review",
+    () => ({
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({ schema: formSchema }),
+    }),
+    "Failed to review form",
+  );
 }
 
 export async function submitFormResponse(formId: string, answers: Answers): Promise<FormResponse> {
-  const response = await authenticatedFetch(
-    `${getApiBaseUrl()}/forms/${formId}/responses`,
+  return apiJson(
+    `/forms/${formId}/responses`,
     () => ({
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: jsonHeaders,
       body: JSON.stringify({ answers }),
     }),
+    "Failed to submit response",
   );
-
-  if (!response.ok) {
-    throw await responseError(response, `Failed to submit response: ${response.status}`);
-  }
-
-  return response.json();
 }
 
 export async function listFormResponses(formId: string): Promise<FormResponse[]> {
-  const response = await authenticatedFetch(
-    `${getApiBaseUrl()}/forms/${formId}/responses`,
-    () => ({
-      cache: "no-store",
-    }),
+  return apiJson(
+    `/forms/${formId}/responses`,
+    () => ({ cache: "no-store" }),
+    "Failed to load responses",
   );
-
-  if (!response.ok) {
-    throw statusError(response, `Failed to load responses: ${response.status}`);
-  }
-
-  return response.json();
 }
 
 export async function listFormVersions(formId: string): Promise<FormVersion[]> {
-  const response = await authenticatedFetch(
-    `${getApiBaseUrl()}/forms/${formId}/versions`,
-    () => ({
-      cache: "no-store",
-    }),
+  return apiJson(
+    `/forms/${formId}/versions`,
+    () => ({ cache: "no-store" }),
+    "Failed to load form versions",
   );
-
-  if (!response.ok) {
-    throw statusError(response, `Failed to load form versions: ${response.status}`);
-  }
-
-  return response.json();
 }
 
 export async function createFormVersion(
   formId: string,
   formSchema: FormSchema,
 ): Promise<FormRecord> {
-  const response = await authenticatedFetch(
-    `${getApiBaseUrl()}/forms/${formId}/versions`,
+  return apiJson(
+    `/forms/${formId}/versions`,
     () => ({
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: jsonHeaders,
       body: JSON.stringify({ schema: formSchema }),
     }),
+    "Failed to save form version",
   );
-
-  if (!response.ok) {
-    throw await responseError(response, `Failed to save form version: ${response.status}`);
-  }
-
-  return response.json();
 }
 
 export async function duplicateForm(formId: string): Promise<FormRecord> {
-  const response = await authenticatedFetch(
-    `${getApiBaseUrl()}/forms/${formId}/duplicate`,
+  return apiJson(
+    `/forms/${formId}/duplicate`,
     () => ({
       method: "POST",
     }),
+    "Failed to duplicate form",
   );
+}
+
+const jsonHeaders = {
+  "Content-Type": "application/json",
+};
+
+async function apiJson<T>(
+  path: string,
+  initFactory: () => RequestInit,
+  fallbackMessage: string,
+  notFoundValue?: T,
+): Promise<T> {
+  const response = await authenticatedFetch(`${getApiBaseUrl()}${path}`, initFactory);
+
+  if (response.status === 404 && arguments.length === 4) {
+    return notFoundValue as T;
+  }
 
   if (!response.ok) {
-    throw await responseError(response, `Failed to duplicate form: ${response.status}`);
+    const message = `${fallbackMessage}: ${response.status}`;
+    throw response.headers.get("content-type")?.includes("application/json")
+      ? await responseError(response, message)
+      : statusError(response, message);
   }
 
   return response.json();
