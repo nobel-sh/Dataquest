@@ -4,8 +4,8 @@
 
 :root {
   color-scheme: dark;
-  --font-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-  --font-body: "Manrope", "Avenir Next", "Trebuchet MS", Verdana, sans-serif;
+  --font-display: Georgia, serif;
+  --font-body: sans-serif;
 
   --color-page: #181a20;
   --color-panel: #202124;
