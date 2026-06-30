@@ -2,7 +2,7 @@ import logging
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy.orm import Session
 
 from app.ai.form_generation import get_form_generator
@@ -282,5 +282,7 @@ def list_form_responses(
     form_id: UUID,
     db: DbSession,
     current_user: CurrentUser,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+    offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[FormResponseRead]:
-    return list_form_response_records(form_id, current_user, db)
+    return list_form_response_records(form_id, current_user, db, limit, offset)

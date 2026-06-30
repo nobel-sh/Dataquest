@@ -538,6 +538,47 @@ def test_list_form_responses_returns_saved_responses(test_client: TestClient) ->
     assert response.json()[0]["answers"] == {"email": "student@example.com", "rating": 5}
 
 
+def test_list_form_responses_supports_limit_and_offset(test_client: TestClient) -> None:
+    form = test_client.post(
+        "/forms",
+        json=valid_form_create_payload(),
+        headers=csrf_header(test_client),
+    ).json()
+    clear_auth_cookies(test_client)
+    test_client.headers.pop("Authorization")
+    test_client.headers.pop("X-CSRF-Token", None)
+
+    for index in range(3):
+        test_client.post(
+            f"/forms/{form['id']}/responses",
+            json={"answers": {"email": f"student{index}@example.com", "rating": index + 3}},
+        )
+
+    owner_auth = test_client.post(
+        "/auth/login",
+        json={"email": "owner@example.com", "password": "secret123"},
+    ).json()
+    test_client.headers.update({"Authorization": f"Bearer {owner_auth['access_token']}"})
+    sync_csrf_header(test_client)
+
+    response = test_client.get(f"/forms/{form['id']}/responses?limit=1&offset=1")
+
+    assert response.status_code == 200
+    assert [item["answers"]["email"] for item in response.json()] == ["student1@example.com"]
+
+
+def test_list_form_responses_rejects_invalid_pagination(test_client: TestClient) -> None:
+    form = test_client.post(
+        "/forms",
+        json=valid_form_create_payload(),
+        headers=csrf_header(test_client),
+    ).json()
+
+    response = test_client.get(f"/forms/{form['id']}/responses?limit=0")
+
+    assert response.status_code == 422
+
+
 def test_export_form_responses_returns_csv(test_client: TestClient) -> None:
     form = test_client.post(
         "/forms",

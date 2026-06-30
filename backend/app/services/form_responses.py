@@ -52,6 +52,8 @@ def list_form_response_records(
     form_id: UUID,
     current_user: User,
     db: Session,
+    limit: int = 50,
+    offset: int = 0,
 ) -> list[FormResponseRead]:
     form = db.get(Form, form_id)
     form = require_form_owner(form, current_user)
@@ -60,6 +62,8 @@ def list_form_response_records(
         select(FormResponse)
         .where(FormResponse.form_id == form.id)
         .order_by(FormResponse.submitted_at.asc(), FormResponse.id.asc())
+        .limit(limit)
+        .offset(offset)
     ).all()
 
     return [build_response_read(response) for response in responses]
