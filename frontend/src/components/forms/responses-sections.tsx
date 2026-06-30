@@ -37,7 +37,7 @@ export function ResponsesHeader({
         </Button>
       </div>
       <div className="mt-4 grid grid-cols-4 border border-line text-sm max-lg:grid-cols-2 max-sm:grid-cols-1">
-        <MetricTile label="Total responses" value={responseCount.toString()} />
+        <MetricTile label="Page responses" value={responseCount.toString()} />
         <MetricTile
           label="Latest response"
           value={latestSubmittedAt ? formatDateTime(latestSubmittedAt) : "None"}
@@ -58,7 +58,7 @@ export function ResponsesAnalytics({ analytics }: { analytics: ResponsesAnalytic
       <div className="mb-4">
         <h2 className="m-0 font-display text-2xl">Analytics</h2>
         <p className="m-0 mt-1 text-sm text-ink-muted">
-          Quick summaries from submitted response values.
+          Quick summaries from response values on this page.
         </p>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
@@ -179,6 +179,7 @@ function optionPercent(count: number, total: number): number {
 type ResponsesListProps = {
   fields: FormField[];
   responses: FormResponse[];
+  startIndex?: number;
   versionNumbersById: Record<string, number>;
 };
 
@@ -236,13 +237,18 @@ function ResponsesTable({ fields, responses, versionNumbersById }: ResponsesList
   );
 }
 
-function ResponsesCards({ fields, responses, versionNumbersById }: ResponsesListProps) {
+function ResponsesCards({
+  fields,
+  responses,
+  startIndex = 0,
+  versionNumbersById,
+}: ResponsesListProps) {
   return (
     <div className={`hidden ${surfaceClassName} p-5 max-lg:grid max-lg:gap-4 max-sm:p-4`}>
       {responses.map((response, index) => (
         <article className="min-w-0 border border-line bg-panel p-5 max-sm:p-4" key={response.id}>
           <div className="flex items-start justify-between gap-4 border-b border-line pb-3 max-sm:flex-col">
-            <div className="font-display text-xl">Response {index + 1}</div>
+            <div className="font-display text-xl">Response {startIndex + index + 1}</div>
             <div className="text-right text-sm text-ink-muted max-sm:text-left">
               <div>{formatVersion(response.form_version_id, versionNumbersById)}</div>
               <time dateTime={response.submitted_at}>{formatDateTime(response.submitted_at)}</time>
@@ -260,6 +266,47 @@ function ResponsesCards({ fields, responses, versionNumbersById }: ResponsesList
           </dl>
         </article>
       ))}
+    </div>
+  );
+}
+
+type ResponsesPaginationProps = {
+  hasNextPage: boolean;
+  isLoading: boolean;
+  page: number;
+  pageSize: number;
+  shownCount: number;
+  onNext: () => void;
+  onPrevious: () => void;
+};
+
+export function ResponsesPagination({
+  hasNextPage,
+  isLoading,
+  page,
+  pageSize,
+  shownCount,
+  onNext,
+  onPrevious,
+}: ResponsesPaginationProps) {
+  const start = page * pageSize + 1;
+  const end = page * pageSize + shownCount;
+
+  return (
+    <div
+      className={`${surfaceClassName} flex items-center justify-between gap-3 px-7 pb-7 max-sm:flex-col max-sm:items-stretch max-sm:px-5 max-sm:pb-5`}
+    >
+      <div className="text-sm text-ink-muted">
+        Showing {shownCount === 0 ? "0" : `${start.toString()}-${end.toString()}`}
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:flex">
+        <Button disabled={isLoading || page === 0} type="button" onClick={onPrevious}>
+          Previous
+        </Button>
+        <Button disabled={isLoading || !hasNextPage} type="button" onClick={onNext}>
+          Next
+        </Button>
+      </div>
     </div>
   );
 }

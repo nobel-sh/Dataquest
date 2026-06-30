@@ -15,6 +15,7 @@ import {
   ResponsesEmptyState,
   ResponsesHeader,
   ResponsesList,
+  ResponsesPagination,
   ResponsesSkeleton,
 } from "@/components/forms/responses-sections";
 import { buildResponsesAnalytics } from "@/components/forms/responses-analytics";
@@ -26,14 +27,25 @@ type ResponsesViewerProps = {
   form: FormRecord;
 };
 
+const RESPONSES_PAGE_SIZE = 25;
+const RESPONSES_FETCH_LIMIT = RESPONSES_PAGE_SIZE + 1;
+
 export function ResponsesViewer({ form }: ResponsesViewerProps) {
   const { showStatus } = useStatusBubble();
   const [responses, setResponses] = useState<FormResponse[]>([]);
   const [versionNumbersById, setVersionNumbersById] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(0);
   const fields = form.latest_version.schema.fields;
-  const analytics = buildResponsesAnalytics(fields, responses);
+  const visibleResponses = responses.slice(0, RESPONSES_PAGE_SIZE);
+  const analytics = buildResponsesAnalytics(fields, visibleResponses);
+  const offset = page * RESPONSES_PAGE_SIZE;
+  const hasNextPage = responses.length > RESPONSES_PAGE_SIZE;
+
+  useEffect(() => {
+    setPage(0);
+  }, [form.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,7 +56,7 @@ export function ResponsesViewer({ form }: ResponsesViewerProps) {
 
       try {
         const [nextResponses, versions] = await Promise.all([
-          listFormResponses(form.id),
+          listFormResponses(form.id, { limit: RESPONSES_FETCH_LIMIT, offset }),
           listFormVersions(form.id),
         ]);
         if (!cancelled) {
@@ -71,7 +83,7 @@ export function ResponsesViewer({ form }: ResponsesViewerProps) {
     return () => {
       cancelled = true;
     };
-  }, [form.id]);
+  }, [form.id, offset]);
 
   async function exportCsv() {
     setError(null);
@@ -106,7 +118,7 @@ export function ResponsesViewer({ form }: ResponsesViewerProps) {
         fields={fields}
         form={form}
         latestSubmittedAt={analytics.latestSubmittedAt}
-        responseCount={responses.length}
+        responseCount={visibleResponses.length}
         onExportCsv={() => void exportCsv()}
       />
 
@@ -123,15 +135,25 @@ export function ResponsesViewer({ form }: ResponsesViewerProps) {
 
       {isLoading ? (
         <ResponsesSkeleton />
-      ) : responses.length === 0 ? (
+      ) : visibleResponses.length === 0 ? (
         <ResponsesEmptyState />
       ) : (
         <>
           <ResponsesAnalytics analytics={analytics} />
           <ResponsesList
             fields={fields}
-            responses={responses}
+            responses={visibleResponses}
+            startIndex={offset}
             versionNumbersById={versionNumbersById}
+          />
+          <ResponsesPagination
+            hasNextPage={hasNextPage}
+            isLoading={isLoading}
+            page={page}
+            pageSize={RESPONSES_PAGE_SIZE}
+            shownCount={visibleResponses.length}
+            onNext={() => setPage((current) => current + 1)}
+            onPrevious={() => setPage((current) => Math.max(0, current - 1))}
           />
         </>
       )}

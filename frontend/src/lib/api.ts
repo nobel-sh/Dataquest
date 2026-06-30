@@ -105,9 +105,21 @@ export async function submitFormResponse(formId: string, answers: Answers): Prom
   );
 }
 
-export async function listFormResponses(formId: string): Promise<FormResponse[]> {
+export async function listFormResponses(
+  formId: string,
+  pagination: { limit?: number; offset?: number } = {},
+): Promise<FormResponse[]> {
+  const searchParams = new URLSearchParams();
+  if (pagination.limit !== undefined) {
+    searchParams.set("limit", pagination.limit.toString());
+  }
+  if (pagination.offset !== undefined) {
+    searchParams.set("offset", pagination.offset.toString());
+  }
+  const query = searchParams.toString();
+
   return apiJson(
-    `/forms/${formId}/responses`,
+    `/forms/${formId}/responses${query ? `?${query}` : ""}`,
     () => ({ cache: "no-store" }),
     "Failed to load responses",
   );
