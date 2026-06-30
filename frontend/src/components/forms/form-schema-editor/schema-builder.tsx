@@ -8,6 +8,7 @@ import {
   BuilderHeader,
   BuilderMessages,
   FieldsSection,
+  FormPreview,
   SchemaDetailsSection,
   SchemaPreview,
 } from "@/components/forms/form-schema-editor/builder-sections";
@@ -134,7 +135,8 @@ export function FormSchemaBuilder({
         editorKey: `copy-${Date.now().toString(36)}-${index.toString()}`,
         field: {
           ...source.field,
-          id: nextFieldId(current.map((item) => item.field)),
+          id: nextDuplicateFieldId(source.field, current.map((item) => item.field)),
+          label: `${source.field.label} copy`,
         },
       };
 
@@ -188,37 +190,42 @@ export function FormSchemaBuilder({
 
           <SchemaDetailsSection schema={schema} onChange={setSchema} />
 
-          <FieldsSection>
-            {editableFields.map(({ editorKey, field }, index) => (
-              <FieldEditor
-                field={field}
-                index={index}
-                isFirst={index === 0}
-                isLast={index === editableFields.length - 1}
-                key={editorKey}
-                errors={validation.fieldErrors[index] ?? []}
-                optionErrors={validation.optionErrors}
-                rangeErrors={validation.rangeErrors[index] ?? []}
-                reviewSuggestions={reviewSuggestionsByFieldId[field.id] ?? []}
-                onChange={(nextField) => updateField(index, nextField)}
-                onDuplicate={() => duplicateField(index)}
-                onMove={(direction) => moveField(index, direction)}
-                onRemove={() => removeField(index)}
-              />
-            ))}
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] xl:items-start">
+            <FieldsSection>
+              {editableFields.map(({ editorKey, field }, index) => (
+                <FieldEditor
+                  field={field}
+                  fieldCount={editableFields.length}
+                  index={index}
+                  isFirst={index === 0}
+                  isLast={index === editableFields.length - 1}
+                  key={editorKey}
+                  errors={validation.fieldErrors[index] ?? []}
+                  optionErrors={validation.optionErrors}
+                  rangeErrors={validation.rangeErrors[index] ?? []}
+                  reviewSuggestions={reviewSuggestionsByFieldId[field.id] ?? []}
+                  onChange={(nextField) => updateField(index, nextField)}
+                  onDuplicate={() => duplicateField(index)}
+                  onMove={(direction) => moveField(index, direction)}
+                  onRemove={() => removeField(index)}
+                />
+              ))}
 
-            <button
-              aria-label="Add field"
-              className={`${addFieldButtonClassName} justify-self-center`}
-              title="Add field"
-              type="button"
-              onClick={addField}
-            >
-              <PlusIcon className="size-6" />
-            </button>
-          </FieldsSection>
-
-          <SchemaPreview schema={normalizedSchema} />
+              <button
+                aria-label="Add field"
+                className={`${addFieldButtonClassName} justify-self-center`}
+                title="Add field"
+                type="button"
+                onClick={addField}
+              >
+                <PlusIcon className="size-6" />
+              </button>
+            </FieldsSection>
+            <div className="grid gap-5 xl:sticky xl:top-6">
+              <FormPreview schema={normalizedSchema} />
+              <SchemaPreview schema={normalizedSchema} />
+            </div>
+          </div>
         </div>
 
         <BuilderFooter
@@ -239,16 +246,28 @@ export function FormSchemaBuilder({
 }
 
 function nextFieldId(fields: FormField[]): string {
+  return nextFieldIdFromBase("field", fields);
+}
+
+function nextDuplicateFieldId(field: FormField, fields: FormField[]): string {
+  return nextFieldIdFromBase(`${fieldIdBase(field.id)}_copy`, fields);
+}
+
+function nextFieldIdFromBase(base: string, fields: FormField[]): string {
   const existingIds = new Set(fields.map((field) => field.id));
-  let index = fields.length + 1;
-  let candidate = `field_${index.toString()}`;
+  let index = 1;
+  let candidate = base;
 
   while (existingIds.has(candidate)) {
     index += 1;
-    candidate = `field_${index.toString()}`;
+    candidate = `${base}_${index.toString()}`;
   }
 
   return candidate;
+}
+
+function fieldIdBase(fieldId: string): string {
+  return fieldId.replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "") || "field";
 }
 
 function groupReviewSuggestionsByFieldId(

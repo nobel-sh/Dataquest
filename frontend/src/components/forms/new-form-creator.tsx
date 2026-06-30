@@ -67,7 +67,7 @@ export function NewFormCreator() {
       setGenerationWarnings(result.warnings);
       void reviewDraft(result.schema, { quiet: true });
       if (!normalizedSlug) {
-        setSlug(slugFromTitle(result.schema.title));
+        setSlug(slugFromText(result.schema.title, "generated-form"));
       }
       setMessageKind("success");
       setMessage("Generated a draft schema. Review it before creating the form.");
@@ -185,7 +185,7 @@ export function NewFormCreator() {
               placeholder="student-feedback"
               required
               value={slug}
-              onChange={(event) => setSlug(event.target.value)}
+              onChange={(event) => setSlug(slugFromText(event.target.value))}
             />
             {slugError ? <p className="m-0 mt-2 text-sm text-danger">{slugError}</p> : null}
           </div>
@@ -218,12 +218,12 @@ function getSlugError(slug: string): string | null {
   return null;
 }
 
-function slugFromTitle(title: string): string {
+function slugFromText(value: string, fallback = ""): string {
   return (
-    title
+    value
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
-      .slice(0, 120) || "generated-form"
+      .slice(0, 120) || fallback
   );
 }

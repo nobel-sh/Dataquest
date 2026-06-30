@@ -4,6 +4,8 @@ import { ErrorList } from "@/components/forms/form-schema-editor/shared";
 import type { BuilderMetric } from "@/components/forms/form-schema-editor/schema-builder";
 import { iconButtonClassName, primaryButtonLargeClassName } from "@/components/ui/styles";
 import { Alert, Card, MetricTile, TextArea, TextInput } from "@/components/ui/primitives";
+import { PublicFormField } from "@/components/public-form/field-control";
+import { initialAnswers } from "@/components/public-form/answer-utils";
 import type { FormSchema } from "@/lib/types";
 
 type BuilderHeaderProps = {
@@ -102,6 +104,31 @@ export function SchemaPreview({ schema }: { schema: FormSchema }) {
         {JSON.stringify(schema, null, 2)}
       </pre>
     </details>
+  );
+}
+
+export function FormPreview({ schema }: { schema: FormSchema }) {
+  const answers = initialAnswers(schema.fields);
+
+  return (
+    <section className="grid gap-4">
+      <div>
+        <h2 className="m-0 font-display text-2xl">Preview</h2>
+        <p className="m-0 mt-1 text-sm text-ink-muted">{schema.title}</p>
+      </div>
+      {schema.description ? <p className="m-0 text-sm text-ink-muted">{schema.description}</p> : null}
+      <div className="grid gap-3">
+        {schema.fields.map((field, index) => (
+          <PublicFormField
+            disabled
+            field={field}
+            key={`${field.id}-${index.toString()}`}
+            value={answers[field.id]}
+            onChange={() => undefined}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
 

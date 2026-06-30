@@ -24,6 +24,7 @@ import { SelectInput } from "@/components/ui/primitives";
 type FieldEditorProps = {
   errors: string[];
   field: FormField;
+  fieldCount: number;
   index: number;
   isFirst: boolean;
   isLast: boolean;
@@ -39,6 +40,7 @@ type FieldEditorProps = {
 export function FieldEditor({
   errors,
   field,
+  fieldCount,
   index,
   isFirst,
   isLast,
@@ -72,7 +74,9 @@ export function FieldEditor({
               </span>
             ) : null}
           </div>
-          <div className="mt-1 break-all text-sm text-ink-muted">{field.id || "unnamed_field"}</div>
+          <div className="mt-1 break-all text-sm text-ink-muted">
+            {field.id || "unnamed_field"} - Position {index + 1} of {fieldCount}
+          </div>
         </div>
         <div className="grid grid-cols-3 gap-2 sm:flex">
           <button

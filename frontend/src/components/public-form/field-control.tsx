@@ -4,13 +4,20 @@ import type { AnswerValue, FormField } from "@/lib/types";
 import { stringValue } from "@/components/public-form/answer-utils";
 
 type PublicFormFieldProps = {
+  disabled?: boolean;
   error?: string;
   field: FormField;
   value: AnswerValue;
   onChange: (value: AnswerValue) => void;
 };
 
-export function PublicFormField({ error, field, value, onChange }: PublicFormFieldProps) {
+export function PublicFormField({
+  disabled = false,
+  error,
+  field,
+  value,
+  onChange,
+}: PublicFormFieldProps) {
   const describedBy = [
     field.description ? `${field.id}-description` : null,
     error ? `${field.id}-error` : null,
@@ -32,6 +39,7 @@ export function PublicFormField({ error, field, value, onChange }: PublicFormFie
         field={field}
         value={value}
         describedBy={describedBy || undefined}
+        disabled={disabled}
         onChange={onChange}
       />
       {error ? (
@@ -45,18 +53,20 @@ export function PublicFormField({ error, field, value, onChange }: PublicFormFie
 
 type FieldInputProps = {
   describedBy?: string;
+  disabled?: boolean;
   field: FormField;
   value: AnswerValue;
   onChange: (value: AnswerValue) => void;
 };
 
-function FieldInput({ describedBy, field, value, onChange }: FieldInputProps) {
+function FieldInput({ describedBy, disabled = false, field, value, onChange }: FieldInputProps) {
   switch (field.type) {
     case "textarea":
       return (
         <TextArea
           aria-describedby={describedBy}
           className="min-h-[120px] resize-y"
+          disabled={disabled}
           id={field.id}
           placeholder={field.placeholder ?? undefined}
           value={stringValue(value)}
@@ -67,6 +77,7 @@ function FieldInput({ describedBy, field, value, onChange }: FieldInputProps) {
       return (
         <TextInput
           aria-describedby={describedBy}
+          disabled={disabled}
           id={field.id}
           max={field.max ?? undefined}
           min={field.min ?? undefined}
@@ -85,6 +96,7 @@ function FieldInput({ describedBy, field, value, onChange }: FieldInputProps) {
       return (
         <TextInput
           aria-describedby={describedBy}
+          disabled={disabled}
           id={field.id}
           placeholder={field.placeholder ?? undefined}
           type={field.type === "phone" ? "tel" : field.type}
@@ -96,6 +108,7 @@ function FieldInput({ describedBy, field, value, onChange }: FieldInputProps) {
       return (
         <SelectInput
           aria-describedby={describedBy}
+          disabled={disabled}
           id={field.id}
           value={stringValue(value)}
           onChange={(event) => onChange(event.target.value)}
@@ -109,11 +122,20 @@ function FieldInput({ describedBy, field, value, onChange }: FieldInputProps) {
         </SelectInput>
       );
     case "radio":
-      return <OptionGroup describedBy={describedBy} field={field} value={value} onChange={onChange} />;
+      return (
+        <OptionGroup
+          describedBy={describedBy}
+          disabled={disabled}
+          field={field}
+          value={value}
+          onChange={onChange}
+        />
+      );
     case "checkbox":
       return (
         <OptionGroup
           describedBy={describedBy}
+          disabled={disabled}
           field={field}
           value={value}
           multiple
@@ -121,18 +143,28 @@ function FieldInput({ describedBy, field, value, onChange }: FieldInputProps) {
         />
       );
     case "rating":
-      return <RatingInput describedBy={describedBy} field={field} value={value} onChange={onChange} />;
+      return (
+        <RatingInput
+          describedBy={describedBy}
+          disabled={disabled}
+          field={field}
+          value={value}
+          onChange={onChange}
+        />
+      );
   }
 }
 
 function OptionGroup({
   describedBy,
+  disabled = false,
   field,
   multiple = false,
   value,
   onChange,
 }: {
   describedBy?: string;
+  disabled?: boolean;
   field: FormField;
   multiple?: boolean;
   value: AnswerValue;
@@ -158,6 +190,7 @@ function OptionGroup({
             <input
               className="sr-only"
               checked={checked}
+              disabled={disabled}
               name={multiple ? undefined : field.id}
               type={multiple ? "checkbox" : "radio"}
               value={option.value}
@@ -198,11 +231,13 @@ function OptionMarker({ checked, multiple }: { checked: boolean; multiple: boole
 
 function RatingInput({
   describedBy,
+  disabled = false,
   field,
   value,
   onChange,
 }: {
   describedBy?: string;
+  disabled?: boolean;
   field: FormField;
   value: AnswerValue;
   onChange: (value: AnswerValue) => void;
@@ -216,6 +251,7 @@ function RatingInput({
         <button
           aria-pressed={value === rating}
           className={ratingButtonClassName}
+          disabled={disabled}
           key={rating}
           type="button"
           onClick={() => onChange(rating)}
