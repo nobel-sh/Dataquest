@@ -6,7 +6,6 @@ import sys
 from datetime import UTC, datetime
 from traceback import format_exception
 
-
 STANDARD_LOG_FIELDS = {
     "args",
     "asctime",

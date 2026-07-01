@@ -4,7 +4,7 @@
   };
 
   outputs =
-    { nixpkgs, ... }:
+    { self, nixpkgs, ... }:
     let
       systems = [
         "aarch64-darwin"
@@ -29,6 +29,7 @@
       devShells = forAllSystems (
         { pkgs }:
         let
+          system = pkgs.stdenv.hostPlatform.system;
           python = pkgs.python312.withPackages (
             ps: with ps; [
               alembic
@@ -44,22 +45,36 @@
           );
         in
         {
-          default = pkgs.mkShell {
+          frontend = pkgs.mkShell {
             packages = with pkgs; [
-              docker-compose
               nodejs_22
               pnpm
+            ];
+
+            env = {
+              NEXT_TELEMETRY_DISABLED = "1";
+            };
+          };
+
+          backend = pkgs.mkShell {
+            packages = with pkgs; [
+              docker-compose
               postgresql_16
               python
               sqlite
             ];
 
             env = {
-              NEXT_TELEMETRY_DISABLED = "1";
               PYTHONDONTWRITEBYTECODE = "1";
               PYTHONUNBUFFERED = "1";
             };
+          };
 
+          default = pkgs.mkShell {
+            inputsFrom = [
+              self.devShells.${system}.frontend
+              self.devShells.${system}.backend
+            ];
           };
         }
       );

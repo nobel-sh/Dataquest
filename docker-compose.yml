@@ -1,4 +1,38 @@
 services:
+  backend:
+    build:
+      context: ./backend
+    container_name: dataquest-backend
+    restart: unless-stopped
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+psycopg://dataquest:dataquest@postgres:5432/dataquest
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://127.0.0.1:3000,http://localhost:3000}
+      AUTH_SECRET_KEY: change-me-in-development
+      ACCESS_TOKEN_COOKIE_SECURE: "false"
+      REFRESH_TOKEN_COOKIE_SECURE: "false"
+      CSRF_COOKIE_SECURE: "false"
+      AI_PROVIDER: mock
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://127.0.0.1:8000}
+    container_name: dataquest-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://127.0.0.1:8000}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - backend
+
   postgres:
     image: postgres:16-alpine
     container_name: dataquest-postgres
