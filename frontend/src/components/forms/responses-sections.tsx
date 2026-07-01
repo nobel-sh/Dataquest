@@ -1,4 +1,4 @@
-import { Button, Card, MetricTile, Skeleton } from "@/components/ui/primitives";
+import { Button, Card, MetricTile, Skeleton, TextInput } from "@/components/ui/primitives";
 import { surfaceClassName } from "@/components/ui/styles";
 import { formatAnswer, formatVersion } from "@/components/forms/responses-format";
 import { formatDateTime } from "@/lib/format";
@@ -68,6 +68,42 @@ export function ResponsesAnalytics({ analytics }: { analytics: ResponsesAnalytic
             key={fieldAnalytics.field.id}
           />
         ))}
+      </div>
+    </section>
+  );
+}
+
+type ResponsesSearchProps = {
+  resultCount: number;
+  searchTerm: string;
+  totalCount: number;
+  onSearchTermChange: (value: string) => void;
+};
+
+export function ResponsesSearch({
+  resultCount,
+  searchTerm,
+  totalCount,
+  onSearchTermChange,
+}: ResponsesSearchProps) {
+  return (
+    <section className={`${surfaceClassName} border-b border-line px-7 py-5 max-sm:px-5`}>
+      <label className="text-sm font-semibold" htmlFor="response-search">
+        Search this page
+      </label>
+      <div className="mt-2 flex items-center gap-3 max-sm:grid">
+        <TextInput
+          id="response-search"
+          placeholder="Search answers, version, or date"
+          type="search"
+          value={searchTerm}
+          onChange={(event) => onSearchTermChange(event.target.value)}
+        />
+        <span className="text-sm text-ink-muted">
+          {searchTerm.trim()
+            ? `${resultCount.toString()} of ${totalCount.toString()} shown`
+            : `${totalCount.toString()} shown`}
+        </span>
       </div>
     </section>
   );
@@ -318,6 +354,19 @@ export function ResponsesEmptyState() {
         <strong>No responses yet.</strong>
         <p className="m-0 mt-2 text-ink-muted">
           Submitted responses for this form will appear here.
+        </p>
+      </Card>
+    </div>
+  );
+}
+
+export function ResponsesSearchEmptyState() {
+  return (
+    <div className={`${surfaceClassName} p-7 max-sm:p-5`}>
+      <Card className="p-5">
+        <strong>No matching responses.</strong>
+        <p className="m-0 mt-2 text-ink-muted">
+          Try a different search term or move to another page.
         </p>
       </Card>
     </div>

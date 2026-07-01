@@ -16,11 +16,15 @@ import {
   ResponsesHeader,
   ResponsesList,
   ResponsesPagination,
+  ResponsesSearch,
+  ResponsesSearchEmptyState,
   ResponsesSkeleton,
 } from "@/components/forms/responses-sections";
 import { buildResponsesAnalytics } from "@/components/forms/responses-analytics";
+import { formatAnswer, formatVersion } from "@/components/forms/responses-format";
 import { authenticatedFetch } from "@/lib/auth";
 import { statusError } from "@/lib/http-error";
+import { formatDateTime } from "@/lib/format";
 import type { FormRecord, FormResponse } from "@/lib/types";
 
 type ResponsesViewerProps = {
@@ -37,9 +41,16 @@ export function ResponsesViewer({ form }: ResponsesViewerProps) {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
   const fields = form.latest_version.schema.fields;
   const visibleResponses = responses.slice(0, RESPONSES_PAGE_SIZE);
-  const analytics = buildResponsesAnalytics(fields, visibleResponses);
+  const filteredResponses = filterResponses(
+    visibleResponses,
+    fields,
+    versionNumbersById,
+    searchTerm,
+  );
+  const analytics = buildResponsesAnalytics(fields, filteredResponses);
   const offset = page * RESPONSES_PAGE_SIZE;
   const hasNextPage = responses.length > RESPONSES_PAGE_SIZE;
 
@@ -139,13 +150,25 @@ export function ResponsesViewer({ form }: ResponsesViewerProps) {
         <ResponsesEmptyState />
       ) : (
         <>
-          <ResponsesAnalytics analytics={analytics} />
-          <ResponsesList
-            fields={fields}
-            responses={visibleResponses}
-            startIndex={offset}
-            versionNumbersById={versionNumbersById}
+          <ResponsesSearch
+            resultCount={filteredResponses.length}
+            searchTerm={searchTerm}
+            totalCount={visibleResponses.length}
+            onSearchTermChange={setSearchTerm}
           />
+          {filteredResponses.length === 0 ? (
+            <ResponsesSearchEmptyState />
+          ) : (
+            <>
+              <ResponsesAnalytics analytics={analytics} />
+              <ResponsesList
+                fields={fields}
+                responses={filteredResponses}
+                startIndex={offset}
+                versionNumbersById={versionNumbersById}
+              />
+            </>
+          )}
           <ResponsesPagination
             hasNextPage={hasNextPage}
             isLoading={isLoading}
@@ -159,4 +182,25 @@ export function ResponsesViewer({ form }: ResponsesViewerProps) {
       )}
     </Panel>
   );
+}
+
+function filterResponses(
+  responses: FormResponse[],
+  fields: FormRecord["latest_version"]["schema"]["fields"],
+  versionNumbersById: Record<string, number>,
+  searchTerm: string,
+): FormResponse[] {
+  const query = searchTerm.trim().toLowerCase();
+  if (!query) {
+    return responses;
+  }
+
+  return responses.filter((response) => {
+    const searchable = [
+      formatDateTime(response.submitted_at),
+      formatVersion(response.form_version_id, versionNumbersById),
+      ...fields.map((field) => formatAnswer(response.answers[field.id], field)),
+    ];
+    return searchable.some((value) => value.toLowerCase().includes(query));
+  });
 }
