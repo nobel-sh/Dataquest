@@ -81,6 +81,21 @@ export async function generateForm(prompt: string): Promise<GenerateFormResult> 
   );
 }
 
+export async function improveForm(
+  formSchema: FormSchema,
+  instruction: string,
+): Promise<GenerateFormResult> {
+  return apiJson(
+    "/forms/improve",
+    () => ({
+      method: "POST",
+      headers: jsonHeaders,
+      body: JSON.stringify({ schema: formSchema, instruction }),
+    }),
+    "Failed to improve form",
+  );
+}
+
 export async function reviewForm(formSchema: FormSchema): Promise<FormReviewResult> {
   return apiJson(
     "/forms/review",

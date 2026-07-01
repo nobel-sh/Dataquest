@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createForm, generateForm } from "@/lib/api";
+import { createForm, generateForm, improveForm } from "@/lib/api";
 import type { FormSchema } from "@/lib/types";
 import { FormSchemaBuilder } from "@/components/forms/form-schema-editor/schema-builder";
 import { ReviewSuggestions } from "@/components/forms/review-suggestions";
@@ -46,6 +46,7 @@ export function NewFormCreator() {
   } = useReviewSuggestions(setMessage, setMessageKind);
   const normalizedSlug = slug.trim();
   const slugError = getSlugError(normalizedSlug);
+  const hasGeneratedDraft = draftRevision > 0;
 
   async function generateDraft() {
     const normalizedPrompt = prompt.trim();
@@ -117,6 +118,32 @@ export function NewFormCreator() {
     }
   }
 
+  async function improveDraft(formSchema: FormSchema, instruction: string) {
+    setMessage(null);
+    showStatus({ kind: "loading", title: "Improving draft", detail: "Updating the schema." });
+    try {
+      const result = await improveForm(formSchema, instruction);
+      setMessageKind("success");
+      setMessage("Improved the draft schema. Review it before creating the form.");
+      showStatus(
+        {
+          kind: "success",
+          title: "Draft improved",
+          detail: `${result.schema.fields.length.toString()} fields ready to review.`,
+        },
+        { autoDismissMs: 2800 },
+      );
+      void reviewDraft(result.schema, { quiet: true });
+      return result;
+    } catch (error) {
+      setMessageKind("error");
+      const detail = error instanceof Error ? error.message : "Failed to improve draft.";
+      setMessage(detail);
+      showStatus({ kind: "error", title: "Improve failed", detail }, { autoDismissMs: 5000 });
+      throw error;
+    }
+  }
+
   return (
     <FormSchemaBuilder
       eyebrow="New form"
@@ -132,6 +159,32 @@ export function NewFormCreator() {
       isReviewing={isReviewing}
       reviewSuggestions={visibleReviewSuggestions}
       metadataSlot={
+        <Card asSection className="grid gap-4 p-5">
+          <ReviewSuggestions
+            suggestions={visibleReviewSuggestions}
+            totalCount={reviewSuggestions.length}
+            onDismiss={dismissReviewSuggestion}
+            onJumpToField={jumpToReviewField}
+          />
+
+          <div>
+            <label className="text-base font-semibold" htmlFor="form-slug">
+              Slug
+            </label>
+            <TextInput
+              className="mt-2"
+              id="form-slug"
+              maxLength={120}
+              placeholder="student-feedback"
+              required
+              value={slug}
+              onChange={(event) => setSlug(slugInputFromText(event.target.value))}
+            />
+            {slugError ? <p className="m-0 mt-2 text-sm text-danger">{slugError}</p> : null}
+          </div>
+        </Card>
+      }
+      bottomSlot={!hasGeneratedDraft ? (
         <Card asSection className="grid gap-4 p-5">
           <div>
             <label className="text-base font-semibold" htmlFor="form-prompt">
@@ -166,36 +219,14 @@ export function NewFormCreator() {
               </div>
             ) : null}
           </div>
-
-          <ReviewSuggestions
-            suggestions={visibleReviewSuggestions}
-            totalCount={reviewSuggestions.length}
-            onDismiss={dismissReviewSuggestion}
-            onJumpToField={jumpToReviewField}
-          />
-
-          <div>
-            <label className="text-base font-semibold" htmlFor="form-slug">
-              Slug
-            </label>
-            <TextInput
-              className="mt-2"
-              id="form-slug"
-              maxLength={120}
-              placeholder="student-feedback"
-              required
-              value={slug}
-              onChange={(event) => setSlug(slugFromText(event.target.value))}
-            />
-            {slugError ? <p className="m-0 mt-2 text-sm text-danger">{slugError}</p> : null}
-          </div>
         </Card>
-      }
+      ) : undefined}
       saveLabel="Create form"
       savingLabel="Creating"
       reviewLabel="Review draft"
       reviewingLabel="Reviewing"
       submitBlocked={Boolean(slugError)}
+      onImprove={improveDraft}
       onReview={reviewDraft}
       onSave={save}
     />
@@ -226,4 +257,12 @@ function slugFromText(value: string, fallback = ""): string {
       .replace(/^-+|-+$/g, "")
       .slice(0, 120) || fallback
   );
+}
+
+function slugInputFromText(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9-]+/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 120);
 }

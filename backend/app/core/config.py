@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     ai_provider: str = "mock"
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-flash-latest"
-    gemini_timeout_seconds: float = 15.0
+    gemini_timeout_seconds: float = 30.0
     gemini_max_retries: int = 1
     gemini_retry_base_delay_seconds: float = 0.5
     gemini_retry_max_delay_seconds: float = 4.0

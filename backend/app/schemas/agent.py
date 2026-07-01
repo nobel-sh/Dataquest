@@ -24,6 +24,13 @@ class GenerateFormRequest(BaseModel):
     prompt: str = Field(min_length=1, max_length=MAX_PROMPT_LENGTH)
 
 
+class ImproveFormRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    form_schema: FormSchema = Field(validation_alias="schema", serialization_alias="schema")
+    instruction: str = Field(min_length=1, max_length=MAX_PROMPT_LENGTH)
+
+
 class GenerateFormResult(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 

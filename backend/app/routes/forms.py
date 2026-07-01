@@ -15,6 +15,7 @@ from app.schemas.agent import (
     FormReviewResult,
     GenerateFormRequest,
     GenerateFormResult,
+    ImproveFormRequest,
     ReviewFormRequest,
 )
 from app.schemas.form_record import FormCreate, FormRead, FormSettingsUpdate
@@ -101,6 +102,27 @@ def review_form(
             "user_id": _current_user.id,
             "field_count": len(result.form_schema.fields),
             "suggestion_count": len(result.suggestions),
+        },
+    )
+    return result
+
+
+@router.post("/improve", response_model=GenerateFormResult)
+def improve_form(
+    payload: ImproveFormRequest,
+    request: Request,
+    _current_user: CurrentUser,
+) -> GenerateFormResult:
+    generator = get_form_generator()
+    result = generator.improve(payload.form_schema, payload.instruction)
+    logger.info(
+        "form schema improved",
+        extra={
+            "event": "form_schema_improved",
+            "request_id": get_request_id(request),
+            "user_id": _current_user.id,
+            "field_count": len(result.form_schema.fields),
+            "warning_count": len(result.warnings),
         },
     )
     return result

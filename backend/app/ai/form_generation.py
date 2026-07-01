@@ -59,6 +59,18 @@ class MockFormGenerator:
             }
         )
 
+    def improve(self, form_schema: FormSchema, instruction: str) -> GenerateFormResult:
+        schema = form_schema.model_copy(deep=True)
+        schema.description = (
+            f"{schema.description or 'Updated draft'} Improved with: {instruction[:120]}"
+        )
+        return GenerateFormResult.model_validate(
+            {
+                "schema": schema,
+                "warnings": ["Improved with mock provider; no external AI call was made."],
+            }
+        )
+
 
 class GeminiFormGenerator:
     def __init__(
@@ -78,7 +90,21 @@ class GeminiFormGenerator:
         self.retry_max_delay_seconds = retry_max_delay_seconds
 
     def generate(self, prompt: str) -> GenerateFormResult:
-        response = self.request_generation(prompt)
+        response = self.request_generation(generation_prompt(prompt))
+
+        try:
+            text = extract_gemini_text(response.json())
+            schema = FormSchema.model_validate_json(text)
+        except (KeyError, TypeError, ValueError, ValidationError) as error:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Gemini returned an invalid form schema",
+            ) from error
+
+        return GenerateFormResult.model_validate({"schema": schema})
+
+    def improve(self, form_schema: FormSchema, instruction: str) -> GenerateFormResult:
+        response = self.request_generation(improvement_prompt(form_schema, instruction))
 
         try:
             text = extract_gemini_text(response.json())
@@ -137,6 +163,12 @@ class GeminiFormGenerator:
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
                 detail=gemini_error_detail(last_response),
+            )
+
+        if isinstance(last_error, httpx.ReadTimeout):
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail="AI provider timed out. Try again.",
             )
 
         raise HTTPException(
@@ -224,7 +256,7 @@ def gemini_payload(prompt: str) -> dict[str, Any]:
                             "and checkbox; min/max are only for number and rating; rating min/max "
                             "must stay between 1 and 10; do not include HTML, JavaScript, SQL, "
                             "markdown, comments, or explanations.\n\n"
-                            f"Request: {prompt}"
+                            f"{prompt}"
                         )
                     }
                 ]
@@ -234,6 +266,20 @@ def gemini_payload(prompt: str) -> dict[str, Any]:
             "response_mime_type": "application/json",
         },
     }
+
+
+def generation_prompt(prompt: str) -> str:
+    return f"Request: {prompt}"
+
+
+def improvement_prompt(form_schema: FormSchema, instruction: str) -> str:
+    return (
+        "Update this existing form schema according to the instruction. "
+        "Return the full updated schema, not a patch. Preserve useful existing field IDs unless "
+        "the instruction clearly requires changing them.\n\n"
+        f"Current schema: {form_schema.model_dump_json()}\n\n"
+        f"Instruction: {instruction}"
+    )
 
 
 def extract_gemini_text(payload: dict[str, Any]) -> str:

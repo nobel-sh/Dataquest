@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createFormVersion } from "@/lib/api";
+import { createFormVersion, improveForm } from "@/lib/api";
 import type { FormRecord, FormSchema } from "@/lib/types";
 import { FormSchemaBuilder } from "@/components/forms/form-schema-editor/schema-builder";
 import { ReviewSuggestions } from "@/components/forms/review-suggestions";
@@ -52,6 +52,32 @@ export function FormSchemaEditor({ form }: FormSchemaEditorProps) {
     }
   }
 
+  async function improveDraft(formSchema: FormSchema, instruction: string) {
+    setMessage(null);
+    showStatus({ kind: "loading", title: "Improving draft", detail: "Updating the schema." });
+    try {
+      const result = await improveForm(formSchema, instruction);
+      setMessageKind("success");
+      setMessage("Improved the draft schema. Review it before saving a new version.");
+      showStatus(
+        {
+          kind: "success",
+          title: "Draft improved",
+          detail: `${result.schema.fields.length.toString()} fields ready to review.`,
+        },
+        { autoDismissMs: 2800 },
+      );
+      void reviewDraft(result.schema, { quiet: true });
+      return result;
+    } catch (error) {
+      setMessageKind("error");
+      const detail = error instanceof Error ? error.message : "Failed to improve draft.";
+      setMessage(detail);
+      showStatus({ kind: "error", title: "Improve failed", detail }, { autoDismissMs: 5000 });
+      throw error;
+    }
+  }
+
   return (
     <FormSchemaBuilder
       eyebrow="Form editor"
@@ -75,6 +101,7 @@ export function FormSchemaEditor({ form }: FormSchemaEditorProps) {
       }
       reviewLabel="Review draft"
       reviewingLabel="Reviewing"
+      onImprove={improveDraft}
       onReview={reviewDraft}
       saveLabel="Save new version"
       savingLabel="Saving"

@@ -2,7 +2,12 @@
 
 import type { ReactNode } from "react";
 import { FormEvent, useState } from "react";
-import type { FormField, FormReviewSuggestion, FormSchema } from "@/lib/types";
+import type {
+  FormField,
+  FormReviewSuggestion,
+  FormSchema,
+  GenerateFormResult,
+} from "@/lib/types";
 import {
   BuilderFooter,
   BuilderHeader,
@@ -16,7 +21,7 @@ import {
 import { FieldEditor } from "@/components/forms/form-schema-editor/field-editor";
 import { PlusIcon } from "@/components/forms/form-schema-editor/icons";
 import { addFieldButtonClassName, surfaceClassName } from "@/components/ui/styles";
-import { Panel } from "@/components/ui/primitives";
+import { Button, Card, Panel, TextArea } from "@/components/ui/primitives";
 import { normalizeSchema } from "@/components/forms/form-schema-editor/schema";
 import { hasErrors, validateSchema } from "@/components/forms/form-schema-editor/validation";
 
@@ -43,7 +48,9 @@ type FormSchemaBuilderProps = {
   saveLabel: string;
   savingLabel: string;
   submitBlocked?: boolean;
+  bottomSlot?: ReactNode;
   metadataSlot?: ReactNode;
+  onImprove?: (schema: FormSchema, instruction: string) => Promise<GenerateFormResult>;
   onReview?: (schema: FormSchema) => Promise<void>;
   onSave: (schema: FormSchema) => Promise<void>;
 };
@@ -61,17 +68,20 @@ export function FormSchemaBuilder({
   saveLabel,
   savingLabel,
   submitBlocked = false,
+  bottomSlot,
   metadataSlot,
+  onImprove,
   onReview,
   onSave,
 }: FormSchemaBuilderProps) {
   const [schema, setSchema] = useState<FormSchema>(initialSchema);
   const [editableFields, setEditableFields] = useState<EditableField[]>(() =>
-    initialSchema.fields.map((field, index) => ({
-      editorKey: `initial-${index.toString()}-${field.id}`,
-      field,
-    })),
+    editableFieldsFromSchema(initialSchema, "initial"),
   );
+  const [improveInstruction, setImproveInstruction] = useState("");
+  const [improveError, setImproveError] = useState<string | null>(null);
+  const [improveWarnings, setImproveWarnings] = useState<string[]>([]);
+  const [isImproving, setIsImproving] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const schemaToSave: FormSchema = { ...schema, fields: editableFields.map((item) => item.field) };
   const normalizedSchema = normalizeSchema(schemaToSave);
@@ -100,6 +110,33 @@ export function FormSchemaBuilder({
     }
 
     await onReview(normalizedSchema);
+  }
+
+  async function improveDraft() {
+    const instruction = improveInstruction.trim();
+    if (!instruction) {
+      setImproveError("Instruction is required.");
+      return;
+    }
+    if (hasValidationErrors || !onImprove) {
+      return;
+    }
+
+    setIsImproving(true);
+    setImproveError(null);
+    try {
+      const result = await onImprove(normalizedSchema, instruction);
+      setSchema(result.schema);
+      setEditableFields(
+        editableFieldsFromSchema(result.schema, `improved-${Date.now().toString(36)}`),
+      );
+      setImproveWarnings(result.warnings);
+      setImproveInstruction("");
+    } catch (error) {
+      setImproveError(error instanceof Error ? error.message : "Failed to improve draft.");
+    } finally {
+      setIsImproving(false);
+    }
   }
 
   function updateField(index: number, nextField: FormField) {
@@ -167,12 +204,7 @@ export function FormSchemaBuilder({
 
   function resetBuilder() {
     setSchema(initialSchema);
-    setEditableFields(
-      initialSchema.fields.map((field, index) => ({
-        editorKey: `initial-${index.toString()}-${field.id}`,
-        field,
-      })),
-    );
+    setEditableFields(editableFieldsFromSchema(initialSchema, "initial"));
   }
 
   return (
@@ -228,13 +260,27 @@ export function FormSchemaBuilder({
               <SchemaPreview schema={normalizedSchema} />
             </div>
           </div>
+
+          {bottomSlot}
+
+          {onImprove && !bottomSlot ? (
+            <ImproveDraftSection
+              disabled={isImproving || hasValidationErrors}
+              error={improveError}
+              instruction={improveInstruction}
+              isImproving={isImproving}
+              warnings={improveWarnings}
+              onChange={setImproveInstruction}
+              onImprove={() => void improveDraft()}
+            />
+          ) : null}
         </div>
 
         <BuilderFooter
-          disabled={isSaving || isReviewing || hasValidationErrors || submitBlocked}
+          disabled={isSaving || isReviewing || isImproving || hasValidationErrors || submitBlocked}
           isReviewing={isReviewing}
           isSaving={isSaving}
-          reviewDisabled={isSaving || hasValidationErrors}
+          reviewDisabled={isSaving || isImproving || hasValidationErrors}
           reviewLabel={reviewLabel}
           reviewingLabel={reviewingLabel}
           saveLabel={saveLabel}
@@ -270,6 +316,67 @@ function nextFieldIdFromBase(base: string, fields: FormField[]): string {
 
 function fieldIdBase(fieldId: string): string {
   return fieldId.replace(/[^a-z0-9_]+/g, "_").replace(/^_+|_+$/g, "") || "field";
+}
+
+function editableFieldsFromSchema(schema: FormSchema, prefix: string): EditableField[] {
+  return schema.fields.map((field, index) => ({
+    editorKey: `${prefix}-${index.toString()}-${field.id}`,
+    field,
+  }));
+}
+
+type ImproveDraftSectionProps = {
+  disabled: boolean;
+  error: string | null;
+  instruction: string;
+  isImproving: boolean;
+  warnings: string[];
+  onChange: (instruction: string) => void;
+  onImprove: () => void;
+};
+
+function ImproveDraftSection({
+  disabled,
+  error,
+  instruction,
+  isImproving,
+  warnings,
+  onChange,
+  onImprove,
+}: ImproveDraftSectionProps) {
+  return (
+    <Card asSection className="grid gap-3 p-5">
+      <div>
+        <label className="text-base font-semibold" htmlFor="form-improve-instruction">
+          Improve with prompt
+        </label>
+        <TextArea
+          className="mt-2 min-h-[88px] resize-y"
+          id="form-improve-instruction"
+          maxLength={8000}
+          placeholder="Make this shorter, add a consent question, or make the wording less biased."
+          value={instruction}
+          onChange={(event) => onChange(event.target.value)}
+        />
+      </div>
+      {error ? <p className="m-0 text-sm text-danger">{error}</p> : null}
+      {warnings.length > 0 ? (
+        <div className="border border-line bg-[#181a20] px-4 py-3 text-sm text-ink-muted">
+          {warnings.map((warning) => (
+            <div key={warning}>{warning}</div>
+          ))}
+        </div>
+      ) : null}
+      <Button
+        className="justify-self-end max-sm:w-full"
+        disabled={disabled}
+        type="button"
+        onClick={onImprove}
+      >
+        {isImproving ? "Improving" : "Improve draft"}
+      </Button>
+    </Card>
+  );
 }
 
 function groupReviewSuggestionsByFieldId(
