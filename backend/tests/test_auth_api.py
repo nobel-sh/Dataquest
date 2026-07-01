@@ -168,6 +168,98 @@ def test_update_password_changes_login_password(client: TestClient) -> None:
     assert login_response.status_code == 200
 
 
+def test_password_reset_changes_login_password(client: TestClient) -> None:
+    client.post(
+        "/auth/register",
+        json={"email": "owner@example.com", "password": "password123"},
+    )
+
+    reset_response = client.post(
+        "/auth/password-reset",
+        json={"email": "owner@example.com"},
+    )
+    token = reset_response.json()["reset_token"]
+
+    response = client.post(
+        "/auth/password-reset/confirm",
+        json={"token": token, "new_password": "password456"},
+    )
+
+    assert reset_response.status_code == 200
+    assert token
+    assert response.status_code == 200
+    assert response.json()["email"] == "owner@example.com"
+    assert client.post(
+        "/auth/login",
+        json={"email": "owner@example.com", "password": "password123"},
+    ).status_code == 401
+    assert client.post(
+        "/auth/login",
+        json={"email": "owner@example.com", "password": "password456"},
+    ).status_code == 200
+
+
+def test_password_reset_does_not_disclose_missing_email(client: TestClient) -> None:
+    response = client.post(
+        "/auth/password-reset",
+        json={"email": "missing@example.com"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"reset_token": None}
+
+
+def test_password_reset_does_not_return_token_in_production(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client.post(
+        "/auth/register",
+        json={"email": "owner@example.com", "password": "password123"},
+    )
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("AUTH_SECRET_KEY", "production-secret")
+    monkeypatch.setenv("ACCESS_TOKEN_COOKIE_SECURE", "true")
+    monkeypatch.setenv("REFRESH_TOKEN_COOKIE_SECURE", "true")
+    monkeypatch.setenv("CSRF_COOKIE_SECURE", "true")
+    monkeypatch.setenv("CORS_ORIGINS", "https://example.com")
+    get_settings.cache_clear()
+
+    try:
+        response = client.post(
+            "/auth/password-reset",
+            json={"email": "owner@example.com"},
+        )
+    finally:
+        get_settings.cache_clear()
+
+    assert response.status_code == 200
+    assert response.json() == {"reset_token": None}
+
+
+def test_password_reset_rejects_reused_token(client: TestClient) -> None:
+    client.post(
+        "/auth/register",
+        json={"email": "owner@example.com", "password": "password123"},
+    )
+    token = client.post(
+        "/auth/password-reset",
+        json={"email": "owner@example.com"},
+    ).json()["reset_token"]
+
+    first_response = client.post(
+        "/auth/password-reset/confirm",
+        json={"token": token, "new_password": "password456"},
+    )
+    second_response = client.post(
+        "/auth/password-reset/confirm",
+        json={"token": token, "new_password": "password789"},
+    )
+
+    assert first_response.status_code == 200
+    assert second_response.status_code == 400
+
+
 def test_refresh_session_rotates_refresh_cookie(client: TestClient) -> None:
     payload = {"email": "owner@example.com", "password": "password123"}
     register_response = client.post("/auth/register", json=payload)

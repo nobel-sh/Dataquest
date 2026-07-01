@@ -15,7 +15,12 @@ from app.core.config import Settings
 from app.core.request_context import get_request_id
 
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
-CSRF_EXEMPT_PATHS = {"/auth/login", "/auth/register"}
+CSRF_EXEMPT_PATHS = {
+    "/auth/login",
+    "/auth/password-reset",
+    "/auth/password-reset/confirm",
+    "/auth/register",
+}
 REQUEST_ID_HEADER = "X-Request-ID"
 REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9_.:-]{1,128}$")
 

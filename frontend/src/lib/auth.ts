@@ -5,6 +5,7 @@ import { responseError, statusError } from "@/lib/http-error";
 let refreshSessionPromise: Promise<AuthToken | null> | null = null;
 const CSRF_COOKIE_NAME = "dataquest_csrf_token";
 const CSRF_HEADER_NAME = "X-CSRF-Token";
+const SESSION_EXPIRED_MESSAGE = "Your session expired. Please log in again.";
 
 export async function register(email: string, password: string): Promise<AuthToken> {
   return authRequest("/auth/register", email, password);
@@ -12,6 +13,42 @@ export async function register(email: string, password: string): Promise<AuthTok
 
 export async function login(email: string, password: string): Promise<AuthToken> {
   return authRequest("/auth/login", email, password);
+}
+
+export async function requestPasswordReset(
+  email: string,
+): Promise<{ reset_token: string | null }> {
+  const response = await fetch(`${getApiBaseUrl()}/auth/password-reset`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ email }),
+  });
+
+  if (!response.ok) {
+    throw await responseError(response, `Failed to request password reset: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<User> {
+  const response = await fetch(`${getApiBaseUrl()}/auth/password-reset/confirm`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ token, new_password: newPassword }),
+  });
+
+  if (!response.ok) {
+    throw await responseError(response, `Failed to reset password: ${response.status}`);
+  }
+
+  return response.json();
 }
 
 export async function getCurrentUser(): Promise<User | null> {
@@ -94,6 +131,7 @@ export async function authenticatedFetch(
 
   const refreshedSession = await refreshSession();
   if (!refreshedSession) {
+    handleExpiredSession();
     return initialResponse;
   }
 
@@ -189,6 +227,15 @@ function headersToRecord(headers: HeadersInit | undefined): Record<string, strin
     return Object.fromEntries(headers);
   }
   return headers;
+}
+
+function handleExpiredSession(): void {
+  if (typeof window === "undefined" || window.location.pathname === "/auth") {
+    return;
+  }
+
+  window.sessionStorage.setItem("dataquest_auth_message", SESSION_EXPIRED_MESSAGE);
+  window.location.assign("/auth");
 }
 
 async function fetchCurrentUser(): Promise<User | null> {

@@ -39,3 +39,22 @@ class PasswordUpdate(BaseModel):
 
     current_password: str = Field(min_length=8, max_length=128)
     new_password: str = Field(min_length=8, max_length=128)
+
+
+class PasswordResetRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    email: str = Field(min_length=3, max_length=320, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+class PasswordResetStart(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    reset_token: str | None = None
+
+
+class PasswordResetConfirm(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    token: str = Field(min_length=1)
+    new_password: str = Field(min_length=8, max_length=128)

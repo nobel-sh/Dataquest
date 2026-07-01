@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     log_format: str = "json"
     auth_secret_key: str = "change-me-in-development"
     access_token_ttl_seconds: int = 60 * 15
+    password_reset_token_ttl_seconds: int = 60 * 60
     access_token_cookie_name: str = "dataquest_access_token"
     access_token_cookie_path: str = "/"
     access_token_cookie_secure: bool = False
