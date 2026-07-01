@@ -8,6 +8,7 @@ import {
   BuilderHeader,
   BuilderMessages,
   FieldsSection,
+  FieldsEmptyState,
   FormPreview,
   SchemaDetailsSection,
   SchemaPreview,
@@ -192,6 +193,7 @@ export function FormSchemaBuilder({
 
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] xl:items-start">
             <FieldsSection>
+              {editableFields.length === 0 ? <FieldsEmptyState /> : null}
               {editableFields.map(({ editorKey, field }, index) => (
                 <FieldEditor
                   field={field}

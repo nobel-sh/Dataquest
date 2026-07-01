@@ -208,3 +208,14 @@ export function FieldsSection({ children }: { children: ReactNode }) {
     </section>
   );
 }
+
+export function FieldsEmptyState() {
+  return (
+    <Card className="p-5">
+      <strong>No fields yet.</strong>
+      <p className="m-0 mt-2 text-sm text-ink-muted">
+        Add one question to make this form saveable.
+      </p>
+    </Card>
+  );
+}

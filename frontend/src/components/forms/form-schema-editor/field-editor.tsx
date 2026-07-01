@@ -59,6 +59,8 @@ export function FieldEditor({
     onChange(normalizeFieldForType({ ...field, type }));
   }
 
+  const inputPrefix = `field-${index.toString()}-${field.id || "new"}`;
+
   return (
     <article
       className="grid min-w-0 scroll-mt-6 gap-4 border border-line bg-panel p-5 max-sm:p-4"
@@ -68,6 +70,12 @@ export function FieldEditor({
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <div className="font-display text-xl">Field {index + 1}</div>
+            <span className="border border-line bg-[#30333d] px-2 py-1 text-xs uppercase text-ink-muted">
+              {field.type}
+            </span>
+            <span className="border border-line bg-[#30333d] px-2 py-1 text-xs uppercase text-ink-muted">
+              {field.required ? "Required" : "Optional"}
+            </span>
             {reviewSuggestions.length > 0 ? (
               <span className="border border-[#fdd663] bg-[#3a3420] px-2 py-1 text-xs uppercase text-[#fdd663]">
                 {reviewSuggestions.length} review{reviewSuggestions.length === 1 ? "" : "s"}
@@ -124,6 +132,7 @@ export function FieldEditor({
 
       <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
         <FieldTextInput
+          id={`${inputPrefix}-id`}
           label="Field ID"
           value={field.id}
           onChange={(value) => onChange({ ...field, id: value })}
@@ -149,6 +158,7 @@ export function FieldEditor({
       </div>
 
       <FieldTextInput
+        id={`${inputPrefix}-label`}
         label="Label"
         maxLength={200}
         required
@@ -158,11 +168,13 @@ export function FieldEditor({
 
       <div className="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
         <FieldTextInput
+          id={`${inputPrefix}-description`}
           label="Description"
           value={field.description ?? ""}
           onChange={(value) => onChange({ ...field, description: value || null })}
         />
         <FieldTextInput
+          id={`${inputPrefix}-placeholder`}
           label="Placeholder"
           disabled={field.type === "rating" || hasOptions}
           value={field.placeholder ?? ""}

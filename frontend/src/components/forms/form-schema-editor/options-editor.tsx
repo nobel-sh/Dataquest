@@ -39,7 +39,7 @@ export function OptionsEditor({
         ...options,
         {
           label: `Option ${nextNumber.toString()}`,
-          value: `option_${nextNumber.toString()}`,
+          value: nextOptionValue(options),
         },
       ],
     });
@@ -102,4 +102,17 @@ export function OptionsEditor({
       ))}
     </section>
   );
+}
+
+function nextOptionValue(options: FieldOption[]): string {
+  const values = new Set(options.map((option) => option.value));
+  let index = options.length + 1;
+  let value = `option_${index.toString()}`;
+
+  while (values.has(value)) {
+    index += 1;
+    value = `option_${index.toString()}`;
+  }
+
+  return value;
 }
